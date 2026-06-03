@@ -44,17 +44,22 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
     const badgeBg = isFact ? `${themeColor}20` : '#10b98120';
     const badgeColor = isFact ? themeColor : '#10b981';
     const badgeBorder = isFact ? `${themeColor}40` : '#10b98140';
-    const bulletIcon = isFact ? '💡' : '✔️';
 
     const bulletsHtml = content.bullets
       .map(bullet => `
-        <li class="flex items-center gap-6 py-3">
-          <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-primary/20 shrink-0 shadow-[0_0_12px_${themeColor}40]">
-            <span class="text-xl">${bulletIcon}</span>
+        <li class="flex items-center gap-6 py-4">
+          <div class="w-10 h-10 rounded-full bg-slate-900/80 flex items-center justify-center border ${isFact ? 'border-primary/40' : 'border-[#10b981]/40'} shrink-0 shadow-[0_0_12px_${isFact ? themeColor : '#10b981'}30]">
+            ${isFact ? `
+              <span class="w-3.5 h-3.5 rounded-full bg-primary"></span>
+            ` : `
+              <svg class="w-5 h-5 text-[#10b981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            `}
           </div>
           <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-normal break-keep">${bullet}</p>
         </li>
-      `).join('<div class="w-full h-px bg-white/5 my-2"></div>');
+      `).join('<div class="w-full h-px bg-white/5 my-1"></div>');
 
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
@@ -118,6 +123,10 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
                 primary: "${themeColor}",
                 "primary-container": "${themeColor}",
                 background: "#0A0E1A"
+              },
+              fontSize: {
+                '2.5xl': '1.75rem',
+                '3.5xl': '2.1rem',
               },
               fontFamily: {
                 display: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
@@ -194,18 +203,27 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
   } else {
     const isFact = cardType === 'fact';
     const badgeText = isFact ? content.section_title || '무슨 일이야?' : content.section_title || '그래서 어떻게 돼?';
-    const badgeBg = isFact ? '#705d0015' : '#10b98115';
-    const badgeColor = isFact ? '#705d00' : '#10b981';
-    const badgeBorder = isFact ? '#705d0030' : '#10b98130';
-    const bulletIcon = isFact ? 'circle' : 'task_alt';
+    
+    // Ivory Theme palette (Fact: deep gold, Action: warm terracotta/orange)
+    const badgeColor = isFact ? '#705d00' : '#c2410c';
+    const badgeBg = isFact ? 'rgba(112, 93, 0, 0.08)' : 'rgba(194, 65, 12, 0.08)';
+    const badgeBorder = isFact ? 'rgba(112, 93, 0, 0.2)' : 'rgba(194, 65, 12, 0.2)';
 
     const bulletsHtml = content.bullets
       .map(bullet => `
-        <li class="flex items-center gap-6 py-3">
-          <span class="material-symbols-outlined text-4xl shrink-0 font-bold" style="color: ${badgeColor}">${bulletIcon}</span>
+        <li class="flex items-center gap-6 py-4">
+          <div class="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center border ${isFact ? 'border-[#705d00]/30' : 'border-[#c2410c]/30'} shrink-0 shadow-[0_0_12px_${isFact ? 'rgba(112,93,0,0.15)' : 'rgba(194,65,12,0.15)'}]">
+            ${isFact ? `
+              <span class="w-3.5 h-3.5 rounded-full" style="background-color: ${badgeColor}"></span>
+            ` : `
+              <svg class="w-5 h-5" style="color: ${badgeColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            `}
+          </div>
           <p class="font-body text-3.5xl text-slate-800 font-extrabold leading-normal break-keep">${bullet}</p>
         </li>
-      `).join('<div class="w-full h-px bg-slate-200/80 my-2"></div>');
+      `).join('<div class="w-full h-px bg-slate-200/60 my-1"></div>');
 
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
@@ -266,6 +284,10 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
               colors: {
                 primary: "#121212",
                 secondary: "#705d00"
+              },
+              fontSize: {
+                '2.5xl': '1.75rem',
+                '3.5xl': '2.1rem',
               },
               fontFamily: {
                 display: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
@@ -403,6 +425,10 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
                 secondary: "#ffb1c3",
                 tertiary: "#2ae500",
                 background: "#190c2c"
+              },
+              fontSize: {
+                '2.5xl': '1.75rem',
+                '3.5xl': '2.1rem',
               },
               fontFamily: {
                 display: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],

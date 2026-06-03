@@ -29,6 +29,10 @@ async function testLive() {
   console.log(`[Test Live] Selected News: "${selectedNews.title}"`);
   console.log(`[Test Live] RSS Link: ${selectedNews.link}`);
 
+  // Pausing 5 seconds to prevent Groq TPM rate limit issues
+  console.log('[Test Live] Pausing for 5 seconds...');
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
   console.log('[Test Live] 3. Generating Instagram captions, templates & bubble dialogues...');
   const cardContent = await generateCardContent(selectedNews);
   console.log('[Test Live] Selected Theme:', cardContent.template_theme);

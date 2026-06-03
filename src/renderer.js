@@ -66,14 +66,14 @@ async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') 
       'https://images.unsplash.com/photo-1604871000636-074fa5117945?w=1080&h=1920&fit=crop&q=80'  // obsidian 3D wave 3
     ];
     const ivoryFallbacks = [
-      'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1080&h=1920&fit=crop&q=80', // warm gold/beige abstract 1
-      'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=1080&h=1920&fit=crop&q=80', // warm gold/beige abstract 2
-      'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1080&h=1920&fit=crop&q=80'  // warm gold/beige abstract 3
+      'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=1080&h=1920&fit=crop&q=80', // Ivory warm 3D wave 1
+      'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=1080&h=1920&fit=crop&q=80', // Ivory warm 3D wave 2
+      'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1080&h=1920&fit=crop&q=80'  // Ivory warm 3D wave 3
     ];
     const cyberFallbacks = [
       'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1080&h=1920&fit=crop&q=80', // neon abstract wave 1
       'https://images.unsplash.com/photo-1563089145-599997674d42?w=1080&h=1920&fit=crop&q=80', // neon abstract wave 2
-      'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1080&h=1920&fit=crop&q=80'  // neon abstract wave 3
+      'https://images.unsplash.com/photo-1550684847-75bdda21cc95?w=1080&h=1920&fit=crop&q=80'  // neon abstract wave 3
     ];
 
     let fallbacks = obsidianFallbacks;

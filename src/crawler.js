@@ -23,7 +23,7 @@ async function fetchNews(rssUrl) {
         title: item.title ? item.title.trim() : '',
         link: item.link ? item.link.trim() : '',
         pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
-        summary: summary.trim(),
+        summary: summary.trim().substring(0, 300),
       };
     });
 

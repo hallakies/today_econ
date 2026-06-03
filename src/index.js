@@ -56,6 +56,10 @@ async function run() {
     const selectedNews = await selectNews(newsList);
     console.log(`[Main] Selected news title: "${selectedNews.title}"`);
 
+    // Pausing 5 seconds to prevent Groq TPM rate limit issues
+    console.log('[Main] Pausing for 5 seconds...');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
     // 3. Generate card content (Title, fact bullet points, action points, prompts, caption)
     const cardContent = await generateCardContent(selectedNews);
     console.log('[Main] Content and prompts generated successfully.');
