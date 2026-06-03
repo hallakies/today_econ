@@ -7,9 +7,11 @@ const groq = new Groq({
 });
 
 /**
- * Sanitizes and cleans the generated Instagram caption to ensure correct unicode emojis and clean hashtags.
+ * Sanitizes a single text string by replacing Slack emoji codes and removing multilingual leaks.
  */
-function sanitizeCaption(caption) {
+function sanitizeText(text) {
+  if (typeof text !== 'string') return text;
+  
   const emojiMap = {
     ':chart_with_upwards_trend:': '📈',
     ':mega:': '📢',
@@ -17,26 +19,70 @@ function sanitizeCaption(caption) {
     ':memo:': '📝',
     ':white_check_mark:': '✅',
     ':warning:': '🚨',
+    ':rotating_light:': '🚨',
     ':bulb:': '💡',
     ':thinking:': '🧐',
-    ':moneybag:': '💸',
+    ':thinking_face:': '🤔',
+    ':moneybag:': '💰',
+    ':money_with_wings:': '💸',
+    ':exploding_head:': '🤯',
+    ':bar_chart:': '📊',
     ':scissors:': '✂️',
     ':shield:': '🛡️',
     ':lock:': '🔒',
+    ':smile:': '😄',
+    ':fire:': '🔥',
+    ':rocket:': '🚀',
+    ':checkered_flag:': '🏁',
+    ':point_right:': '👉',
+    ':point_left:': '👈',
+    ':star:': '⭐️',
+    ':heart:': '❤️',
+    ':sob:': '😭',
+    ':tada:': '🎉',
   };
   
-  let clean = caption || '';
+  let clean = text;
   
   // Replace Slack shortcode emojis with real Unicode emojis
   for (const [shortcode, emoji] of Object.entries(emojiMap)) {
     clean = clean.replace(new RegExp(shortcode, 'g'), emoji);
   }
 
-  // Clean up any multilingual contamination (e.g. Russian/Chinese "This means" glitch)
+  // Clean up any multilingual / translation leaks (like Chinese suffix 們, 智慧, Russian/Chinese "This means" glitch)
+  clean = clean.replace(/們/g, '들');
+  clean = clean.replace(/들들/g, '들'); // Just in case "들們" was generated
+  clean = clean.replace(/智慧/g, '지혜');
   clean = clean.replace(/Это意味着/g, '이는');
   clean = clean.replace(/这意味着/g, '이는');
   clean = clean.replace(/意味着/g, '의미합니다');
-  clean = clean.replace(/智慧/g, '지혜');
+  
+  return clean;
+}
+
+/**
+ * Recursively sanitizes all text properties in a generated JSON object.
+ */
+function sanitizeJsonRecursively(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeJsonRecursively(item));
+  } else if (obj !== null && typeof obj === 'object') {
+    const sanitized = {};
+    for (const [key, value] of Object.entries(obj)) {
+      sanitized[key] = sanitizeJsonRecursively(value);
+    }
+    return sanitized;
+  } else if (typeof obj === 'string') {
+    return sanitizeText(obj);
+  }
+  return obj;
+}
+
+/**
+ * Sanitizes the Instagram caption specifically (removing generated hashtags and appending curated ones).
+ */
+function finalizeCaption(caption) {
+  let clean = sanitizeText(caption || '');
 
   // Strip any generated hashtags to avoid gibberish (like #재발, #영화드림)
   const hashtagIndex = clean.indexOf('#');
@@ -110,13 +156,13 @@ async function generateCardContent(selectedNews) {
 3. **카드 2와 카드 3의 완전 분리 (필수)**:
    - **카드 2(card2)**: 기사 내용의 핵심 팩트(Fact) 요약 3가지입니다. (배지명 추천: "무슨 일이야?")
    - **카드 3(card3)**: 기사 사건이 독자의 지갑에 미칠 영향과 독자가 취해야 할 실생활 행동 지침(Action) 3가지입니다. (배지명 추천: "그래서 어떻게 돼?")
-   - 두 카드의 불릿 포인트는 절대 겹치거나 같아서는 안 되며, 완전히 구분되어야 합니다.
+   - **경고**: 카드 3(card3)의 불릿 포인트는 절대로 학술적이거나 거시적인 추상형 개요(예: '은행권 구조조정의 영향', '미래 금융업계의 전망')로 작성하지 마십시오. 독자가 오늘 이 뉴스를 읽고 당장 취해야 할 '실천 가능한 실생활 행동 지침' 또는 '직접적인 가계 대처법'(예: '비대면 금융 앱 활용법 미리 익혀두기', '시중은행 예금 금리 인하에 미리 대비하기', '디지털 전환 트렌드에 관심 갖기')으로 아주 구체적으로 적어주세요. 두 카드의 불릿 포인트는 절대 겹치거나 같아서는 안 되며, 완전히 구분되어야 합니다.
 4. **비주얼 컨셉 및 FLUX 이미지 프롬프트**:
    - 각 카드에 어울리는 고해상도 FLUX.1-schnell 이미지 생성 프롬프트를 **영어로** 구체적으로 작성하세요.
    - 프롬프트 지침: "Minimalist modern 3D vector illustration, cute pastel claymation style, isolated on clean solid background, financial theme, no text in image" 스타일을 차용하여 기사 주제에 맞게 변경하세요. 텍스트가 절대 이미지 안에 들어가지 않도록 "no text"를 필수 포함하세요.
-5. **캐릭터 말풍선 멘트 (speech_bubble)**:
+5. **캐릭터 말풍선 멘트 (speech_bubble) 경고**:
    - 각 카드 이미지 위에 들어갈 캐릭터 리액션 말풍선 문구를 10~15자 내외의 아주 위트 있고 직관적인 한국어 한마디로 작성하세요. (각 카드별로 리액션이 겹치지 않게 하세요!)
-     (예: "대출 이자 살려줘~", "예금 탈출 신호인가?!", "내 지갑 방어 완료!")
+   - **경고**: 말풍선(speech_bubble)은 절대 기사 제목이나 내용을 요약한 설명조 글(예: '억대 퇴직금 받고 나간 은행원들', '은행원들의 미래는?')로 채우지 마십시오. 이는 캐릭터가 실제로 할 법한 지극히 주관적이고 위트 있는 '독백이나 현실 리액션'(예: '나도 퇴직금 5억 줘! 💸', '부러우면 지는 건데.. 🥲', '내 퇴직금은 안전한가? 🔒')이어야 합니다.
 6. **디자인 테마 및 강조 색상 선정 (template_theme & theme_color)**:
    - 뉴스의 주제와 분위기에 맞는 디자인 테마를 선정하세요:
      - "obsidian": 정통 거시경제, 금리, 기업 실적, 증시 시황 뉴스용. (추천 theme_color: "#00d2ff" 또는 네온 블루)
@@ -124,7 +170,7 @@ async function generateCardContent(selectedNews) {
      - "cyber": 미래지향적인 반도체, IT, 빅테크, AI, 코인/암호화폐 뉴스용. (추천 theme_color: "#bc13fe" 또는 네온 퍼플)
 7. **인스타그램 게시글 멘트 (instagram_caption) - 이모지 및 해시태그 중요**:
    - 줄바꿈과 이모지를 풍부하게 섞어 친근한 해요체로 작성하세요.
-   - **중요**: 본문에 들어가는 모든 이모지는 반드시 **👀, 📝, 📈, 🚨, ✅ 같은 실제 유니코드 이모지**로 넣으세요. \`:eyes:\`, \`:memo:\` 같은 Slack 텍스트 코드는 절대로 사용하지 마십시오.
+   - **중요**: 본문에 들어가는 모든 이모지는 반드시 **👀, 📝, 📈, 🚨, ✅ 같은 실제 유니코드 이모지**로 넣으세요. \`:eyes:\`, \`:memo:\`, \`:rotating_light:\` 같은 Slack 텍스트 코드는 절대로 사용하지 마십시오.
    - 본문 내 해시태그를 길게 나열하는 대신 텍스트 본문만 자연스럽게 생성하십시오. (해시태그는 스크립트 내부에서 깔끔한 한국어 태그로 후처리 삽입할 것입니다)
 
 반드시 마크다운 백틱 없이 순수한 JSON 포맷으로만 응답해야 합니다.
@@ -208,8 +254,11 @@ async function generateCardContent(selectedNews) {
     // 1. Validate & repair potential duplicate content bugs
     resultJson = validateAndRepairContent(resultJson);
 
-    // 2. Sanitize emojis & hashtags in Instagram caption
-    resultJson.instagram_caption = sanitizeCaption(resultJson.instagram_caption);
+    // 2. Recursively sanitize all text fields (including titles, subtitles, bullets, bubbles)
+    resultJson = sanitizeJsonRecursively(resultJson);
+
+    // 3. Finalize and sanitize the Instagram caption separately (handling hashtags)
+    resultJson.instagram_caption = finalizeCaption(resultJson.instagram_caption);
 
     console.log('[Generator] Successfully finalized and cleaned card content.');
     return resultJson;

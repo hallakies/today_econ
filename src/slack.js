@@ -28,20 +28,28 @@ async function sendToSlack(imagePaths, instagramCaption) {
     };
   });
 
-  // Prepare initial comment containing the ready-to-copy Instagram caption
-  const commentText = `📈 *오늘의 경제 카드 뉴스 생성 완료!*\n\n아래 점선 사이의 텍스트를 복사하여 인스타그램 본문 멘트로 사용하세요.\n\n-----------------------------\n\n${instagramCaption}\n\n-----------------------------`;
+  // Prepare caption text message referencing the upload
+  const captionMessage = `📈 *오늘의 경제 카드 뉴스 생성 완료!*\n\n아래 점선 사이의 텍스트를 복사하여 인스타그램 본문 멘트로 사용하세요.\n\n-----------------------------\n\n${instagramCaption}\n\n-----------------------------`;
 
   try {
-    const response = await web.filesUploadV2({
+    // 1. Upload files first (without initial_comment to prevent duplicate posts in some slack APIs)
+    console.log('[Slack] Sending files via filesUploadV2...');
+    const uploadResponse = await web.filesUploadV2({
       channel_id: config.slackChannelId,
       file_uploads: fileUploads,
-      initial_comment: commentText,
+    });
+
+    // 2. Post a single, dedicated chat message containing the copyable Instagram caption
+    console.log('[Slack] Posting Instagram caption via chat.postMessage...');
+    await web.chat.postMessage({
+      channel: config.slackChannelId,
+      text: captionMessage,
     });
 
     console.log('[Slack] Files and caption successfully posted to Slack!');
-    return response;
+    return uploadResponse;
   } catch (error) {
-    console.error('[Slack] Failed to upload files via Slack API:', error);
+    console.error('[Slack] Failed to post files or message via Slack API:', error);
     throw error;
   }
 }
