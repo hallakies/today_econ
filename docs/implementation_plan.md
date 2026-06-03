@@ -7,18 +7,18 @@
 ## User Review Required
 
 > [!IMPORTANT]
-> **1. 업그레이드된 LLM 도입 (Groq - Llama 3.3 70B)**
-> - 사용자 피드백을 반영하여 성능이 아쉬운 Gemini 1.5 Flash 대신, **Groq API**를 사용해 오픈소스 최고 성능 모델인 **Llama 3.3 70B** (`llama-3.3-70b-versatile`)를 텍스트 처리에 활용합니다.
-> - Groq의 Developer Free Tier는 매우 빠르고(초당 수백 토큰) 넉넉한 속도 제한을 무료로 제공하므로 비용은 여전히 **0원**입니다.
+> **1. 업그레이드된 LLM 도입 (Groq - openai/gpt-oss-120b)**
+> - 사용자 피드백을 반영하여 성능이 아쉬운 Gemini 1.5 Flash 대신, **Groq API**를 사용해 대형 파라미터 모델인 **openai/gpt-oss-120b**를 텍스트 처리에 활용합니다.
+> - Groq의 Developer Free Tier는 매우 빠르고 넉넉한 속도 제한을 무료로 제공하므로 비용은 여전히 **0원**입니다.
 > - 뉴스 중복 배제, 복잡한 단어 순화, "그래서 나랑 무슨 상관이지?"에 대한 날카로운 분석을 최고 수준으로 도출합니다.
 >
-> **2. 최고 화질 이미지 생성 AI 도입 (Hugging Face - FLUX.1-schnell)**
-> - 구형 Stable Diffusion 기반의 Pollinations.ai 대신, 현재 오픈소스 이미지 생성 분야에서 압도적인 1위 화질을 자랑하는 **Hugging Face의 FLUX.1-schnell** API를 도입합니다.
-> - Hugging Face 계정에서 무료 Access Token만 발급받으면 Serverless Inference API를 통해 무료로 고화질 일러스트(Text-to-Image)를 실시간 생성할 수 있습니다.
+> **2. 이미지 생성 AI 도입 (Pollinations.ai - POLLINATIONS_API_KEY 연동)**
+> - Hugging Face API의 속도 및 IP rate limit 우회를 위해, 안정적인 무료 이미지 생성 플랫폼인 **Pollinations.ai** API를 연동하여 고품질 일러스트(Text-to-Image)를 실시간 생성합니다.
+> - 발급받은 `POLLINATIONS_API_KEY`를 `Authorization: Bearer [KEY]` 헤더에 실어 요청을 전송해 402/429 제한을 안전하게 우회합니다.
 > - 생성된 고화질 이미지를 로컬에 다운로드하여 HTML 카드 레이아웃에 결합합니다.
 >
 > **3. 인스타그램 게시글 본문(멘트) 슬랙 전송**
-> - 슬랙 메시지로 카드 뉴스 이미지 3장과 함께, 인스타그램 게시글로 복사해서 붙여넣기만 하면 되는 **줄글 멘트(핵심 요약 + 유용한 팁 + 이모지 + 태그 + 해시태그 포함)**를 함께 동봉해 전송합니다.
+> - 슬랙 메시지로 카드 뉴스 이미지 3장 + 복사하여 붙여넣기 간편한 **인스타그램용 본문 멘트(이모지, 핵심 질문, 해시태그 포함)**를 동봉해 전송합니다.
 >
 > **4. 승인 완료된 설정 적용**
 > - **뉴스 출처**: 매일경제 경제 뉴스 RSS(`https://www.mk.co.kr/rss/30100041/`)를 단독/주요 출처로 선정.
@@ -55,7 +55,7 @@ RSS 피드 URL, 슬랙 채널 설정 및 환경변수 로딩 관리.
 
 #### [NEW] [selector.js](file:///Users/joelonsw/Desktop/오늘경제/src/selector.js)
 - `history.json`에 기록된 최근 7일 동안 다룬 뉴스 주제 리스트를 조회합니다.
-- 오늘 수집된 뉴스 기사 목록과 히스토리를 Groq의 **Llama 3.3 70B**에 전달합니다.
+- 오늘 수집된 뉴스 기사 목록과 히스토리를 Groq의 **openai/gpt-oss-120b**에 전달합니다.
 - 최근 주제와 겹치지 않고, 인스타그램 유저들이 관심을 가질 만한 **가장 파급력 높은 뉴스 1개**를 정밀 선정합니다. (구조화된 JSON 응답 생성)
 
 #### [NEW] [generator.js](file:///Users/joelonsw/Desktop/오늘경제/src/generator.js)
@@ -75,7 +75,7 @@ RSS 피드 URL, 슬랙 채널 설정 및 환경변수 로딩 관리.
 - 동반 메시지로 복사해서 인스타에 붙여넣기 편리하도록 **인스타그램용 본문 멘트**를 동봉하여 전송합니다.
 
 #### [NEW] [index.js](file:///Users/joelonsw/Desktop/오늘경제/src/index.js)
-전체 파이프라인(크롤링 ➡️ Llama 뉴스 선정 ➡️ 원고/프롬프트 생성 ➡️ FLUX 이미지 생성 ➡️ Playwright 이미지 렌더링 ➡️ 슬랙 업로드 ➡️ 히스토리 갱신 및 Git Push)을 총괄합니다.
+전체 파이프라인(크롤링 ➡️ LLM 뉴스 선정 ➡️ 원고/프롬프트 생성 ➡️ 이미지 생성 ➡️ Playwright 이미지 렌더링 ➡️ 슬랙 업로드 ➡️ 히스토리 갱신 및 Git Push)을 총괄합니다.
 
 ---
 
@@ -97,4 +97,4 @@ RSS 피드 URL, 슬랙 채널 설정 및 환경변수 로딩 관리.
 
 ### Manual Verification
 - 슬랙에 도달한 카드 이미지 3장과 본문을 모바일 기기로 다운로드하여 인스타그램 릴스/슬라이드 포스트로 직접 올려보며 모바일 화면 비율과 화질을 수동 검증합니다.
-- 어려운 주식/시황 개념이 Llama 3.3 70B를 통해 비전문가 독자들도 이해하기 쉽도록 설명되었는지 검정합니다.
+- 어려운 주식/시황 개념이 openai/gpt-oss-120b를 통해 비전문가 독자들도 이해하기 쉽도록 설명되었는지 검정합니다.

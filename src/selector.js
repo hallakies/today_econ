@@ -128,18 +128,19 @@ ${todayNewsText}
     
     try {
       const response = await callGroqWithRetry({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         messages: [
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
         response_format: { type: 'json_object' },
         temperature: 0.1,
-        max_tokens: 300,
+        max_tokens: 1000,
       });
       resultText = response.choices[0].message.content.trim();
     } catch (apiError) {
-      console.warn('[Selector] 70B failed. Falling back to Llama 3.1 8B...');
+      console.warn('[Selector] 70B/120B failed or rate-limited. Error:', apiError);
+      console.warn('[Selector] Falling back to Llama 3.1 8B...');
       const response = await callGroqWithRetry({
         model: 'llama-3.1-8b-instant',
         messages: [

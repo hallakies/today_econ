@@ -70,15 +70,34 @@ function sanitizeText(text) {
     clean = clean.replace(new RegExp(shortcode, 'g'), emoji);
   }
 
-  // Clean up any multilingual / translation leaks (like Chinese suffix 們, 智慧, Russian/Chinese "This means" glitch)
-  clean = clean.replace(/們/g, '들');
-  clean = clean.replace(/들들/g, '들'); // Just in case "들們" was generated
-  clean = clean.replace(/智慧/g, '지혜');
-  clean = clean.replace(/圍/g, '위');
-  clean = clean.replace(/Это意味着/g, '이는');
-  clean = clean.replace(/这意味着/g, '이는');
-  clean = clean.replace(/意味着/g, '의미합니다');
-  
+  // Clean up any multilingual / translation leaks (like Chinese/Russian leaks)
+  const translationMap = {
+    '們': '들',
+    '들들': '들',
+    '智慧': '지혜',
+    '圍': '위',
+    'Это意味着': '이는',
+    '这意味着': '이는',
+    '意味着': '의미합니다',
+    '机构': '기관',
+    '金融': '금융',
+    '政策': '정책',
+    '韩国': '한국',
+    '银行': '은행',
+    '保险': '보험',
+    '企业': '기업',
+    '政府': '정부',
+    '率': '율',
+    '金融机构': '금융기관'
+  };
+
+  for (const [chinese, korean] of Object.entries(translationMap)) {
+    clean = clean.replace(new RegExp(chinese, 'g'), korean);
+  }
+
+  // Strip any remaining Chinese characters (Kanji/Hanja range) as absolute safety net
+  clean = clean.replace(/[\u4e00-\u9fa5]/g, '');
+
   return clean;
 }
 
@@ -242,10 +261,11 @@ async function generateCardContent(selectedNews) {
     - 가벼워 보이는 말풍선이나 이모티콘 독백 대신, 뉴스 레터 스타일의 **격식 있고 신뢰감 주는 한 줄 요약 평(인사이트)**을 20자 내외의 정중한 어조로 작성하세요. (이모지 남발 금지, 최대 1개)
    - **중요**: 해당 카드의 제목이나 불릿 포인트에 사용된 텍스트를 그대로 반복하지 마십시오. 예를 들어, 불릿이 "2500억 펀드 조성"이면 인사이트는 "중소기업의 설비 자금난이 해소될 전망입니다"와 같이 **원인 분석, 영향력, 혹은 거시적 경제 전망**으로 완전히 다르게 서술해야 합니다. 단어를 그대로 재활용하여 대충 만든 인상을 주는 행위를 엄격히 금지합니다.
 5. **비주얼 컨셉 및 FLUX 이미지 프롬프트 (로컬라이즈 및 일관성 필수)**:
-   - 각 카드에 어울리는 고해상도 FLUX.1-schnell 이미지 생성 프롬프트를 **영어로** 구체적으로 작성하세요.
+   - 각 카드에 어울리는 고해상도 FLUX.1-schnell 이미지 생성 프롬프트를 **반드시 순수한 영어로만 (NO KOREAN)** 구체적으로 작성하세요.
    - **필수 스타일 제약**: 모든 카드 이미지가 동일한 비주얼 톤앤매너를 유지해야 합니다. 다음 스타일 키워드를 프롬프트에 메인으로 고정 포함하십시오: "Consistent minimalist 3D vector illustration style, cute pastel claymation, isolated on clean solid background, financial theme, no text in image".
-   - **로컬라이제이션(한국화) 필수**: 뉴스 내용에 화폐가 등장할 경우 절대 미국 달러(USD)를 묘사하지 말고 **한국 원화(KRW coins, Korean Won bills)**를 묘사하도록 프롬프트를 작성하세요. 인물이나 배경이 나올 경우 반드시 **한국/동아시아적 맥락(Korean context, East Asian characters)**을 묘사하도록 강제하세요.
-   - **비주얼 통일성**: 실사 사진이나 노트북, 영문 텍스트 화면 같은 스탁 사진 분위기는 철저히 배제하고, 통일된 3D 그래픽/일러스트 스타일만 생성하도록 프롬프트를 작성하십시오.
+   - **글자 생성 절대 금지**: 이미지 내부에 'REVENUE', 'BUSINESS', 'MONEY' 등 어떠한 영어 단어/문자도 렌더링되게 유도하지 마십시오. 글자가 나타날 수 있는 노트북 모니터나 스마트폰 화면, 차트의 레이블 등은 표현하지 마십시오. (no english letters, no characters, no alphabet)
+   - **로컬라이제이션(한국화) 필수**: 뉴스 내용에 화폐가 등장할 경우 절대 미국 달러(USD)나 유로 등을 묘사하지 말고 **한국 원화(KRW coins, Korean Won bills with green color and King Sejong portrait)**를 묘사하도록 프롬프트를 작성하세요. 인물이나 배경이 나올 경우 반드시 **한국/동아시아적 맥락(Korean context, East Asian characters)**을 묘사하도록 강제하세요.
+   - **비주얼 통일성 및 1차원 매칭 회피**: 실사 사진이나 노트북, 스톡 사진 분위기는 철저히 배제하십시오. 뉴스 팩트를 너무 1차원적으로 묘사하여 재미없게(예: 대출 기사에 단순히 은행 건물이나 정장 입은 남성 실사 사진 등) 그리지 마십시오. 뉴스 핵심 개념(예: 금리 인상이면 '풍선이 터지려고 하거나 커지는 모습', 대출 규제면 '가방이나 상자에 잠금 장치가 채워진 모습')을 3D 클레이 장난감 피규어 소품 형태로 비유적으로 창의성 있게 묘사하십시오.
 6. **디자인 테마 및 강조 색상 선정 (template_theme & theme_color)**:
    - 뉴스의 주제와 분위기에 맞는 디자인 테마를 선정하세요:
      - "obsidian": 정통 거시경제, 금리, 기업 실적, 증시 시황 뉴스용. (추천 theme_color: "#00d2ff" 또는 네온 블루)
@@ -311,18 +331,19 @@ async function generateCardContent(selectedNews) {
     
     try {
       const response = await callGroqWithRetry({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         messages: [
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
         response_format: { type: 'json_object' },
         temperature: 0.7,
-        max_tokens: 1500,
+        max_tokens: 3000,
       });
       resultText = response.choices[0].message.content.trim();
     } catch (apiError) {
-      console.warn('[Generator] 70B failed or rate-limited. Falling back to Llama 3.1 8B with low max_tokens...');
+      console.warn('[Generator] 70B/120B failed or rate-limited. Error:', apiError);
+      console.warn('[Generator] Falling back to Llama 3.1 8B with low max_tokens...');
       const response = await callGroqWithRetry({
         model: 'llama-3.1-8b-instant',
         messages: [

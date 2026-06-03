@@ -46,7 +46,7 @@
 
 ### 3.1 LLM 모델 선택 및 비교
 * **후보**: `openai/gpt-oss-120b` vs `llama-3.3-70b-versatile` (Groq 제공)
-* **결정**: **Llama 3.3 70B**가 Groq에서 무료 API로 제공되고, JSON 출력 형식(JSON Mode) 준수율이 매우 뛰어나며 한글 압축 및 팩트 추출 능력이 검증되어 메인 모델로 선정. 성능 저하 및 한계가 뚜렷한 fallback 모델은 최소화함.
+* **결정**: **openai/gpt-oss-120b** 모델을 메인으로 사용합니다. 이 모델은 하루 허용량(TPD)이 더 넉넉하며, 복잡한 지문 요약 및 한국어 경제 용어 처리에 우수합니다. JSON Mode의 안정적인 출력을 위해 `max_tokens` 설정을 selector 단계는 1000, generator 단계는 3000으로 충분히 할당하여 사용합니다.
 
 ### 3.2 Groq API Rate Limit (429 및 413 에러) 대응
 무료 API 키의 특성상 낮은 TPM(Tokens Per Minute)과 RPM(Requests Per Minute) 제한으로 인해 장애가 빈번히 발생했습니다.
@@ -59,8 +59,7 @@
   * **지수 백오프 기반 재시도 루프 (`callGroqWithRetry`)**: 429 에러 감지 시 초기 대기 시간을 8,000ms로 늘리고 배수를 2.0으로 상향(8s ➡️ 16s ➡️ 32s ➡️ 64s)하여 sliding window 해제 시간을 안정적으로 보장.
 
 ### 3.3 비활성화된(Decommissioned) 모델 이슈
-* **문제**: Groq API에서 `mixtral-8x7b-32768` 및 `gemma2-9b-it` 모델이 더 이상 지원되지 않아 fallback 실행 시 크래시 발생.
-* **해결**: 지원 중단된 모델을 전면 제거하고 오직 `llama-3.3-70b-versatile`과 `llama-3.1-8b-instant` 두 가지만을 active 모델로 유지하도록 코드를 클린업.
+* **해결**: 지원 중단된 모델을 전면 제거하고 메인 추론 모델로 `openai/gpt-oss-120b`, 그리고 fallback 모델로 `llama-3.1-8b-instant`를 사용하도록 정비하였습니다.
 
 ### 3.4 Tailwind 글자 크기 버그
 * **문제**: 모바일 뷰포트에서 타이틀과 슬라이드 제목의 글자 크기가 지정되지 않아 tiny 폰트로 렌더링되는 현상.
@@ -79,7 +78,7 @@
 ```mermaid
 graph TD
     A[crawler.js: RSS 피드 크롤링] -->|최대 15개 아이템 및 300자 요약| B[selector.js: 오늘경제 뉴스 선정]
-    B -->|Llama 3.3 70B 분석 및 중복 배제| C[generator.js: 슬라이드 원고 및 이미지 프롬프트 생성]
+    B -->|openai/gpt-oss-120b 분석 및 중복 배제| C[generator.js: 슬라이드 원고 및 이미지 프롬프트 생성]
     C -->|NFC 정규화 및 한국어 조사/어미 정제| D[renderer.js: Playwright & AI 이미지 로드]
     D -->|Hugging Face FLUX 혹은 curated 3D fallback| E[templates.js: HTML/CSS 테마 매핑 및 렌더링]
     E -->|1080x1920 PNG 3장 저장| F[slack.js: 슬랙봇 메시지 전송]

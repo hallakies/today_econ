@@ -13,28 +13,28 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#050811]/30 via-[#050811]/70 to-[#050811] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#050811]/15 via-[#050811]/60 to-[#050811] z-10"></div>
         <div class="ambient-glow glow-primary w-[700px] h-[700px] bottom-[-200px] right-[-200px] z-10"></div>
         
         <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-primary text-5xl">trending_up</span>
-          <div class="font-display font-extrabold text-primary text-4xl tracking-tight">today.econ 📈</div>
-          <span class="material-symbols-outlined text-primary text-5xl">more_horiz</span>
+          <span class="material-symbols-outlined text-primary text-6xl">trending_up</span>
+          <div class="font-display font-black text-primary text-5xl tracking-tight">today.econ 📈</div>
+          <span class="material-symbols-outlined text-primary text-6xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
-          <div class="glass-card rounded-3xl p-10 space-y-6 text-center shadow-[0_25px_60px_rgba(0,0,0,0.65)]">
-            <span class="inline-block px-6 py-2 rounded-full bg-primary/20 border border-primary/40 text-primary font-label-caps text-xl tracking-widest backdrop-blur-md">TODAY</span>
-            <h1 class="font-display text-5xl font-extrabold text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
-            <p class="font-body text-2.5xl text-slate-300 mt-4 px-6 break-keep leading-relaxed font-semibold">${content.subtitle}</p>
+        <main class="flex-1 flex flex-col z-20 justify-center pb-[320px] mt-24">
+          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 text-center shadow-[0_30px_70px_rgba(0,0,0,0.7)] border border-white/10">
+            <span class="inline-block px-8 py-2.5 rounded-full bg-primary/20 border border-primary/40 text-primary font-label-caps text-2xl tracking-widest backdrop-blur-md">TODAY</span>
+            <h1 class="font-display text-6xl font-black text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
+            <p class="font-body text-3xl text-slate-300 mt-6 px-6 break-keep leading-relaxed font-bold">${content.subtitle}</p>
             ${content.editors_insight ? `
-              <div class="mt-6 pt-6 border-t border-white/10 flex items-center justify-center gap-4 text-primary font-bold text-2.5xl bg-primary/5 rounded-2xl py-4 px-5">
-                <span class="text-3xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              <div class="mt-8 pt-8 border-t border-white/10 flex items-center justify-center gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
+                <span class="text-4xl">💡</span>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
               </div>
             ` : ''}
           </div>
-          <div class="footer-area text-slate-500 font-bold text-center text-2xl mt-12">📍 @today.econ</div>
+          <div class="footer-area text-slate-500 font-black text-center text-2.5xl mt-12">📍 @today.econ</div>
         </main>
       </div>
     `;
@@ -47,36 +47,36 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
 
     const bulletsHtml = content.bullets
       .map(bullet => `
-        <li class="flex items-center gap-6 py-4">
-          <div class="w-10 h-10 rounded-full bg-slate-900/80 flex items-center justify-center border ${isFact ? 'border-primary/40' : 'border-[#10b981]/40'} shrink-0 shadow-[0_0_12px_${isFact ? themeColor : '#10b981'}30]">
+        <li class="flex items-center gap-6 py-5">
+          <div class="w-12 h-12 rounded-full bg-slate-900/80 flex items-center justify-center border ${isFact ? 'border-primary/40' : 'border-[#10b981]/40'} shrink-0 shadow-[0_0_15px_${isFact ? themeColor : '#10b981'}40]">
             ${isFact ? `
-              <span class="w-3.5 h-3.5 rounded-full bg-primary"></span>
+              <span class="w-4 h-4 rounded-full bg-primary"></span>
             ` : `
-              <svg class="w-5 h-5 text-[#10b981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+              <svg class="w-6 h-6 text-[#10b981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             `}
           </div>
-          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-normal break-keep">${bullet}</p>
+          <p class="font-body text-4xl text-slate-100 font-extrabold leading-normal break-keep">${bullet}</p>
         </li>
       `).join('<div class="w-full h-px bg-white/5 my-1"></div>');
 
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#050811]/30 via-[#050811]/70 to-[#050811] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#050811]/15 via-[#050811]/60 to-[#050811] z-10"></div>
         <div class="ambient-glow glow-primary w-[700px] h-[700px] bottom-[-200px] right-[-200px] z-10"></div>
         
         <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-primary text-5xl">trending_up</span>
-          <div class="font-display font-extrabold text-primary text-4xl tracking-tight">today.econ 📈</div>
-          <span class="material-symbols-outlined text-primary text-5xl">more_horiz</span>
+          <span class="material-symbols-outlined text-primary text-6xl">trending_up</span>
+          <div class="font-display font-black text-primary text-5xl tracking-tight">today.econ 📈</div>
+          <span class="material-symbols-outlined text-primary text-6xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
-          <div class="glass-card rounded-3xl p-10 space-y-6 shadow-[0_25px_60px_rgba(0,0,0,0.65)]">
+        <main class="flex-1 flex flex-col z-20 justify-center pb-[320px] mt-24">
+          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_30px_70px_rgba(0,0,0,0.7)] border border-white/10">
             <div class="mb-4">
-              <span class="inline-block px-6 py-2 rounded-full font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
+              <span class="inline-block px-8 py-2.5 rounded-full font-label-caps text-2xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
             </div>
             
             <ul class="space-y-4">
@@ -84,20 +84,20 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
             </ul>
 
             ${content.editors_insight ? `
-              <div class="mt-6 pt-6 border-t border-white/10 flex items-start gap-4 text-primary font-bold text-2.5xl bg-primary/5 rounded-2xl py-4 px-5">
-                <span class="text-3xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
+                <span class="text-4xl">💡</span>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
               </div>
             ` : ''}
           </div>
           
           <div class="w-full flex flex-col items-center space-y-6 mt-8">
             ${!isFact ? `
-              <div class="cta-banner w-full text-center text-slate-300 font-bold text-2xl py-4" style="border-top: 1.5px dashed rgba(255,255,255,0.15)">
+              <div class="cta-banner w-full text-center text-slate-300 font-bold text-2.5xl py-4" style="border-top: 1.5px dashed rgba(255,255,255,0.15)">
                 📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}">[팔로우]</span> 해주세요!
               </div>
             ` : ''}
-            <div class="footer-area text-slate-500 font-bold text-center text-2xl">📍 @today.econ</div>
+            <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
           </div>
         </main>
       </div>
@@ -176,27 +176,27 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/30 via-[#FDFBF7]/70 to-[#FDFBF7] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/15 via-[#FDFBF7]/60 to-[#FDFBF7] z-10"></div>
         
         <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-slate-800 text-5xl">trending_up</span>
-          <div class="font-display font-extrabold text-slate-800 text-4xl tracking-tight">today.econ 📈</div>
-          <span class="material-symbols-outlined text-slate-800 text-5xl">more_horiz</span>
+          <span class="material-symbols-outlined text-slate-800 text-6xl">trending_up</span>
+          <div class="font-display font-black text-slate-800 text-5xl tracking-tight">today.econ 📈</div>
+          <span class="material-symbols-outlined text-slate-800 text-6xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
-          <div class="glass-card rounded-3xl p-10 space-y-6 text-center shadow-[0_20px_45px_rgba(0,0,0,0.06)]">
-            <span class="inline-block px-6 py-2 rounded bg-slate-800 text-white font-label-caps text-xl tracking-widest">TODAY</span>
-            <h1 class="font-display text-5xl font-extrabold text-slate-800 leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
-            <p class="font-body text-2.5xl text-slate-600 mt-4 px-6 break-keep leading-relaxed font-bold">${content.subtitle}</p>
+        <main class="flex-1 flex flex-col z-20 justify-center pb-[320px] mt-24">
+          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 text-center shadow-[0_25px_55px_rgba(0,0,0,0.08)] border border-white/95">
+            <span class="inline-block px-8 py-2.5 rounded bg-slate-800 text-white font-label-caps text-2xl tracking-widest">TODAY</span>
+            <h1 class="font-display text-6xl font-black text-slate-800 leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
+            <p class="font-body text-3xl text-slate-600 mt-6 px-6 break-keep leading-relaxed font-bold">${content.subtitle}</p>
             ${content.editors_insight ? `
-              <div class="mt-6 pt-6 border-t border-slate-200/80 flex items-center justify-center gap-4 text-secondary font-bold text-2.5xl bg-secondary/5 rounded-2xl py-4 px-5">
-                <span class="text-3xl">💡</span>
-                <p class="text-left text-slate-700 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              <div class="mt-8 pt-8 border-t border-slate-200/80 flex items-center justify-center gap-4 text-secondary bg-secondary/5 rounded-2xl py-5 px-6">
+                <span class="text-4xl">💡</span>
+                <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
               </div>
             ` : ''}
           </div>
-          <div class="footer-area text-slate-500 font-bold text-center text-2xl mt-12">📍 @today.econ</div>
+          <div class="footer-area text-slate-500 font-black text-center text-2.5xl mt-12">📍 @today.econ</div>
         </main>
       </div>
     `;
@@ -211,35 +211,35 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
 
     const bulletsHtml = content.bullets
       .map(bullet => `
-        <li class="flex items-center gap-6 py-4">
-          <div class="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center border ${isFact ? 'border-[#705d00]/30' : 'border-[#c2410c]/30'} shrink-0 shadow-[0_0_12px_${isFact ? 'rgba(112,93,0,0.15)' : 'rgba(194,65,12,0.15)'}]">
+        <li class="flex items-center gap-6 py-5">
+          <div class="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center border ${isFact ? 'border-[#705d00]/30' : 'border-[#c2410c]/30'} shrink-0 shadow-[0_0_15px_${isFact ? 'rgba(112,93,0,0.15)' : 'rgba(194,65,12,0.15)'}]">
             ${isFact ? `
-              <span class="w-3.5 h-3.5 rounded-full" style="background-color: ${badgeColor}"></span>
+              <span class="w-4 h-4 rounded-full" style="background-color: ${badgeColor}"></span>
             ` : `
-              <svg class="w-5 h-5" style="color: ${badgeColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+              <svg class="w-6 h-6" style="color: ${badgeColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             `}
           </div>
-          <p class="font-body text-3.5xl text-slate-800 font-extrabold leading-normal break-keep">${bullet}</p>
+          <p class="font-body text-4xl text-slate-800 font-extrabold leading-normal break-keep">${bullet}</p>
         </li>
       `).join('<div class="w-full h-px bg-slate-200/60 my-1"></div>');
 
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/30 via-[#FDFBF7]/70 to-[#FDFBF7] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/15 via-[#FDFBF7]/60 to-[#FDFBF7] z-10"></div>
         
         <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-slate-800 text-5xl">trending_up</span>
-          <div class="font-display font-extrabold text-slate-800 text-4xl tracking-tight">today.econ 📈</div>
-          <span class="material-symbols-outlined text-slate-800 text-5xl">more_horiz</span>
+          <span class="material-symbols-outlined text-slate-800 text-6xl">trending_up</span>
+          <div class="font-display font-black text-slate-800 text-5xl tracking-tight">today.econ 📈</div>
+          <span class="material-symbols-outlined text-slate-800 text-6xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
-          <div class="glass-card rounded-3xl p-10 space-y-6 shadow-[0_20px_45px_rgba(0,0,0,0.06)]">
+        <main class="flex-1 flex flex-col z-20 justify-center pb-[320px] mt-24">
+          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_45px_rgba(0,0,0,0.06)]">
             <div class="mb-4">
-              <span class="inline-block px-6 py-2 rounded font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
+              <span class="inline-block px-8 py-2.5 rounded font-label-caps text-2xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
             </div>
             
             <ul class="space-y-4">
@@ -247,20 +247,20 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
             </ul>
 
             ${content.editors_insight ? `
-              <div class="mt-6 pt-6 border-t border-slate-200/80 flex items-start gap-4 text-secondary font-bold text-2.5xl bg-secondary/5 rounded-2xl py-4 px-5">
-                <span class="text-3xl">💡</span>
-                <p class="text-left text-slate-700 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              <div class="mt-8 pt-8 border-t border-slate-200/80 flex items-start gap-4 text-secondary bg-secondary/5 rounded-2xl py-5 px-6">
+                <span class="text-4xl">💡</span>
+                <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
               </div>
             ` : ''}
           </div>
           
           <div class="w-full flex flex-col items-center space-y-6 mt-8">
             ${!isFact ? `
-              <div class="cta-banner w-full text-center text-slate-600 font-bold text-2xl py-4" style="border-top: 1.5px dashed rgba(0,0,0,0.15)">
+              <div class="cta-banner w-full text-center text-slate-600 font-bold text-2.5xl py-4" style="border-top: 1.5px dashed rgba(0,0,0,0.15)">
                 📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}">[팔로우]</span> 해주세요!
               </div>
             ` : ''}
-            <div class="footer-area text-slate-500 font-bold text-center text-2xl">📍 @today.econ</div>
+            <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
           </div>
         </main>
       </div>
@@ -329,24 +329,24 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
         <div class="absolute inset-0 bg-gradient-to-b from-[#140727]/30 via-[#140727]/70 to-[#140727] z-10"></div>
         
         <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-neon-green text-5xl">insights</span>
-          <div class="font-display font-extrabold text-neon-green text-4xl tracking-tighter">today.econ 📈</div>
-          <span class="material-symbols-outlined text-slate-300 text-5xl">more_vert</span>
+          <span class="material-symbols-outlined text-neon-green text-6xl">insights</span>
+          <div class="font-display font-black text-neon-green text-5xl tracking-tighter">today.econ 📈</div>
+          <span class="material-symbols-outlined text-slate-300 text-6xl">more_vert</span>
         </header>
 
-        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
-          <div class="glass-card rounded-3xl p-10 space-y-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <span class="inline-block px-6 py-2 rounded border border-secondary text-secondary font-label-caps text-xl tracking-widest uppercase shadow-[0_0_12px_rgba(255,75,137,0.5)]">#MARKET_UPDATE</span>
-            <h1 class="font-display text-5xl font-extrabold text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
+        <main class="flex-1 flex flex-col z-20 justify-center pb-[320px] mt-24">
+          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 text-center shadow-[0_25px_55px_rgba(0,0,0,0.5)]">
+            <span class="inline-block px-8 py-2.5 rounded border border-secondary text-secondary font-label-caps text-2xl tracking-widest uppercase shadow-[0_0_12px_rgba(255,75,137,0.5)]">#MARKET_UPDATE</span>
+            <h1 class="font-display text-6xl font-black text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
             <div class="w-32 h-1.5 bg-primary mx-auto mt-6 shadow-[0_0_15px_rgba(235,178,255,0.9)]"></div>
             ${content.editors_insight ? `
-              <div class="mt-6 pt-6 border-t border-white/10 flex items-center justify-center gap-4 text-primary font-bold text-2.5xl bg-primary/5 rounded-2xl py-4 px-5">
-                <span class="text-3xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              <div class="mt-8 pt-8 border-t border-white/10 flex items-center justify-center gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
+                <span class="text-4xl">💡</span>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
               </div>
             ` : ''}
           </div>
-          <div class="footer-area text-slate-500 font-bold text-center text-2xl mt-8">📍 @today.econ</div>
+          <div class="footer-area text-slate-500 font-black text-center text-2.5xl mt-12">📍 @today.econ</div>
         </main>
       </div>
     `;
@@ -361,11 +361,11 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
 
     const bulletsHtml = content.bullets
       .map(bullet => `
-        <li class="flex items-center gap-6 py-3">
-          <div class="w-10 h-10 rounded-full bg-slate-900/60 flex items-center justify-center border ${dotBorder} shrink-0 shadow-[0_0_12px_${bulletGlow}]">
-            <span class="w-3.5 h-3.5 rounded-full ${dotPulseColor} animate-pulse"></span>
+        <li class="flex items-center gap-6 py-5">
+          <div class="w-12 h-12 rounded-full bg-slate-900/60 flex items-center justify-center border ${dotBorder} shrink-0 shadow-[0_0_15px_${bulletGlow}]">
+            <span class="w-4 h-4 rounded-full ${dotPulseColor} animate-pulse"></span>
           </div>
-          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-normal break-keep">${bullet}</p>
+          <p class="font-body text-4xl text-slate-100 font-extrabold leading-normal break-keep">${bullet}</p>
         </li>
       `).join('<div class="w-full h-px bg-white/10 my-2"></div>');
 
@@ -375,15 +375,15 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
         <div class="absolute inset-0 bg-gradient-to-b from-[#140727]/30 via-[#140727]/70 to-[#140727] z-10"></div>
         
         <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-neon-green text-5xl">insights</span>
-          <div class="font-display font-extrabold text-neon-green text-4xl tracking-tighter">today.econ 📈</div>
-          <span class="material-symbols-outlined text-slate-300 text-5xl">more_vert</span>
+          <span class="material-symbols-outlined text-neon-green text-6xl">insights</span>
+          <div class="font-display font-black text-neon-green text-5xl tracking-tighter">today.econ 📈</div>
+          <span class="material-symbols-outlined text-slate-300 text-6xl">more_vert</span>
         </header>
 
-        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
-          <div class="glass-card rounded-3xl p-10 space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
+        <main class="flex-1 flex flex-col z-20 justify-center pb-[320px] mt-24">
+          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
             <div class="mb-4">
-              <span class="inline-block px-6 py-2 rounded border text-slate-200 font-label-caps text-xl tracking-widest uppercase" style="border-color: ${badgeBorderColor}; background: ${badgeBorderColor}15; box-shadow: 0 0 10px ${badgeGlowColor};">${badgeText}</span>
+              <span class="inline-block px-8 py-2.5 rounded border text-slate-200 font-label-caps text-2xl tracking-widest uppercase" style="border-color: ${badgeBorderColor}; background: ${badgeBorderColor}15; box-shadow: 0 0 10px ${badgeGlowColor};">${badgeText}</span>
             </div>
             
             <ul class="space-y-4">
@@ -391,15 +391,15 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
             </ul>
 
             ${content.editors_insight ? `
-              <div class="mt-6 pt-6 border-t border-white/10 flex items-start gap-4 text-primary font-bold text-2.5xl bg-primary/5 rounded-2xl py-4 px-5">
-                <span class="text-3xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
+                <span class="text-4xl">💡</span>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
               </div>
             ` : ''}
           </div>
           
           <div class="w-full flex flex-col items-center space-y-6 mt-8">
-            <div class="footer-area text-slate-500 font-bold text-center text-2xl">📍 @today.econ</div>
+            <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
           </div>
         </main>
       </div>
