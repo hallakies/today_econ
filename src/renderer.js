@@ -7,7 +7,7 @@ const { buildThemeHtml } = require('./templates');
  * @param {string} prompt The visual description of the image to generate.
  * @returns {Promise<Buffer>} The image binary data.
  */
-async function generateImage(prompt) {
+async function generateImage(prompt, fallbackIndex = 0) {
   const cleanPrompt = prompt.trim();
   console.log(`[Renderer] Generating image for prompt: "${cleanPrompt.substring(0, 60)}..."`);
   
@@ -42,23 +42,46 @@ async function generateImage(prompt) {
     console.log('[Renderer] No HF_TOKEN config found. Using Pollinations.ai directly.');
   }
 
-  // Fallback to Pollinations.ai (uses Flux/Stable Diffusion, free & keyless)
+  // Try Pollinations.ai fallback (uses Flux/Stable Diffusion, free & keyless)
   try {
     console.log('[Renderer] Attempting Pollinations.ai fallback...');
     const encodedPrompt = encodeURIComponent(cleanPrompt);
     const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=800&nologo=true&seed=${Math.floor(Math.random() * 100000)}`;
     
     const response = await fetch(pollinationsUrl);
-    if (!response.ok) {
+    if (response.ok) {
+      const arrayBuffer = await response.arrayBuffer();
+      console.log('[Renderer] Successfully generated image via Pollinations.ai fallback.');
+      return Buffer.from(arrayBuffer);
+    } else {
       throw new Error(`Pollinations API returned status ${response.status}`);
     }
-    const arrayBuffer = await response.arrayBuffer();
-    console.log('[Renderer] Successfully generated image via Pollinations.ai fallback.');
-    return Buffer.from(arrayBuffer);
   } catch (error) {
-    console.error('[Renderer] All image generation APIs failed.', error);
-    // Return a dummy transparent PNG buffer as an absolute fallback
-    return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+    console.warn('[Renderer] Pollinations API fallback failed. Loading curated Unsplash stock image...');
+    
+    // Curated high-quality, professional financial stock photos from Unsplash (no-key, reliable CDN)
+    const fallbacks = [
+      'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=800&fit=crop&q=60', // Card 1: Charts/Stock market
+      'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&h=800&fit=crop&q=60', // Card 2: Coins/Money
+      'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&h=800&fit=crop&q=60'  // Card 3: Wallet/Savings/Piggybank
+    ];
+    
+    try {
+      const fallbackUrl = fallbacks[fallbackIndex % fallbacks.length];
+      console.log(`[Renderer] Downloading Unsplash fallback: ${fallbackUrl}`);
+      const response = await fetch(fallbackUrl);
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer();
+        console.log('[Renderer] Successfully loaded curated Unsplash fallback image.');
+        return Buffer.from(arrayBuffer);
+      } else {
+        throw new Error(`Unsplash fallback responded with status ${response.status}`);
+      }
+    } catch (unsplashError) {
+      console.error('[Renderer] Unsplash fallback failed as well.', unsplashError);
+      // Return a dummy transparent PNG buffer as an absolute last resort
+      return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+    }
   }
 }
 
@@ -76,9 +99,9 @@ async function renderCardImages(generatedJson) {
 
   // 1. Generate AI Illustrations for each card
   console.log('[Renderer] Starting image generation for 3 cards...');
-  const card1Buffer = await generateImage(generatedJson.card1.image_prompt);
-  const card2Buffer = await generateImage(generatedJson.card2.image_prompt);
-  const card3Buffer = await generateImage(generatedJson.card3.image_prompt);
+  const card1Buffer = await generateImage(generatedJson.card1.image_prompt, 0);
+  const card2Buffer = await generateImage(generatedJson.card2.image_prompt, 1);
+  const card3Buffer = await generateImage(generatedJson.card3.image_prompt, 2);
 
   // Convert buffers to base64 strings
   const card1Base64 = card1Buffer.toString('base64');

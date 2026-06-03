@@ -105,7 +105,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
       <title>today.econ Obsidian Card</title>
       <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-      <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700;800&family=JetBrains+Mono:wght@500&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet"/>
+      <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css" />
       <script>
         tailwind.config = {
           darkMode: "class",
@@ -117,8 +117,8 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
                 background: "#0A0E1A"
               },
               fontFamily: {
-                display: ["Be Vietnam Pro", "sans-serif"],
-                body: ["Noto Sans", "sans-serif"]
+                display: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+                body: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"]
               }
             }
           }
@@ -334,7 +334,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
       <title>today.econ Ivory Card</title>
       <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-      <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+      <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css" />
       <script>
         tailwind.config = {
           theme: {
@@ -344,8 +344,8 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
                 secondary: "#705d00"
               },
               fontFamily: {
-                display: ["Be Vietnam Pro", "sans-serif"],
-                body: ["Be Vietnam Pro", "sans-serif"]
+                display: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+                body: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"]
               }
             }
           }
@@ -551,7 +551,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
       <title>today.econ Cyber Card</title>
       <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-      <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+      <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css" />
       <script>
         tailwind.config = {
           theme: {
@@ -563,8 +563,8 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
                 background: "#190c2c"
               },
               fontFamily: {
-                display: ["Be Vietnam Pro", "sans-serif"],
-                body: ["Be Vietnam Pro", "sans-serif"]
+                display: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+                body: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"]
               }
             }
           }
