@@ -21,9 +21,21 @@
 
 ---
 
-## 🧪 로컬 시각적 렌더링 테스트 결과
+## 🧪 실시간 카드 뉴스 및 일러스트 연동 결과
 
-모의 데이터로 로컬 테스트 스크립트(`test-render.js`)를 실행하여 이미지 렌더링 및 텍스트 배치가 정상 동작함을 완벽히 확인했습니다.
+최종 디테일 보정 후 실시간 경제 뉴스("중동전쟁 삼중고")를 크롤링하여 **Hugging Face FLUX.1** 이미지 모델과 함께 정상 구동한 실제 인스타그램 업로드용 카드 뉴스(Ivory 테마)입니다. 개선된 레이아웃(여백 제거, 폰트 확대)과 AI 삽화가 정상 결합되었습니다.
+
+```carousel
+![Live Slide 1: Title](/Users/joelonsw/.gemini/antigravity/brain/256322d0-59bf-45f4-8b7d-fa71427658fa/live_1.png)
+<!-- slide -->
+![Live Slide 2: Fact](/Users/joelonsw/.gemini/antigravity/brain/256322d0-59bf-45f4-8b7d-fa71427658fa/live_2.png)
+<!-- slide -->
+![Live Slide 3: Action](/Users/joelonsw/.gemini/antigravity/brain/256322d0-59bf-45f4-8b7d-fa71427658fa/live_3.png)
+```
+
+## 🧪 로컬 시각적 렌더링 테스트 결과 (디자인 테마별 시연)
+
+모의 데이터로 로컬 테스트 스크립트(`test-render.js`)를 실행하여 3대 테마(Obsidian, Ivory, Cyber)의 이미지 렌더링 및 텍스트 배치가 정상 동작함을 완벽히 확인했습니다.
 
 ### 1️⃣ Luminous Obsidian 테마 (거시경제/증시 시황)
 ```carousel

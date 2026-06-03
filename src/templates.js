@@ -66,25 +66,23 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
           <span class="material-symbols-outlined text-primary text-5xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col px-12 pt-8 pb-16 z-10 relative justify-between">
-          <div class="space-y-6 mt-4">
-            <div class="px-2">
-              <span class="inline-block px-6 py-2 rounded-full font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
-            </div>
-            
-            <div class="glass-card rounded-3xl p-10 space-y-6">
-              <ul class="space-y-6">
-                ${bulletsHtml}
-              </ul>
-            </div>
+        <main class="flex-1 flex flex-col px-12 pt-8 pb-16 z-10 relative justify-start items-stretch">
+          <div class="px-2 mb-6 mt-4">
+            <span class="inline-block px-6 py-2 rounded-full font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
           </div>
           
-          <div class="flex flex-col items-center space-y-8 mt-auto">
-            <div class="image-wrapper-small mx-auto shadow-[0_25px_55px_rgba(0,0,0,0.7)]">
-              ${content.speech_bubble ? `<div class="speech-bubble-small">${content.speech_bubble}</div>` : ''}
-              <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
-            </div>
-            
+          <div class="glass-card rounded-3xl p-10 space-y-6 mb-10">
+            <ul class="space-y-6">
+              ${bulletsHtml}
+            </ul>
+          </div>
+          
+          <div class="image-wrapper-small mx-auto mb-10 shadow-[0_25px_55px_rgba(0,0,0,0.7)] relative">
+            ${content.speech_bubble ? `<div class="speech-bubble-small">${content.speech_bubble}</div>` : ''}
+            <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
+          </div>
+          
+          <div class="mt-auto w-full flex flex-col items-center space-y-6">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-300 font-bold text-2xl py-4" style="border-top: 1.5px dashed rgba(255,255,255,0.15)">
                 📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}">[팔로우]</span> 해주세요!
@@ -163,7 +161,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
           border-radius: 40px;
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-          background: rgba(255, 255, 255, 0.02);
+          background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
           overflow: visible;
         }
         .image-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 40px; }
@@ -175,7 +173,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
           border-radius: 32px;
           border: 1px solid rgba(255, 255, 255, 0.08);
           box-shadow: 0 20px 45px rgba(0,0,0,0.5);
-          background: rgba(255, 255, 255, 0.02);
+          background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
           overflow: visible;
         }
         .image-wrapper-small img { width: 100%; height: 100%; object-fit: cover; border-radius: 32px; }
@@ -285,7 +283,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
       .map(bullet => `
         <li class="flex items-start py-2">
           <span class="material-symbols-outlined mr-6 mt-1.5 text-4xl shrink-0 font-bold" style="color: ${badgeColor}">${bulletIcon}</span>
-          <p class="font-body text-3xl text-slate-750 leading-relaxed break-keep font-semibold">${bullet}</p>
+          <p class="font-body text-3xl text-slate-755 leading-relaxed break-keep font-semibold">${bullet}</p>
         </li>
       `).join('<div class="w-full h-px bg-slate-200/80 my-3"></div>');
 
@@ -297,25 +295,23 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           <span class="material-symbols-outlined text-slate-800 text-5xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col px-12 pt-8 pb-16 z-10 relative justify-between">
-          <div class="space-y-6 mt-4">
-            <div class="px-2">
-              <span class="inline-block px-6 py-2 rounded font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
-            </div>
-            
-            <div class="glass-card rounded-3xl p-10 space-y-6">
-              <ul class="space-y-6">
-                ${bulletsHtml}
-              </ul>
-            </div>
+        <main class="flex-1 flex flex-col px-12 pt-8 pb-16 z-10 relative justify-start items-stretch">
+          <div class="px-2 mb-6 mt-4">
+            <span class="inline-block px-6 py-2 rounded font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
           </div>
           
-          <div class="flex flex-col items-center space-y-8 mt-auto">
-            <div class="image-wrapper-small mx-auto shadow-[0_25px_55px_rgba(0,0,0,0.1)]">
-              ${content.speech_bubble ? `<div class="speech-bubble-small">${content.speech_bubble}</div>` : ''}
-              <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
-            </div>
-            
+          <div class="glass-card rounded-3xl p-10 space-y-6 mb-10">
+            <ul class="space-y-6">
+              ${bulletsHtml}
+            </ul>
+          </div>
+          
+          <div class="image-wrapper-small mx-auto mb-10 shadow-[0_25px_55px_rgba(0,0,0,0.1)] relative">
+            ${content.speech_bubble ? `<div class="speech-bubble-small">${content.speech_bubble}</div>` : ''}
+            <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
+          </div>
+          
+          <div class="mt-auto w-full flex flex-col items-center space-y-6">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-600 font-bold text-2xl py-4" style="border-top: 1.5px dashed rgba(0,0,0,0.15)">
                 📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}">[팔로우]</span> 해주세요!
@@ -385,7 +381,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           border-radius: 24px;
           border: 1px solid rgba(0, 0, 0, 0.08);
           box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
-          background: rgba(255, 255, 255, 0.6);
+          background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
           overflow: visible;
         }
         .image-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 24px; }
@@ -397,7 +393,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           border-radius: 24px;
           border: 1px solid rgba(0, 0, 0, 0.08);
           box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-          background: rgba(255, 255, 255, 0.6);
+          background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
           overflow: visible;
         }
         .image-wrapper-small img { width: 100%; height: 100%; object-fit: cover; border-radius: 24px; }
@@ -522,25 +518,23 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           <span class="material-symbols-outlined text-slate-300 text-5xl">more_vert</span>
         </header>
 
-        <main class="flex-1 flex flex-col px-12 pt-8 pb-16 z-10 relative justify-between">
-          <div class="space-y-6 mt-4">
-            <div class="px-2">
-              <span class="inline-block px-6 py-2 rounded border text-slate-200 font-label-caps text-xl tracking-widest uppercase" style="border-color: ${badgeBorderColor}; background: ${badgeBorderColor}15; box-shadow: 0 0 10px ${badgeGlowColor};">${badgeText}</span>
-            </div>
-            
-            <div class="glass-card rounded-3xl p-10 space-y-6">
-              <ul class="space-y-6">
-                ${bulletsHtml}
-              </ul>
-            </div>
+        <main class="flex-1 flex flex-col px-12 pt-8 pb-16 z-10 relative justify-start items-stretch">
+          <div class="px-2 mb-6 mt-4">
+            <span class="inline-block px-6 py-2 rounded border text-slate-200 font-label-caps text-xl tracking-widest uppercase" style="border-color: ${badgeBorderColor}; background: ${badgeBorderColor}15; box-shadow: 0 0 10px ${badgeGlowColor};">${badgeText}</span>
           </div>
           
-          <div class="flex flex-col items-center space-y-8 mt-auto">
-            <div class="image-wrapper-small mx-auto shadow-[0_25px_55px_rgba(0,0,0,0.8)]">
-              ${content.speech_bubble ? `<div class="speech-bubble-small">${content.speech_bubble}</div>` : ''}
-              <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
-            </div>
-            
+          <div class="glass-card rounded-3xl p-10 space-y-6 mb-10">
+            <ul class="space-y-6">
+              ${bulletsHtml}
+            </ul>
+          </div>
+          
+          <div class="image-wrapper-small mx-auto mb-10 shadow-[0_25px_55px_rgba(0,0,0,0.8)] relative">
+            ${content.speech_bubble ? `<div class="speech-bubble-small">${content.speech_bubble}</div>` : ''}
+            <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
+          </div>
+          
+          <div class="mt-auto w-full flex flex-col items-center space-y-6">
             <div class="footer-area text-slate-500 font-bold text-center text-2xl">📍 @today.econ</div>
           </div>
         </main>
@@ -609,7 +603,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           border-radius: 24px;
           border: 1px solid rgba(235, 178, 255, 0.2);
           box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-          background: rgba(25, 12, 44, 0.4);
+          background: linear-gradient(135deg, #2e1065 0%, #4c1d95 100%);
           overflow: visible;
         }
         .image-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 24px; mix-blend-mode: screen; }
@@ -621,7 +615,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           border-radius: 24px;
           border: 1px solid rgba(235, 178, 255, 0.2);
           box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-          background: rgba(25, 12, 44, 0.4);
+          background: linear-gradient(135deg, #2e1065 0%, #4c1d95 100%);
           overflow: visible;
         }
         .image-wrapper-small img { width: 100%; height: 100%; object-fit: cover; border-radius: 24px; mix-blend-mode: screen; }
