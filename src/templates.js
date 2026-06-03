@@ -3,6 +3,17 @@
  * Optimized for mobile (Instagram Reels / 9:16 Slides) with full-bleed visual layouts and premium typography.
  */
 
+
+/**
+ * Dynamically highlights numbers, currency units, and English uppercase entities (like ETF, IR, CEO)
+ */
+function highlightText(text, themeColor) {
+  if (!text) return text;
+  // Match: numbers with optional decimals and units (조, 억, 만, 원, 달러, %), or uppercase words (2+ letters)
+  const regex = /(\b\d+(?:\.\d+)?(?:조|억|만)?(?:원|달러|%)?\b|[A-Z]{2,})/g;
+  return text.replace(regex, `<span class="font-black" style="color: ${themeColor}">$1</span>`);
+}
+
 /**
  * Obsidian Theme (Dark Mode Premium Glassmorphism)
  */
@@ -25,16 +36,16 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
         <main class="flex-1 flex flex-col z-20 justify-center pb-[320px] mt-24">
           <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 text-center shadow-[0_30px_70px_rgba(0,0,0,0.7)] border border-white/10">
             <span class="inline-block px-8 py-2.5 rounded-full bg-primary/20 border border-primary/40 text-primary font-label-caps text-2xl tracking-widest backdrop-blur-md">TODAY</span>
-            <h1 class="font-display text-6xl font-black text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
-            <p class="font-body text-3xl text-slate-300 mt-6 px-6 break-keep leading-relaxed font-bold">${content.subtitle}</p>
+            <h1 class="font-display text-6xl font-black text-white leading-tight break-keep px-2">${highlightText(content.title.replace(/\n/g, '<br/>'), themeColor)}</h1>
+            <p class="font-body text-3xl text-slate-300 mt-6 px-6 break-keep leading-relaxed font-bold">${highlightText(content.subtitle, themeColor)}</p>
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-center justify-center gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
           </div>
-          <div class="footer-area text-slate-500 font-black text-center text-2.5xl mt-12">📍 @today.econ</div>
+          <div class="footer-area text-slate-500 font-black text-center text-2.5xl mt-12 drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">📍 @today.econ</div>
         </main>
       </div>
     `;
@@ -57,7 +68,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
               </svg>
             `}
           </div>
-          <p class="font-body text-4xl text-slate-100 font-extrabold leading-normal break-keep">${bullet}</p>
+          <p class="font-body text-4xl text-slate-100 font-extrabold leading-normal break-keep">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('<div class="w-full h-px bg-white/5 my-1"></div>');
 
@@ -86,18 +97,18 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
           </div>
           
           <div class="w-full flex flex-col items-center space-y-6 mt-8">
             ${!isFact ? `
-              <div class="cta-banner w-full text-center text-slate-300 font-bold text-2.5xl py-4" style="border-top: 1.5px dashed rgba(255,255,255,0.15)">
+              <div class="cta-banner w-full text-center text-slate-300 font-bold text-2.5xl py-4 drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]" style="border-top: 1.5px dashed rgba(255,255,255,0.15)">
                 📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}">[팔로우]</span> 해주세요!
               </div>
             ` : ''}
-            <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
+            <div class="footer-area text-slate-500 font-black text-center text-2.5xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">📍 @today.econ</div>
           </div>
         </main>
       </div>
@@ -187,16 +198,16 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
         <main class="flex-1 flex flex-col z-20 justify-center pb-[320px] mt-24">
           <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 text-center shadow-[0_25px_55px_rgba(0,0,0,0.08)] border border-white/95">
             <span class="inline-block px-8 py-2.5 rounded bg-slate-800 text-white font-label-caps text-2xl tracking-widest">TODAY</span>
-            <h1 class="font-display text-6xl font-black text-slate-800 leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
-            <p class="font-body text-3xl text-slate-600 mt-6 px-6 break-keep leading-relaxed font-bold">${content.subtitle}</p>
+            <h1 class="font-display text-6xl font-black text-slate-800 leading-tight break-keep px-2">${highlightText(content.title.replace(/\n/g, '<br/>'), themeColor)}</h1>
+            <p class="font-body text-3xl text-slate-600 mt-6 px-6 break-keep leading-relaxed font-bold">${highlightText(content.subtitle, themeColor)}</p>
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-slate-200/80 flex items-center justify-center gap-4 text-secondary bg-secondary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
-                <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
+                <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
           </div>
-          <div class="footer-area text-slate-500 font-black text-center text-2.5xl mt-12">📍 @today.econ</div>
+          <div class="footer-area text-slate-500 font-black text-center text-2.5xl mt-12 drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">📍 @today.econ</div>
         </main>
       </div>
     `;
@@ -221,7 +232,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
               </svg>
             `}
           </div>
-          <p class="font-body text-4xl text-slate-800 font-extrabold leading-normal break-keep">${bullet}</p>
+          <p class="font-body text-4xl text-slate-800 font-extrabold leading-normal break-keep">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('<div class="w-full h-px bg-slate-200/60 my-1"></div>');
 
@@ -249,18 +260,18 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-slate-200/80 flex items-start gap-4 text-secondary bg-secondary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
-                <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
+                <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
           </div>
           
           <div class="w-full flex flex-col items-center space-y-6 mt-8">
             ${!isFact ? `
-              <div class="cta-banner w-full text-center text-slate-600 font-bold text-2.5xl py-4" style="border-top: 1.5px dashed rgba(0,0,0,0.15)">
+              <div class="cta-banner w-full text-center text-slate-600 font-bold text-2.5xl py-4 drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]" style="border-top: 1.5px dashed rgba(0,0,0,0.15)">
                 📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}">[팔로우]</span> 해주세요!
               </div>
             ` : ''}
-            <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
+            <div class="footer-area text-slate-500 font-black text-center text-2.5xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">📍 @today.econ</div>
           </div>
         </main>
       </div>
@@ -337,16 +348,16 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
         <main class="flex-1 flex flex-col z-20 justify-center pb-[320px] mt-24">
           <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 text-center shadow-[0_25px_55px_rgba(0,0,0,0.5)]">
             <span class="inline-block px-8 py-2.5 rounded border border-secondary text-secondary font-label-caps text-2xl tracking-widest uppercase shadow-[0_0_12px_rgba(255,75,137,0.5)]">#MARKET_UPDATE</span>
-            <h1 class="font-display text-6xl font-black text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
+            <h1 class="font-display text-6xl font-black text-white leading-tight break-keep px-2">${highlightText(content.title.replace(/\n/g, '<br/>'), themeColor)}</h1>
             <div class="w-32 h-1.5 bg-primary mx-auto mt-6 shadow-[0_0_15px_rgba(235,178,255,0.9)]"></div>
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-center justify-center gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
           </div>
-          <div class="footer-area text-slate-500 font-black text-center text-2.5xl mt-12">📍 @today.econ</div>
+          <div class="footer-area text-slate-500 font-black text-center text-2.5xl mt-12 drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">📍 @today.econ</div>
         </main>
       </div>
     `;
@@ -365,7 +376,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           <div class="w-12 h-12 rounded-full bg-slate-900/60 flex items-center justify-center border ${dotBorder} shrink-0 shadow-[0_0_15px_${bulletGlow}]">
             <span class="w-4 h-4 rounded-full ${dotPulseColor} animate-pulse"></span>
           </div>
-          <p class="font-body text-4xl text-slate-100 font-extrabold leading-normal break-keep">${bullet}</p>
+          <p class="font-body text-4xl text-slate-100 font-extrabold leading-normal break-keep">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('<div class="w-full h-px bg-white/10 my-2"></div>');
 
@@ -393,13 +404,13 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${content.editors_insight}</p>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
           </div>
           
           <div class="w-full flex flex-col items-center space-y-6 mt-8">
-            <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
+            <div class="footer-area text-slate-500 font-black text-center text-2.5xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]">📍 @today.econ</div>
           </div>
         </main>
       </div>
