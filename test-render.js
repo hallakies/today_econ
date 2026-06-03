@@ -1,4 +1,5 @@
 const fs = require('fs');
+require('dotenv').config();
 const { renderCardImages } = require('./src/renderer');
 
 // Mock data representing a typical Llama-generated response

@@ -3,61 +3,40 @@ const config = require('../config');
 const { buildThemeHtml } = require('./templates');
 
 /**
- * Downloads an image from Hugging Face FLUX.1-schnell or falls back to Pollinations.ai.
+ * Downloads an image from Pollinations.ai or falls back to curated theme-specific 3D fluid gradient images.
  * @param {string} prompt The visual description of the image to generate.
+ * @param {number} fallbackIndex Index for selecting a fallback image if generation fails.
+ * @param {string} themeName The current template theme name.
  * @returns {Promise<Buffer>} The image binary data.
  */
 async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') {
   const cleanPrompt = prompt.trim();
   console.log(`[Renderer] Generating image for prompt: "${cleanPrompt.substring(0, 60)}..."`);
   
-  // Try Hugging Face first
-  if (config.hfToken) {
-    try {
-      console.log('[Renderer] Attempting HF FLUX.1-schnell API...');
-      const response = await fetch(
-        'https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell',
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${config.hfToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ inputs: cleanPrompt }),
-        }
-      );
-
-      if (response.ok) {
-        const arrayBuffer = await response.arrayBuffer();
-        console.log('[Renderer] Successfully generated image via Hugging Face.');
-        return Buffer.from(arrayBuffer);
-      } else {
-        const errorText = await response.text();
-        console.warn(`[Renderer] HF API responded with status ${response.status}: ${errorText}`);
-      }
-    } catch (error) {
-      console.warn('[Renderer] HF API failed, attempting fallback...', error);
-    }
-  } else {
-    console.log('[Renderer] No HF_TOKEN config found. Using Pollinations.ai directly.');
-  }
-
-  // Try Pollinations.ai fallback (uses Flux/Stable Diffusion, free & keyless)
+  // Try Pollinations.ai first (uses Flux/Stable Diffusion, free & keyless)
   try {
-    console.log('[Renderer] Attempting Pollinations.ai fallback...');
+    console.log('[Renderer] Attempting Pollinations.ai image generation...');
     const encodedPrompt = encodeURIComponent(cleanPrompt);
-    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=800&nologo=true&seed=${Math.floor(Math.random() * 100000)}`;
     
-    const response = await fetch(pollinationsUrl);
+    // Use the official gen.pollinations.ai endpoint
+    const pollinationsUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?width=800&height=800&nologo=true&seed=${Math.floor(Math.random() * 100000)}`;
+    
+    const headers = {};
+    if (config.pollinationsApiKey) {
+      headers['Authorization'] = `Bearer ${config.pollinationsApiKey}`;
+      console.log('[Renderer] Using POLLINATIONS_API_KEY for authorization.');
+    }
+    
+    const response = await fetch(pollinationsUrl, { headers });
     if (response.ok) {
       const arrayBuffer = await response.arrayBuffer();
-      console.log('[Renderer] Successfully generated image via Pollinations.ai fallback.');
+      console.log('[Renderer] Successfully generated image via Pollinations.ai.');
       return Buffer.from(arrayBuffer);
     } else {
       throw new Error(`Pollinations API returned status ${response.status}`);
     }
   } catch (error) {
-    console.warn('[Renderer] Pollinations API fallback failed. Loading curated theme-specific 3D fluid gradient image...');
+    console.warn('[Renderer] Pollinations API failed. Loading curated theme-specific 3D fluid gradient image...', error.message || error);
     
     // Curated 3D abstract fluid gradient artworks, 100% cohesive and matching theme colors (9:16 aspect ratio)
     const obsidianFallbacks = [
@@ -96,7 +75,7 @@ async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') 
         throw new Error(`Unsplash fallback responded with status ${response.status}`);
       }
     } catch (unsplashError) {
-      console.error('[Renderer] Unsplash fallback failed as well.', unsplashError);
+      console.error('[Renderer] Unsplash fallback failed as well.', unsplashError.message || unsplashError);
       // Return a dummy transparent PNG buffer as an absolute last resort
       return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
     }

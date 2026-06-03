@@ -18,10 +18,6 @@ function validateConfig() {
     console.error('[Main] Please copy .env.example to .env and fill in the values.');
     process.exit(1);
   }
-
-  if (!config.hfToken) {
-    console.warn('[Main] Warning: HF_TOKEN is not set. Image generation will fallback to Pollinations.ai.');
-  }
 }
 
 // Helper to delete temporary image files

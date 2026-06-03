@@ -4,6 +4,7 @@ require('dotenv').config();
 module.exports = {
   groqApiKey: process.env.GROQ_API_KEY,
   hfToken: process.env.HF_TOKEN,
+  pollinationsApiKey: process.env.POLLINATIONS_API_KEY,
   slackBotToken: process.env.SLACK_BOT_TOKEN,
   slackChannelId: process.env.SLACK_CHANNEL_ID,
   newsRssUrl: process.env.NEWS_RSS_URL || 'https://www.mk.co.kr/rss/30100041/',
