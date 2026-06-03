@@ -7,7 +7,7 @@ const { buildThemeHtml } = require('./templates');
  * @param {string} prompt The visual description of the image to generate.
  * @returns {Promise<Buffer>} The image binary data.
  */
-async function generateImage(prompt, fallbackIndex = 0) {
+async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') {
   const cleanPrompt = prompt.trim();
   console.log(`[Renderer] Generating image for prompt: "${cleanPrompt.substring(0, 60)}..."`);
   
@@ -57,18 +57,36 @@ async function generateImage(prompt, fallbackIndex = 0) {
       throw new Error(`Pollinations API returned status ${response.status}`);
     }
   } catch (error) {
-    console.warn('[Renderer] Pollinations API fallback failed. Loading curated Unsplash stock image...');
+    console.warn('[Renderer] Pollinations API fallback failed. Loading curated theme-specific 3D fluid gradient image...');
     
-    // Curated high-quality, professional financial stock photos from Unsplash (no-key, reliable CDN)
-    const fallbacks = [
-      'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=800&fit=crop&q=60', // Card 1: Charts/Stock market
-      'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&h=800&fit=crop&q=60', // Card 2: Coins/Money
-      'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&h=800&fit=crop&q=60'  // Card 3: Wallet/Savings/Piggybank
+    // Curated 3D abstract fluid gradient artworks, 100% cohesive and matching theme colors (9:16 aspect ratio)
+    const obsidianFallbacks = [
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080&h=1920&fit=crop&q=80', // obsidian 3D wave 1
+      'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=1080&h=1920&fit=crop&q=80', // obsidian 3D wave 2
+      'https://images.unsplash.com/photo-1604871000636-074fa5117945?w=1080&h=1920&fit=crop&q=80'  // obsidian 3D wave 3
     ];
+    const ivoryFallbacks = [
+      'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1080&h=1920&fit=crop&q=80', // warm gold/beige abstract 1
+      'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=1080&h=1920&fit=crop&q=80', // warm gold/beige abstract 2
+      'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1080&h=1920&fit=crop&q=80'  // warm gold/beige abstract 3
+    ];
+    const cyberFallbacks = [
+      'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1080&h=1920&fit=crop&q=80', // neon abstract wave 1
+      'https://images.unsplash.com/photo-1563089145-599997674d42?w=1080&h=1920&fit=crop&q=80', // neon abstract wave 2
+      'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1080&h=1920&fit=crop&q=80'  // neon abstract wave 3
+    ];
+
+    let fallbacks = obsidianFallbacks;
+    const normalizedTheme = (themeName || 'obsidian').toLowerCase();
+    if (normalizedTheme === 'ivory') {
+      fallbacks = ivoryFallbacks;
+    } else if (normalizedTheme === 'cyber') {
+      fallbacks = cyberFallbacks;
+    }
     
     try {
       const fallbackUrl = fallbacks[fallbackIndex % fallbacks.length];
-      console.log(`[Renderer] Downloading Unsplash fallback: ${fallbackUrl}`);
+      console.log(`[Renderer] Downloading theme-specific Unsplash fallback: ${fallbackUrl}`);
       const response = await fetch(fallbackUrl);
       if (response.ok) {
         const arrayBuffer = await response.arrayBuffer();
@@ -99,9 +117,9 @@ async function renderCardImages(generatedJson) {
 
   // 1. Generate AI Illustrations for each card
   console.log('[Renderer] Starting image generation for 3 cards...');
-  const card1Buffer = await generateImage(generatedJson.card1.image_prompt, 0);
-  const card2Buffer = await generateImage(generatedJson.card2.image_prompt, 1);
-  const card3Buffer = await generateImage(generatedJson.card3.image_prompt, 2);
+  const card1Buffer = await generateImage(generatedJson.card1.image_prompt, 0, themeName);
+  const card2Buffer = await generateImage(generatedJson.card2.image_prompt, 1, themeName);
+  const card3Buffer = await generateImage(generatedJson.card3.image_prompt, 2, themeName);
 
   // Convert buffers to base64 strings
   const card1Base64 = card1Buffer.toString('base64');

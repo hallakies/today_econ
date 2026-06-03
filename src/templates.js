@@ -1,6 +1,6 @@
 /**
  * Google Stitch designed HTML/CSS templates for today.econ card news.
- * Optimized for readability on mobile (Instagram) with large fonts and proper space utilization.
+ * Optimized for mobile (Instagram Reels / 9:16 Slides) with full-bleed visual layouts and premium typography.
  */
 
 /**
@@ -11,29 +11,30 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
   
   if (cardType === 'title') {
     innerHtml = `
-      <div class="slide-container">
-        <div class="ambient-glow glow-primary w-[600px] h-[600px] top-[-150px] left-[-150px]"></div>
-        <div class="ambient-glow glow-secondary w-[700px] h-[700px] bottom-[-200px] right-[-200px]"></div>
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
+        <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#050811]/30 via-[#050811]/70 to-[#050811] z-10"></div>
+        <div class="ambient-glow glow-primary w-[700px] h-[700px] bottom-[-200px] right-[-200px] z-10"></div>
         
-        <header class="w-full pt-16 flex justify-between items-center px-12 z-50">
+        <header class="w-full pt-16 flex justify-between items-center z-20">
           <span class="material-symbols-outlined text-primary text-5xl">trending_up</span>
           <div class="font-display font-extrabold text-primary text-4xl tracking-tight">today.econ 📈</div>
           <span class="material-symbols-outlined text-primary text-5xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col px-12 pt-12 pb-16 z-10 relative justify-between">
-          <div class="space-y-6 text-center mt-8">
-            <span class="inline-block px-6 py-2 rounded-full bg-primary-container/20 border border-primary-container/40 text-primary font-label-caps text-xl tracking-widest backdrop-blur-md">TODAY</span>
-            <h1 class="font-display text-6xl font-extrabold text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
-            <p class="font-body text-3xl text-slate-350 mt-6 px-6 break-keep leading-relaxed">${content.subtitle}</p>
+        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
+          <div class="glass-card rounded-3xl p-10 space-y-6 text-center shadow-[0_25px_60px_rgba(0,0,0,0.65)]">
+            <span class="inline-block px-6 py-2 rounded-full bg-primary/20 border border-primary/40 text-primary font-label-caps text-xl tracking-widest backdrop-blur-md">TODAY</span>
+            <h1 class="font-display text-5xl font-extrabold text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
+            <p class="font-body text-2.5xl text-slate-300 mt-4 px-6 break-keep leading-relaxed font-semibold">${content.subtitle}</p>
+            ${content.editors_insight ? `
+              <div class="mt-6 pt-6 border-t border-white/10 flex items-center justify-center gap-4 text-primary font-bold text-2.5xl bg-primary/5 rounded-2xl py-4 px-5">
+                <span class="text-3xl">💡</span>
+                <p class="text-left text-slate-200 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              </div>
+            ` : ''}
           </div>
-          
-          <div class="image-wrapper mx-auto my-auto shadow-[0_30px_70px_rgba(0,0,0,0.7)]">
-            ${content.speech_bubble ? `<div class="speech-bubble">${content.speech_bubble}</div>` : ''}
-            <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
-          </div>
-          
-          <div class="footer-area text-slate-500 font-bold text-center text-2xl mt-8">📍 @today.econ</div>
+          <div class="footer-area text-slate-500 font-bold text-center text-2xl mt-12">📍 @today.econ</div>
         </main>
       </div>
     `;
@@ -47,48 +48,50 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
 
     const bulletsHtml = content.bullets
       .map(bullet => `
-        <li class="flex items-start gap-6 py-2">
-          <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center border border-primary/20 shrink-0 shadow-[0_0_12px_${themeColor}40]">
-            <span class="text-2xl">${bulletIcon}</span>
+        <li class="flex items-center gap-6 py-3">
+          <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-primary/20 shrink-0 shadow-[0_0_12px_${themeColor}40]">
+            <span class="text-xl">${bulletIcon}</span>
           </div>
-          <p class="font-body text-3xl text-slate-200 leading-relaxed break-keep mt-0.5">${bullet}</p>
+          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-normal break-keep">${bullet}</p>
         </li>
-      `).join('<div class="w-full h-px bg-white/10 my-3"></div>');
+      `).join('<div class="w-full h-px bg-white/5 my-2"></div>');
 
     innerHtml = `
-      <div class="slide-container">
-        <div class="ambient-glow glow-primary w-[600px] h-[600px] top-[-150px] left-[-150px]"></div>
-        <div class="ambient-glow glow-secondary w-[700px] h-[700px] bottom-[-200px] right-[-200px]"></div>
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
+        <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#050811]/30 via-[#050811]/70 to-[#050811] z-10"></div>
+        <div class="ambient-glow glow-primary w-[700px] h-[700px] bottom-[-200px] right-[-200px] z-10"></div>
         
-        <header class="w-full pt-16 flex justify-between items-center px-12 z-50">
+        <header class="w-full pt-16 flex justify-between items-center z-20">
           <span class="material-symbols-outlined text-primary text-5xl">trending_up</span>
           <div class="font-display font-extrabold text-primary text-4xl tracking-tight">today.econ 📈</div>
           <span class="material-symbols-outlined text-primary text-5xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col px-12 pt-8 pb-16 z-10 relative justify-start items-stretch">
-          <div class="px-2 mb-6 mt-4">
-            <span class="inline-block px-6 py-2 rounded-full font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
-          </div>
-          
-          <div class="glass-card rounded-3xl p-10 space-y-6 mb-10">
-            <ul class="space-y-6">
+        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
+          <div class="glass-card rounded-3xl p-10 space-y-6 shadow-[0_25px_60px_rgba(0,0,0,0.65)]">
+            <div class="mb-4">
+              <span class="inline-block px-6 py-2 rounded-full font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
+            </div>
+            
+            <ul class="space-y-4">
               ${bulletsHtml}
             </ul>
+
+            ${content.editors_insight ? `
+              <div class="mt-6 pt-6 border-t border-white/10 flex items-start gap-4 text-primary font-bold text-2.5xl bg-primary/5 rounded-2xl py-4 px-5">
+                <span class="text-3xl">💡</span>
+                <p class="text-left text-slate-200 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              </div>
+            ` : ''}
           </div>
           
-          <div class="image-wrapper-small mx-auto mb-10 shadow-[0_25px_55px_rgba(0,0,0,0.7)] relative">
-            ${content.speech_bubble ? `<div class="speech-bubble-small">${content.speech_bubble}</div>` : ''}
-            <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
-          </div>
-          
-          <div class="mt-auto w-full flex flex-col items-center space-y-6">
+          <div class="w-full flex flex-col items-center space-y-6 mt-8">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-300 font-bold text-2xl py-4" style="border-top: 1.5px dashed rgba(255,255,255,0.15)">
                 📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}">[팔로우]</span> 해주세요!
               </div>
             ` : ''}
-            
             <div class="footer-area text-slate-500 font-bold text-center text-2xl">📍 @today.econ</div>
           </div>
         </main>
@@ -125,111 +128,25 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
         }
       </script>
       <style>
-        body { background-color: #0A0E1A; overflow: hidden; }
+        body { background-color: #050811; overflow: hidden; }
         .glass-card {
-          background-color: rgba(255, 255, 255, 0.03);
+          background-color: rgba(10, 14, 26, 0.85);
           backdrop-filter: blur(40px);
           -webkit-backdrop-filter: blur(40px);
-          border: 0.5px solid rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .ambient-glow {
           position: absolute;
           border-radius: 50%;
           filter: blur(120px);
-          z-index: 0;
+          z-index: 5;
           pointer-events: none;
         }
         .glow-primary {
-          background: radial-gradient(circle, ${themeColor}20 0%, transparent 70%);
-        }
-        .glow-secondary {
-          background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+          background: radial-gradient(circle, ${themeColor}15 0%, transparent 70%);
         }
         .slide-container {
-          width: 1080px;
-          height: 1920px;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
           background-color: #050811;
-        }
-        .image-wrapper {
-          position: relative;
-          width: 840px;
-          height: 840px;
-          border-radius: 40px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-          background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-          overflow: visible;
-        }
-        .image-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 40px; }
-        
-        .image-wrapper-small {
-          position: relative;
-          width: 800px;
-          height: 620px;
-          border-radius: 32px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 20px 45px rgba(0,0,0,0.5);
-          background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-          overflow: visible;
-        }
-        .image-wrapper-small img { width: 100%; height: 100%; object-fit: cover; border-radius: 32px; }
-
-        .speech-bubble {
-          position: absolute;
-          top: -50px;
-          right: -20px;
-          background: #ffffff;
-          color: #0f172a;
-          padding: 20px 36px;
-          border-radius: 35px;
-          font-size: 36px;
-          font-weight: 900;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-          border: 5px solid ${themeColor};
-          z-index: 10;
-          white-space: nowrap;
-        }
-        .speech-bubble::after {
-          content: '';
-          position: absolute;
-          bottom: -18px;
-          left: 55px;
-          border-width: 18px 18px 0;
-          border-style: solid;
-          border-color: #ffffff transparent;
-          display: block;
-          width: 0;
-        }
-
-        .speech-bubble-small {
-          position: absolute;
-          top: -40px;
-          right: -15px;
-          background: #ffffff;
-          color: #0f172a;
-          padding: 16px 28px;
-          border-radius: 28px;
-          font-size: 30px;
-          font-weight: 900;
-          box-shadow: 0 15px 30px rgba(0,0,0,0.5);
-          border: 4px solid ${themeColor};
-          z-index: 10;
-          white-space: nowrap;
-        }
-        .speech-bubble-small::after {
-          content: '';
-          position: absolute;
-          bottom: -14px;
-          left: 45px;
-          border-width: 14px 14px 0;
-          border-style: solid;
-          border-color: #ffffff transparent;
-          display: block;
-          width: 0;
         }
       </style>
     </head>
@@ -248,26 +165,29 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
   
   if (cardType === 'title') {
     innerHtml = `
-      <div class="slide-container">
-        <header class="w-full pt-16 flex justify-between items-center px-12 z-50">
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
+        <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/30 via-[#FDFBF7]/70 to-[#FDFBF7] z-10"></div>
+        
+        <header class="w-full pt-16 flex justify-between items-center z-20">
           <span class="material-symbols-outlined text-slate-800 text-5xl">trending_up</span>
           <div class="font-display font-extrabold text-slate-800 text-4xl tracking-tight">today.econ 📈</div>
           <span class="material-symbols-outlined text-slate-800 text-5xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col px-12 pt-12 pb-16 z-10 relative justify-between">
-          <div class="space-y-6 text-center mt-8">
+        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
+          <div class="glass-card rounded-3xl p-10 space-y-6 text-center shadow-[0_20px_45px_rgba(0,0,0,0.06)]">
             <span class="inline-block px-6 py-2 rounded bg-slate-800 text-white font-label-caps text-xl tracking-widest">TODAY</span>
-            <h1 class="font-display text-6xl font-extrabold text-slate-800 leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
-            <p class="font-body text-3xl text-slate-650 mt-6 px-6 break-keep leading-relaxed font-semibold">${content.subtitle}</p>
+            <h1 class="font-display text-5xl font-extrabold text-slate-800 leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
+            <p class="font-body text-2.5xl text-slate-600 mt-4 px-6 break-keep leading-relaxed font-bold">${content.subtitle}</p>
+            ${content.editors_insight ? `
+              <div class="mt-6 pt-6 border-t border-slate-200/80 flex items-center justify-center gap-4 text-secondary font-bold text-2.5xl bg-secondary/5 rounded-2xl py-4 px-5">
+                <span class="text-3xl">💡</span>
+                <p class="text-left text-slate-700 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              </div>
+            ` : ''}
           </div>
-          
-          <div class="image-wrapper mx-auto my-auto shadow-[0_30px_70px_rgba(0,0,0,0.15)]">
-            ${content.speech_bubble ? `<div class="speech-bubble">${content.speech_bubble}</div>` : ''}
-            <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
-          </div>
-          
-          <div class="footer-area text-slate-500 font-bold text-center text-2xl mt-8">📍 @today.econ</div>
+          <div class="footer-area text-slate-500 font-bold text-center text-2xl mt-12">📍 @today.econ</div>
         </main>
       </div>
     `;
@@ -281,43 +201,47 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
 
     const bulletsHtml = content.bullets
       .map(bullet => `
-        <li class="flex items-start py-2">
-          <span class="material-symbols-outlined mr-6 mt-1.5 text-4xl shrink-0 font-bold" style="color: ${badgeColor}">${bulletIcon}</span>
-          <p class="font-body text-3xl text-slate-755 leading-relaxed break-keep font-semibold">${bullet}</p>
+        <li class="flex items-center gap-6 py-3">
+          <span class="material-symbols-outlined text-4xl shrink-0 font-bold" style="color: ${badgeColor}">${bulletIcon}</span>
+          <p class="font-body text-3.5xl text-slate-800 font-extrabold leading-normal break-keep">${bullet}</p>
         </li>
-      `).join('<div class="w-full h-px bg-slate-200/80 my-3"></div>');
+      `).join('<div class="w-full h-px bg-slate-200/80 my-2"></div>');
 
     innerHtml = `
-      <div class="slide-container">
-        <header class="w-full pt-16 flex justify-between items-center px-12 z-50">
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
+        <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/30 via-[#FDFBF7]/70 to-[#FDFBF7] z-10"></div>
+        
+        <header class="w-full pt-16 flex justify-between items-center z-20">
           <span class="material-symbols-outlined text-slate-800 text-5xl">trending_up</span>
           <div class="font-display font-extrabold text-slate-800 text-4xl tracking-tight">today.econ 📈</div>
           <span class="material-symbols-outlined text-slate-800 text-5xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col px-12 pt-8 pb-16 z-10 relative justify-start items-stretch">
-          <div class="px-2 mb-6 mt-4">
-            <span class="inline-block px-6 py-2 rounded font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
-          </div>
-          
-          <div class="glass-card rounded-3xl p-10 space-y-6 mb-10">
-            <ul class="space-y-6">
+        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
+          <div class="glass-card rounded-3xl p-10 space-y-6 shadow-[0_20px_45px_rgba(0,0,0,0.06)]">
+            <div class="mb-4">
+              <span class="inline-block px-6 py-2 rounded font-label-caps text-xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
+            </div>
+            
+            <ul class="space-y-4">
               ${bulletsHtml}
             </ul>
+
+            ${content.editors_insight ? `
+              <div class="mt-6 pt-6 border-t border-slate-200/80 flex items-start gap-4 text-secondary font-bold text-2.5xl bg-secondary/5 rounded-2xl py-4 px-5">
+                <span class="text-3xl">💡</span>
+                <p class="text-left text-slate-700 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              </div>
+            ` : ''}
           </div>
           
-          <div class="image-wrapper-small mx-auto mb-10 shadow-[0_25px_55px_rgba(0,0,0,0.1)] relative">
-            ${content.speech_bubble ? `<div class="speech-bubble-small">${content.speech_bubble}</div>` : ''}
-            <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
-          </div>
-          
-          <div class="mt-auto w-full flex flex-col items-center space-y-6">
+          <div class="w-full flex flex-col items-center space-y-6 mt-8">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-600 font-bold text-2xl py-4" style="border-top: 1.5px dashed rgba(0,0,0,0.15)">
                 📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}">[팔로우]</span> 해주세요!
               </div>
             ` : ''}
-            
             <div class="footer-area text-slate-500 font-bold text-center text-2xl">📍 @today.econ</div>
           </div>
         </main>
@@ -354,102 +278,12 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
       <style>
         body {
           background-color: #FDFBF7;
-          background-image: 
-            radial-gradient(circle at 10% 20%, rgba(255, 223, 160, 0.4) 0%, transparent 50%),
-            radial-gradient(circle at 90% 80%, rgba(252, 212, 0, 0.3) 0%, transparent 60%);
-          background-attachment: fixed;
           overflow: hidden;
         }
         .glass-card {
-          background: rgba(255, 255, 255, 0.85);
-          backdrop-filter: blur(24px);
-          border: 1px solid rgba(255, 255, 255, 0.9);
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
-        }
-        .slide-container {
-          width: 1080px;
-          height: 1920px;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-        .image-wrapper {
-          position: relative;
-          width: 840px;
-          height: 840px;
-          border-radius: 24px;
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
-          background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
-          overflow: visible;
-        }
-        .image-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 24px; }
-        
-        .image-wrapper-small {
-          position: relative;
-          width: 800px;
-          height: 620px;
-          border-radius: 24px;
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-          background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
-          overflow: visible;
-        }
-        .image-wrapper-small img { width: 100%; height: 100%; object-fit: cover; border-radius: 24px; }
-
-        .speech-bubble {
-          position: absolute;
-          top: -50px;
-          right: -20px;
-          background: #ffffff;
-          color: #0f172a;
-          padding: 20px 36px;
-          border-radius: 35px;
-          font-size: 36px;
-          font-weight: 900;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.18);
-          border: 5px solid #121212;
-          z-index: 10;
-          white-space: nowrap;
-        }
-        .speech-bubble::after {
-          content: '';
-          position: absolute;
-          bottom: -18px;
-          left: 55px;
-          border-width: 18px 18px 0;
-          border-style: solid;
-          border-color: #ffffff transparent;
-          display: block;
-          width: 0;
-        }
-
-        .speech-bubble-small {
-          position: absolute;
-          top: -40px;
-          right: -15px;
-          background: #ffffff;
-          color: #0f172a;
-          padding: 16px 28px;
-          border-radius: 28px;
-          font-size: 30px;
-          font-weight: 900;
-          box-shadow: 0 15px 30px rgba(0,0,0,0.12);
-          border: 4px solid #121212;
-          z-index: 10;
-          white-space: nowrap;
-        }
-        .speech-bubble-small::after {
-          content: '';
-          position: absolute;
-          bottom: -14px;
-          left: 45px;
-          border-width: 14px 14px 0;
-          border-style: solid;
-          border-color: #ffffff transparent;
-          display: block;
-          width: 0;
+          background: rgba(253, 251, 247, 0.9);
+          backdrop-filter: blur(30px);
+          border: 1px solid rgba(255, 255, 255, 0.95);
         }
       </style>
     </head>
@@ -468,25 +302,28 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
   
   if (cardType === 'title') {
     innerHtml = `
-      <div class="slide-container">
-        <header class="w-full pt-16 flex justify-between items-center px-12 z-50">
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
+        <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#140727]/30 via-[#140727]/70 to-[#140727] z-10"></div>
+        
+        <header class="w-full pt-16 flex justify-between items-center z-20">
           <span class="material-symbols-outlined text-neon-green text-5xl">insights</span>
           <div class="font-display font-extrabold text-neon-green text-4xl tracking-tighter">today.econ 📈</div>
           <span class="material-symbols-outlined text-slate-300 text-5xl">more_vert</span>
         </header>
 
-        <main class="flex-1 flex flex-col px-12 pt-12 pb-16 z-10 relative justify-between">
-          <div class="space-y-6 text-center mt-8 relative">
+        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
+          <div class="glass-card rounded-3xl p-10 space-y-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <span class="inline-block px-6 py-2 rounded border border-secondary text-secondary font-label-caps text-xl tracking-widest uppercase shadow-[0_0_12px_rgba(255,75,137,0.5)]">#MARKET_UPDATE</span>
-            <h1 class="font-display text-6xl font-extrabold text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
+            <h1 class="font-display text-5xl font-extrabold text-white leading-tight break-keep px-2">${content.title.replace(/\n/g, '<br/>')}</h1>
             <div class="w-32 h-1.5 bg-primary mx-auto mt-6 shadow-[0_0_15px_rgba(235,178,255,0.9)]"></div>
+            ${content.editors_insight ? `
+              <div class="mt-6 pt-6 border-t border-white/10 flex items-center justify-center gap-4 text-primary font-bold text-2.5xl bg-primary/5 rounded-2xl py-4 px-5">
+                <span class="text-3xl">💡</span>
+                <p class="text-left text-slate-200 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              </div>
+            ` : ''}
           </div>
-          
-          <div class="image-wrapper mx-auto my-auto shadow-[0_30px_70px_rgba(0,0,0,0.8)]">
-            ${content.speech_bubble ? `<div class="speech-bubble">${content.speech_bubble}</div>` : ''}
-            <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
-          </div>
-          
           <div class="footer-area text-slate-500 font-bold text-center text-2xl mt-8">📍 @today.econ</div>
         </main>
       </div>
@@ -502,39 +339,44 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
 
     const bulletsHtml = content.bullets
       .map(bullet => `
-        <li class="flex items-start gap-6 py-2">
-          <div class="w-12 h-12 mt-1 rounded-full bg-slate-900/60 flex items-center justify-center border ${dotBorder} shrink-0 shadow-[0_0_12px_${bulletGlow}]">
-            <span class="w-4 h-4 rounded-full ${dotPulseColor} animate-pulse"></span>
+        <li class="flex items-center gap-6 py-3">
+          <div class="w-10 h-10 rounded-full bg-slate-900/60 flex items-center justify-center border ${dotBorder} shrink-0 shadow-[0_0_12px_${bulletGlow}]">
+            <span class="w-3.5 h-3.5 rounded-full ${dotPulseColor} animate-pulse"></span>
           </div>
-          <p class="font-body text-3xl text-slate-200 leading-relaxed break-keep mt-0.5">${bullet}</p>
+          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-normal break-keep">${bullet}</p>
         </li>
-      `).join('<div class="w-full h-px bg-white/10 my-3"></div>');
+      `).join('<div class="w-full h-px bg-white/10 my-2"></div>');
 
     innerHtml = `
-      <div class="slide-container">
-        <header class="w-full pt-16 flex justify-between items-center px-12 z-50">
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
+        <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#140727]/30 via-[#140727]/70 to-[#140727] z-10"></div>
+        
+        <header class="w-full pt-16 flex justify-between items-center z-20">
           <span class="material-symbols-outlined text-neon-green text-5xl">insights</span>
           <div class="font-display font-extrabold text-neon-green text-4xl tracking-tighter">today.econ 📈</div>
           <span class="material-symbols-outlined text-slate-300 text-5xl">more_vert</span>
         </header>
 
-        <main class="flex-1 flex flex-col px-12 pt-8 pb-16 z-10 relative justify-start items-stretch">
-          <div class="px-2 mb-6 mt-4">
-            <span class="inline-block px-6 py-2 rounded border text-slate-200 font-label-caps text-xl tracking-widest uppercase" style="border-color: ${badgeBorderColor}; background: ${badgeBorderColor}15; box-shadow: 0 0 10px ${badgeGlowColor};">${badgeText}</span>
-          </div>
-          
-          <div class="glass-card rounded-3xl p-10 space-y-6 mb-10">
-            <ul class="space-y-6">
+        <main class="flex-1 flex flex-col z-20 justify-end pb-12">
+          <div class="glass-card rounded-3xl p-10 space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
+            <div class="mb-4">
+              <span class="inline-block px-6 py-2 rounded border text-slate-200 font-label-caps text-xl tracking-widest uppercase" style="border-color: ${badgeBorderColor}; background: ${badgeBorderColor}15; box-shadow: 0 0 10px ${badgeGlowColor};">${badgeText}</span>
+            </div>
+            
+            <ul class="space-y-4">
               ${bulletsHtml}
             </ul>
+
+            ${content.editors_insight ? `
+              <div class="mt-6 pt-6 border-t border-white/10 flex items-start gap-4 text-primary font-bold text-2.5xl bg-primary/5 rounded-2xl py-4 px-5">
+                <span class="text-3xl">💡</span>
+                <p class="text-left text-slate-200 leading-normal font-bold text-2xl">${content.editors_insight}</p>
+              </div>
+            ` : ''}
           </div>
           
-          <div class="image-wrapper-small mx-auto mb-10 shadow-[0_25px_55px_rgba(0,0,0,0.8)] relative">
-            ${content.speech_bubble ? `<div class="speech-bubble-small">${content.speech_bubble}</div>` : ''}
-            <img src="data:image/png;base64,${imageBase64}" alt="illustration" />
-          </div>
-          
-          <div class="mt-auto w-full flex flex-col items-center space-y-6">
+          <div class="w-full flex flex-col items-center space-y-6 mt-8">
             <div class="footer-area text-slate-500 font-bold text-center text-2xl">📍 @today.econ</div>
           </div>
         </main>
@@ -571,13 +413,12 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
         }
       </script>
       <style>
-        body { background-color: #190c2c; overflow: hidden; }
+        body { background-color: #140727; overflow: hidden; }
         .glass-card {
-          background: rgba(24, 11, 43, 0.75);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(235, 178, 255, 0.3);
-          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+          background: rgba(20, 7, 39, 0.85);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border: 1px solid rgba(235, 178, 255, 0.2);
         }
         .text-neon-green {
           color: #39FF14;
@@ -588,90 +429,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
                       radial-gradient(circle at 100% 100%, rgba(255, 75, 137, 0.2) 0%, rgba(24, 11, 43, 0) 50%);
         }
         .slide-container {
-          width: 1080px;
-          height: 1920px;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
           background-color: #140727;
-        }
-        .image-wrapper {
-          position: relative;
-          width: 840px;
-          height: 840px;
-          border-radius: 24px;
-          border: 1px solid rgba(235, 178, 255, 0.2);
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-          background: linear-gradient(135deg, #2e1065 0%, #4c1d95 100%);
-          overflow: visible;
-        }
-        .image-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 24px; mix-blend-mode: screen; }
-        
-        .image-wrapper-small {
-          position: relative;
-          width: 800px;
-          height: 620px;
-          border-radius: 24px;
-          border: 1px solid rgba(235, 178, 255, 0.2);
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-          background: linear-gradient(135deg, #2e1065 0%, #4c1d95 100%);
-          overflow: visible;
-        }
-        .image-wrapper-small img { width: 100%; height: 100%; object-fit: cover; border-radius: 24px; mix-blend-mode: screen; }
-
-        .speech-bubble {
-          position: absolute;
-          top: -50px;
-          right: -20px;
-          background: #ffffff;
-          color: #0f172a;
-          padding: 20px 36px;
-          border-radius: 35px;
-          font-size: 36px;
-          font-weight: 900;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-          border: 5px solid #bc13fe;
-          z-index: 10;
-          white-space: nowrap;
-        }
-        .speech-bubble::after {
-          content: '';
-          position: absolute;
-          bottom: -18px;
-          left: 55px;
-          border-width: 18px 18px 0;
-          border-style: solid;
-          border-color: #ffffff transparent;
-          display: block;
-          width: 0;
-        }
-
-        .speech-bubble-small {
-          position: absolute;
-          top: -40px;
-          right: -15px;
-          background: #ffffff;
-          color: #0f172a;
-          padding: 16px 28px;
-          border-radius: 28px;
-          font-size: 30px;
-          font-weight: 900;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-          border: 3px solid #bc13fe;
-          z-index: 10;
-          white-space: nowrap;
-        }
-        .speech-bubble-small::after {
-          content: '';
-          position: absolute;
-          bottom: -14px;
-          left: 45px;
-          border-width: 14px 14px 0;
-          border-style: solid;
-          border-color: #ffffff transparent;
-          display: block;
-          width: 0;
         }
       </style>
     </head>

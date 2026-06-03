@@ -113,19 +113,19 @@ function validateAndRepairContent(jsonData) {
     console.warn('[Generator] Validation warning: card2 and card3 bullets are identical. Performing auto-repair...');
     result.card3.section_title = '그래서 어떻게 돼?';
     result.card3.bullets = [
-      '고물가/고금리에 대처할 수 있도록 가계 지출 현황을 먼저 점검해 보세요.',
-      '금리 변동이 큰 시기이므로 무리한 대출이나 투자는 신중하게 결정해야 합니다.',
-      '매일 올라오는 유용한 경제 시황을 구독하고 스마트한 재테크 전략을 세우세요!'
+      '지출 내역 점검',
+      '우대금리 상품 비교',
+      '파킹통장 개설 고려'
     ];
   }
 
-  // If card3 and card2 have identical speech bubbles
+  // If card3 and card2 have identical insights
   if (
     result.card2 &&
     result.card3 &&
-    result.card2.speech_bubble === result.card3.speech_bubble
+    result.card2.editors_insight === result.card3.editors_insight
   ) {
-    result.card3.speech_bubble = '지갑 절대 지켜! 🛡️';
+    result.card3.editors_insight = '가계 지출 관리를 철저히 모니터링해야 합니다.';
   }
 
   return result;
@@ -137,35 +137,37 @@ function validateAndRepairContent(jsonData) {
  * @returns {Promise<{
  *   template_theme: string,
  *   theme_color: string,
- *   card1: { title: string, subtitle: string, speech_bubble: string, image_prompt: string },
- *   card2: { section_title: string, bullets: Array<string>, speech_bubble: string, image_prompt: string },
- *   card3: { section_title: string, bullets: Array<string>, speech_bubble: string, image_prompt: string },
+ *   card1: { title: string, subtitle: string, editors_insight: string, image_prompt: string },
+ *   card2: { section_title: string, bullets: Array<string>, editors_insight: string, image_prompt: string },
+ *   card3: { section_title: string, bullets: Array<string>, editors_insight: string, image_prompt: string },
  *   instagram_caption: string
  * }>}
  */
 async function generateCardContent(selectedNews) {
-  const systemPrompt = `당신은 경제 뉴스를 대중의 눈높이에 맞춰 쉽게 전달하는 스타 인플루언서이자 비주얼 콘텐츠 디렉터입니다.
-선택된 경제 뉴스를 바탕으로 인스타그램 릴스/슬라이드 포스트용 3장 카드 뉴스 원고와 이미지 생성 프롬프트, 그리고 인스타그램 본문 멘트를 작성해 주세요.
+  const systemPrompt = `당신은 경제 뉴스를 대중의 눈높이에 맞춰 쉽게 전달하는 경제 오피니언 리더이자 전문 비주얼 콘텐츠 디렉터입니다.
+선택된 경제 뉴스를 바탕으로 인스타그램 릴스(Reels) 영상 및 슬라이드 포스트용 3장 카드 뉴스 원고와 이미지 생성 프롬프트, 그리고 인스타그램 본문 멘트를 작성해 주세요.
 
 ### 작성 지침:
 1. **쉬운 용어 설명 (핵심)**:
-   - 기사에 쓰인 어려운 경제 용어는 초보자도 쉽게 알 수 있도록 괄호안에 아주 친절한 설명이나 비유를 붙여주세요.
+   - 어려운 경제 용어는 초보자도 쉽게 알 수 있도록 괄호안에 아주 친절한 설명이나 비유를 붙여주세요.
      (예: "연준(미국의 중앙은행으로 세계 경제의 돈줄을 쥐고 있는 곳)", "LTV(집값 대비 대출한도 - 1억짜리 집이면 최대 얼마까지 대출해줄지 정하는 비율)")
-2. **깊이 있고 유익한 카드 뉴스 텍스트**:
-   - 독자가 뉴스의 핵심 맥락과 중요한 정보/수치를 제대로 파악할 수 있도록 상세하고 깊이 있게 작성해 주세요. (단순하고 얄팍한 단답식 요약은 사양합니다.)
-   - 각 불릿 포인트는 의미가 명확히 전달되도록 지나치게 생략하지 말고, 한국어 기준 문장당 35~50자 내외로 상세하게 서술해 주세요.
+2. **숏폼(릴스) 최적화 극단적 텍스트 다이어트 (필수)**:
+   - 릴스 화면에서 시청자의 시선을 1초 만에 사로잡고 즉시 해독될 수 있도록 문장을 절대 길게 쓰지 마십시오.
+   - 각 불릿 포인트는 **핵심 키워드와 지표 중심의 초단축 문구(한국어 15자 내외)**로 요약해야 합니다.
+   - 불필요한 조사와 서술어는 생략하고, 명사형 종결이나 직관적 키워드 위주로 작성하십시오.
 3. **카드 2와 카드 3의 완전 분리 및 실질적 Action 강제 (필수)**:
-   - **카드 2(card2)**: 기사 내용의 핵심 팩트(Fact) 요약 3가지입니다. (배지명 추천: "무슨 일이야?") 각 불릿은 전후 사정을 충분히 이해할 수 있게 35~50자 분량으로 상세히 기술합니다.
+   - **카드 2(card2)**: 기사 내용의 핵심 팩트(Fact) 요약 3가지입니다. (배지명 추천: "무슨 일이야?")
    - **카드 3(card3)**: 기사 사건이 독자의 지갑에 미칠 영향과 독자가 취해야 할 실생활 행동 지침(Action) 3가지입니다. (배지명 추천: "그래서 어떻게 돼?")
    - **경고**: 카드 3(card3)의 불릿 포인트는 절대로 학술적이거나 거시적인 추상형 개요(예: '은행권 구조조정의 영향', '미래 금융업계의 전망') 또는 너무 당연하고 얄팍한 조언(예: '가계부 예산 세우기', '금리 변동 주시하기', '저금리 대출 찾기', '재테크 관심 갖기')으로 적지 마십시오. 독자가 오늘 이 뉴스를 읽고 당장 스마트폰을 켜거나 은행에 갈 때 실행할 수 있는 **매우 구체적이고 실천 가능한 실생활 행동 지침**으로 적어주세요.
-     (예: '비대면 금융 앱에서 우대금리 자동 알림을 설정하고 0.2%p 추가 혜택 챙기기', '주거래 은행의 예금 금리 인하에 대비해 저축은행이나 제2금융권 파킹통장 금리 비교하기', '보유 중인 대출의 금리 인하 요구권 신청 조건(소득 상승 등)이 충족되는지 모바일 앱에서 직접 검증해보기')
-     각 불릿 포인트는 40~50자 내외의 구체적인 행동 팁으로 충실하게 채워야 합니다. 두 카드의 불릿 포인트는 절대 겹치거나 같아서는 안 되며, 완전히 구분되어야 합니다.
-4. **비주얼 컨셉 및 FLUX 이미지 프롬프트**:
+     (예: '우대금리 자동알림 켜기', '상호금융 금리 비교하기', '금리인하요구권 조건 체크')
+     각 불릿 포인트는 15자 내외의 구체적인 행동 팁이어야 합니다. 두 카드의 불릿 포인트는 절대 겹치거나 같아서는 안 되며, 완전히 구분되어야 합니다.
+4. **에디토리얼 인사이트(editors_insight) 작성**:
+   - 가벼워 보이는 말풍선이나 이모티콘 독백 대신, 뉴스 레터 스타일의 **격식 있고 신뢰감 주는 한 줄 요약 평(인사이트)**을 20자 내외의 정중한 어조로 작성하세요. (이모지 남발 금지, 최대 1개)
+5. **비주얼 컨셉 및 FLUX 이미지 프롬프트 (로컬라이즈 및 일관성 필수)**:
    - 각 카드에 어울리는 고해상도 FLUX.1-schnell 이미지 생성 프롬프트를 **영어로** 구체적으로 작성하세요.
-   - 프롬프트 지침: "Minimalist modern 3D vector illustration, cute pastel claymation style, isolated on clean solid background, financial theme, no text in image" 스타일을 차용하여 기사 주제에 맞게 변경하세요. 텍스트가 절대 이미지 안에 들어가지 않도록 "no text"를 필수 포함하세요.
-5. **캐릭터 말풍선 멘트 (speech_bubble) 경고**:
-   - 각 카드 이미지 위에 들어갈 캐릭터 리액션 말풍선 문구를 10~15자 내외의 아주 위트 있고 직관적인 한국어 한마디로 작성하세요. (각 카드별로 리액션이 겹치지 않게 하세요!)
-   - **경고**: 말풍선(speech_bubble)은 절대 기사 제목이나 내용을 요약한 설명조 글(예: '억대 퇴직금 받고 나간 은행원들', '은행원들의 미래는?')로 채우지 마십시오. 이는 캐릭터가 실제로 할 법한 지극히 주관적이고 위트 있는 '독백이나 현실 리액션'(예: '나도 퇴직금 5억 줘! 💸', '부러우면 지는 건데.. 🥲', '내 퇴직금은 안전한가? 🔒')이어야 합니다.
+   - **필수 스타일 제약**: 모든 카드 이미지가 동일한 비주얼 톤앤매너를 유지해야 합니다. 다음 스타일 키워드를 프롬프트에 메인으로 고정 포함하십시오: "Consistent minimalist 3D vector illustration style, cute pastel claymation, isolated on clean solid background, financial theme, no text in image".
+   - **로컬라이제이션(한국화) 필수**: 뉴스 내용에 화폐가 등장할 경우 절대 미국 달러(USD)를 묘사하지 말고 **한국 원화(KRW coins, Korean Won bills)**를 묘사하도록 프롬프트를 작성하세요. 인물이나 배경이 나올 경우 반드시 **한국/동아시아적 맥락(Korean context, East Asian characters)**을 묘사하도록 강제하세요.
+   - **비주얼 통일성**: 실사 사진이나 노트북, 영문 텍스트 화면 같은 스탁 사진 분위기는 철저히 배제하고, 통일된 3D 그래픽/일러스트 스타일만 생성하도록 프롬프트를 작성하십시오.
 6. **디자인 테마 및 강조 색상 선정 (template_theme & theme_color)**:
    - 뉴스의 주제와 분위기에 맞는 디자인 테마를 선정하세요:
      - "obsidian": 정통 거시경제, 금리, 기업 실적, 증시 시황 뉴스용. (추천 theme_color: "#00d2ff" 또는 네온 블루)
@@ -185,27 +187,27 @@ async function generateCardContent(selectedNews) {
   "card1": {
     "title": "호기심을 유발하는 1장 타이틀 (예: 미국 금리가 내렸다고? 내 대출 이자는?)",
     "subtitle": "타이틀 아래 들어갈 부제목 (예: 미국 연방준비제도의 깜짝 금리 인하 소식)",
-    "speech_bubble": "10~15자 내외의 짧고 웃긴 캐릭터 말말 (예: 대출 탈출 넘버원!)",
+    "editors_insight": "20자 내외의 신뢰감 있는 뉴스 브리핑 (예: 연준의 긴급 금리 결정입니다.)",
     "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
   },
   "card2": {
     "section_title": "무슨 일이야?",
     "bullets": [
-      "35~50자 분량의 상세한 뉴스 팩트 요약 1 (예: 미국의 핵심 인플레이션 지표가 시장 예상치를 밑돌며 3년 만에 최저치인 2.5%를 기록함)",
-      "35~50자 분량의 상세한 뉴스 팩트 요약 2 (예: 이에 따라 연준이 다가오는 9월 통화정책회의에서 기준금리를 0.25%p 인하할 확률이 90%를 넘음)",
-      "35~50자 분량의 상세한 뉴스 팩트 요약 3 (예: 금리 인하 기대감에 국채 금리는 급락하고 뉴욕 증시의 3대 주요 지수는 사상 최고치를 경신함)"
+      "15자 내외 키워드 팩트 1 (예: 美 인플레이션 2.5% 기록)",
+      "15자 내외 키워드 팩트 2 (예: 금리 인하 확률 90% 돌파)",
+      "15자 내외 키워드 팩트 3 (예: 뉴욕 증시 최고치 경신)"
     ],
-    "speech_bubble": "팩트에 대한 리액션 캐릭터 말",
+    "editors_insight": "팩트에 대한 한 줄 에디터 평 (예: 본격적인 금리 인하 궤도 진입입니다.)",
     "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
   },
   "card3": {
     "section_title": "그래서 어떻게 돼?",
     "bullets": [
-      "40~50자 분량의 구체적이고 실천 가능한 실생활 팁 1 (예: 예금 금리가 더 떨어지기 전에 시중은행과 저축은행의 고금리 예적금 상품 비교 후 가입하기)",
-      "40~50자 분량의 구체적이고 실천 가능한 실생활 팁 2 (예: 변동금리 대출을 이용 중이라면 고정금리 대환대출 조건 및 수수료를 계산해 유리한 쪽으로 갈아타기)",
-      "40~50자 분량의 구체적이고 실천 가능한 실생활 팁 3 (예: 채권 가격 상승세가 예상되므로 초보자도 접근하기 쉬운 미국 장기채 ETF 분할 매수 고려하기)"
+      "15자 내외 구체적 액션 1 (예: 고금리 예적금 막차 가입)",
+      "15자 내외 구체적 액션 2 (예: 고정금리 대환 수수료 계산)",
+      "15자 내외 구체적 액션 3 (예: 미국 장기채 ETF 분할 매수)"
     ],
-    "speech_bubble": "대책에 대한 캐릭터 리액션 말",
+    "editors_insight": "대책에 대한 한 줄 에디터 평 (예: 대출 갈아타기 타이밍을 모니터링하세요.)",
     "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
   },
   "instagram_caption": "인스타그램 업로드용 긴 글 본문 멘트 (이모지 포함, 영어 번역식 해시태그는 넣지 말 것)"

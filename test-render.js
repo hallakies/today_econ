@@ -6,27 +6,27 @@ const mockData = {
   card1: {
     title: "미국 금리가 내렸다고?\n내 대출 이자는 어떻게 될까?",
     subtitle: "미국 연방준비제도(연준)의 깜짝 0.5%p 금리 인하 소식",
-    speech_bubble: "대출 탈출 넘버원! 💸",
+    editors_insight: "미국 금리 인하 전격 단행",
     image_prompt: "Minimalist modern 3D vector illustration, cute pastel claymation style, a piggy bank with percentage symbol, isolated on clean solid background, financial theme, no text"
   },
   card2: {
     section_title: "무슨 일이야?",
     bullets: [
-      "미국 연준(미국의 중앙은행)이 기준금리를 0.5%p 낮추는 '빅컷'을 단행했어요.",
-      "인플레이션(물가가 지속적으로 오르는 현상)이 잡히기 시작하면서 경기 침체를 막기 위한 선제 조치예요.",
-      "금리 인하는 시중에 더 많은 돈을 풀어서 경기를 활성화하겠다는 뜻이에요."
+      "미국 기준금리 0.5%p 인하",
+      "인플레이션 안정화 신호",
+      "경기 침체 선제적 예방"
     ],
-    speech_bubble: "어라? 금리를 깎네? ✂️",
+    editors_insight: "빅컷 단행으로 금리 하락 국면 진입",
     image_prompt: "Minimalist modern 3D vector illustration, cute pastel claymation style, a clock with gears and dollar bills, isolated on clean solid background, financial theme, no text"
   },
   card3: {
     section_title: "그래서 어떻게 돼?",
     bullets: [
-      "대출 이자 부담이 줄어들 가능성이 커요. 변동 금리 대출을 가진 분들은 대출 갈아타기를 고민해 보세요.",
-      "예금/적금 이자는 낮아지기 때문에, 주식이나 부동산 등 자산 시장으로 돈이 이동할 수 있어요.",
-      "매일경제 경제 뉴스를 매일 읽으며 지갑을 지킬 스마트한 전략을 세워야 합니다!"
+      "변동금리 대출 갈아타기",
+      "고금리 예적금 막차 가입",
+      "자산 포트폴리오 다각화"
     ],
-    speech_bubble: "내 지갑 절대 지켜! 🛡️",
+    editors_insight: "대출 금리 변동 추이를 주시해야 합니다.",
     image_prompt: "Minimalist modern 3D vector illustration, cute pastel claymation style, a plant growing out of a coin stack, isolated on clean solid background, financial theme, no text"
   },
   instagram_caption: "오늘의 경제 1분 요약!..."
