@@ -1,0 +1,16 @@
+{
+  "name": "today-economy",
+  "version": "1.0.0",
+  "description": "Automated Korean Economic News Summarizer and Instagram Card News Creator",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@slack/web-api": "^7.8.0",
+    "dotenv": "^16.4.5",
+    "groq-sdk": "^0.15.0",
+    "playwright": "^1.49.0",
+    "rss-parser": "^3.13.0"
+  }
+}

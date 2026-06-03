@@ -1,0 +1,55 @@
+name: Daily Economic Card News Creator
+
+on:
+  schedule:
+    # Runs daily at 23:00 UTC (8:00 AM KST)
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+    # Allows manual triggering from the GitHub Actions tab
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Required to commit history.json back to the repository
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Install Playwright and OS Dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Card News Creator Pipeline
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          NEWS_RSS_URL: 'https://www.mk.co.kr/rss/30100041/'
+          MAX_HISTORY_DAYS: '7'
+        run: node src/index.js
+
+      - name: Commit and Push News History
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add history.json
+          # Check if there are changes to commit, push only if modified
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update news history [skip ci]"
+            git push
+          else
+            echo "No changes in history.json to commit."
+          fi
