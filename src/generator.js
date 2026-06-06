@@ -199,10 +199,10 @@ function validateAndRepairContent(jsonData) {
 
   // Card 3
   if (result.card3 && Array.isArray(result.card3.bullets)) {
-    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 70, true)); // Increased to 70
+    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 90, true)); // Increased to 90
   }
   if (result.card3 && result.card3.editors_insight) {
-    result.card3.editors_insight = cleanText(result.card3.editors_insight, 70, true);
+    result.card3.editors_insight = cleanText(result.card3.editors_insight, 90, true);
   }
 
   // Card 1
@@ -325,9 +325,9 @@ async function generateCardContent(selectedNews) {
   "card3": {
     "section_title": "그래서 어떻게 돼?",
     "bullets": [
-      "22자 내외 구체적인 행동 유도 CTA 1 (반드시 동사형으로 종결. 예: <hl>관세율 바로 확인</hl>하고 대책 세우세요!)",
-      "22자 내외 구체적인 행동 유도 CTA 2 (반드시 동사형으로 종결. 예: <hl>수입 계약 조건</hl>을 즉시 재검토하세요!)",
-      "22자 내외 구체적인 행동 유도 CTA 3 (반드시 동사형으로 종결. 예: <hl>대체 수입선</hl>을 당장 모색해 보세요!)"
+      "45자 내외 [예측]: 뉴스가 불러올 단기적 트렌드/시장 변화 (예: 외상매출채권 <hl>상환청구권 폐지</hl>로 중소기업 연쇄 부도 위험이 감소할 전망입니다.)",
+      "45자 내외 [영향]: 내 지갑/자산/업무에 미치는 실질적 파급력 (예: 원청기업의 파산 리스크를 떠안지 않아 중소기업의 <hl>현금 흐름</hl>이 크게 개선됩니다.)",
+      "45자 내외 [행동]: 지금 당장 취할 구체적 행동 지침 (피상적 조언 불가, 반드시 구체적인 동사 종결. 예: 주거래 은행을 통해 <hl>대출 상환 조건</hl>이 어떻게 바뀌는지 즉시 확인해보세요!)"
     ],
     "editors_insight": "대책에 대한 행동 유도 에디터 평 (강조 단어는 반드시 <hl>태그</hl> 활용. 예: <hl>리스크 관리</hl>를 지금 시작해야 합니다)",
     "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
