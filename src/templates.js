@@ -32,11 +32,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
         <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-[#0A0E1A]/70 to-[#0A0E1A] z-10"></div>
         <div class="ambient-glow glow-primary w-[700px] h-[700px] bottom-[-200px] right-[-200px] z-10"></div>
         
-        <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-primary text-6xl">trending_up</span>
-          <div class="font-display font-black text-primary text-5xl tracking-tight">today.econ 📈</div>
-          <span class="material-symbols-outlined text-primary text-6xl">more_horiz</span>
-        </header>
+        <!-- Header removed for cleaner UI -->
 
         <main class="flex-1 flex flex-col z-20 justify-end pb-24 mt-24 space-y-10">
           <!-- Full bleed typography, no modal container -->
@@ -89,11 +85,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-[#0A0E1A]/80 to-[#0A0E1A] z-10"></div>
         <div class="ambient-glow glow-primary w-[700px] h-[700px] bottom-[-200px] right-[-200px] z-10"></div>
         
-        <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-primary text-6xl">trending_up</span>
-          <div class="font-display font-black text-primary text-5xl tracking-tight">today.econ 📈</div>
-          <span class="material-symbols-outlined text-primary text-6xl">more_horiz</span>
-        </header>
+        <!-- Header removed for cleaner UI -->
 
         <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center mt-16' : 'justify-end pb-16'}">
           <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_30px_70px_rgba(0,0,0,0.7)] border border-white/10 ${!isFact ? 'mb-8' : ''}">
@@ -116,7 +108,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
           <div class="w-full flex flex-col items-center space-y-6">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-200 font-bold text-2.5xl py-4 px-8 rounded-full backdrop-blur-2xl bg-black/60 border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.5)] max-w-[950px] mx-auto">
-                📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}; text-shadow: 0 0 8px ${themeColor}80;">[팔로우]</span> 해주세요!
+                💡 오늘의 경제, 내일도 쉽고 빠르게 👉 <span style="color: ${themeColor}; text-shadow: 0 0 8px ${themeColor}80;">[팔로우]</span>
               </div>
             ` : ''}
             <div class="footer-area text-slate-400 font-black text-center text-2.5xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.9)]">📍 @today.econ</div>
@@ -216,11 +208,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
         <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/20 via-[#FDFBF7]/70 to-[#FDFBF7] z-10"></div>
         
-        <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-slate-800 text-6xl">trending_up</span>
-          <div class="font-display font-black text-slate-800 text-5xl tracking-tight">today.econ 📈</div>
-          <span class="material-symbols-outlined text-slate-800 text-6xl">more_horiz</span>
-        </header>
+        <!-- Header removed for cleaner UI -->
 
         <main class="flex-1 flex flex-col z-20 justify-end pb-24 mt-24 space-y-10">
           <!-- Full bleed typography, no modal container -->
@@ -274,11 +262,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
         <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/40 via-[#FDFBF7]/80 to-[#FDFBF7] z-10"></div>
         
-        <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-slate-800 text-6xl">trending_up</span>
-          <div class="font-display font-black text-slate-800 text-5xl tracking-tight">today.econ 📈</div>
-          <span class="material-symbols-outlined text-slate-800 text-6xl">more_horiz</span>
-        </header>
+        <!-- Header removed for cleaner UI -->
 
         <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center mt-16' : 'justify-end pb-16'}">
           <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_45px_rgba(0,0,0,0.06)] ${!isFact ? 'mb-8' : ''}">
@@ -301,7 +285,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           <div class="w-full flex flex-col items-center space-y-6">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-800 font-bold text-2.5xl py-4 px-8 rounded-full backdrop-blur-2xl bg-white/70 border border-slate-200 shadow-[0_10px_25px_rgba(0,0,0,0.05)] max-w-[950px] mx-auto">
-                📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}">[팔로우]</span> 해주세요!
+                💡 오늘의 경제, 내일도 쉽고 빠르게 👉 <span style="color: ${themeColor}; text-shadow: 0 0 4px ${themeColor}40;">[팔로우]</span>
               </div>
             ` : ''}
             <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
@@ -388,11 +372,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
         <div class="absolute inset-0 bg-gradient-to-b from-[#140727]/30 via-[#140727]/70 to-[#140727] z-10"></div>
         
-        <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-neon-green text-6xl">insights</span>
-          <div class="font-display font-black text-neon-green text-5xl tracking-tighter">today.econ 📈</div>
-          <span class="material-symbols-outlined text-slate-300 text-6xl">more_vert</span>
-        </header>
+        <!-- Header removed for cleaner UI -->
 
         <main class="flex-1 flex flex-col z-20 justify-end pb-24 mt-24 space-y-10">
           <!-- Full bleed typography, no modal container -->
@@ -441,11 +421,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
         <div class="absolute inset-0 bg-gradient-to-b from-[#140727]/40 via-[#140727]/80 to-[#140727] z-10"></div>
         
-        <header class="w-full pt-16 flex justify-between items-center z-20">
-          <span class="material-symbols-outlined text-neon-green text-6xl">insights</span>
-          <div class="font-display font-black text-neon-green text-5xl tracking-tighter">today.econ 📈</div>
-          <span class="material-symbols-outlined text-slate-300 text-6xl">more_vert</span>
-        </header>
+        <!-- Header removed for cleaner UI -->
 
         <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center mt-16' : 'justify-end pb-16'}">
           <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-[#ebb2ff]/20 ${!isFact ? 'mb-8' : ''}">
@@ -468,7 +444,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           <div class="w-full flex flex-col items-center space-y-6">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-200 font-bold text-2.5xl py-4 px-8 rounded-full backdrop-blur-2xl bg-black/60 border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.5)] max-w-[950px] mx-auto">
-                📢 유용한 시황을 매일 보시려면 <span style="color: ${themeColor}; text-shadow: 0 0 8px ${themeColor}80;">[팔로우]</span> 해주세요!
+                💡 오늘의 경제, 내일도 쉽고 빠르게 👉 <span style="color: ${themeColor}; text-shadow: 0 0 8px ${themeColor}80;">[팔로우]</span>
               </div>
             ` : ''}
             <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
