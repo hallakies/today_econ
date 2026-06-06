@@ -42,11 +42,47 @@ async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') 
       throw new Error(`Pollinations API returned status ${response.status}`);
     }
   } catch (error) {
-    console.warn('[Renderer] Pollinations API failed. Loading curated theme-specific 3D fluid gradient image...', error.message || error);
+    console.warn('[Renderer] Pollinations API failed. Attempting Hugging Face Inference API (FLUX.1-schnell)...', error.message);
     
-    // Curated 3D abstract fluid gradient artworks, 100% cohesive and matching theme colors (9:16 aspect ratio)
-    // 6 images per theme for variety
-    const obsidianFallbacks = [
+    try {
+      if (!config.hfToken) {
+        throw new Error('HF_TOKEN is not configured.');
+      }
+      
+      const hfResponse = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
+        headers: {
+          'Authorization': `Bearer ${config.hfToken}`,
+          'Content-Type': 'application/json'
+        },
+        method: 'POST',
+        body: JSON.stringify({
+          inputs: cleanPrompt + ", high quality, detailed, trending on artstation",
+          parameters: {
+            guidance_scale: 7.5,
+            num_inference_steps: 4,
+            width: 800,
+            height: 800
+          }
+        }),
+      });
+      
+      if (hfResponse.ok) {
+        const arrayBuffer = await hfResponse.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        if (buffer.length < 5000) {
+          throw new Error(`HF Image too small (${buffer.length} bytes)`);
+        }
+        console.log(`[Renderer] Successfully generated image via Hugging Face (${(buffer.length / 1024).toFixed(1)}KB).`);
+        return buffer;
+      } else {
+        throw new Error(`Hugging Face API returned status ${hfResponse.status}`);
+      }
+    } catch (hfError) {
+      console.warn('[Renderer] Hugging Face API failed as well. Loading curated theme-specific 3D fluid gradient image...', hfError.message);
+      
+      // Curated 3D abstract fluid gradient artworks, 100% cohesive and matching theme colors (9:16 aspect ratio)
+      // 6 images per theme for variety
+      const obsidianFallbacks = [
       'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080&h=1920&fit=crop&q=80', // dark 3D fluid 1
       'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=1080&h=1920&fit=crop&q=80', // dark 3D fluid 2
       'https://images.unsplash.com/photo-1604871000636-074fa5117945?w=1080&h=1920&fit=crop&q=80', // dark 3D fluid 3
@@ -96,6 +132,7 @@ async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') 
       return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
     }
   }
+}
 }
 
 /**

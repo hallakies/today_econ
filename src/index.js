@@ -86,7 +86,7 @@ async function run() {
     console.log(`[Main] Successfully rendered ${renderedFiles.length} slides.`);
 
     // 5. Send images and Instagram caption to Slack
-    await sendToSlack(renderedFiles, cardContent.instagram_caption);
+    await sendToSlack(renderedFiles, cardContent.instagram_caption, selectedNews);
     console.log('[Main] News and images sent to Slack!');
 
     // 6. Save the news item title to history to prevent future duplicates

@@ -8,9 +8,9 @@ const web = new WebClient(config.slackBotToken);
 /**
  * Uploads generated images and posts the Instagram caption to a Slack channel.
  * @param {Array<string>} imagePaths File paths of the 3 rendered PNG slides.
- * @param {string} instagramCaption The caption text generated for the Instagram post.
+ * @param {object} selectedNews The original news item object containing title and link.
  */
-async function sendToSlack(imagePaths, instagramCaption) {
+async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}) {
   if (!config.slackBotToken || !config.slackChannelId) {
     throw new Error('[Slack] Missing SLACK_BOT_TOKEN or SLACK_CHANNEL_ID. Cannot send notification.');
   }
@@ -28,8 +28,10 @@ async function sendToSlack(imagePaths, instagramCaption) {
     };
   });
 
+  const newsRef = selectedNews.link ? `\n\n🔗 *원본 기사 (팩트체크용):*\n<${selectedNews.link}|${selectedNews.title}>\n` : '';
+
   // Prepare caption text message referencing the upload
-  const captionMessage = `📈 *오늘의 경제 카드 뉴스 생성 완료!*\n\n아래 점선 사이의 텍스트를 복사하여 인스타그램 본문 멘트로 사용하세요.\n\n-----------------------------\n\n${instagramCaption}\n\n-----------------------------`;
+  const captionMessage = `📈 *오늘의 경제 카드 뉴스 생성 완료!*${newsRef}\n아래 점선 사이의 텍스트를 복사하여 인스타그램 본문 멘트로 사용하세요.\n\n-----------------------------\n\n${instagramCaption}\n\n-----------------------------`;
 
   try {
     // 1. Upload files first (without initial_comment to prevent duplicate posts in some slack APIs)
