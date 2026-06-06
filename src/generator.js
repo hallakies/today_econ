@@ -191,10 +191,10 @@ function validateAndRepairContent(jsonData) {
 
   // Card 2
   if (result.card2 && Array.isArray(result.card2.bullets)) {
-    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 60, false)); // Increased to 60
+    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 90, false)); // Increased to 90
   }
   if (result.card2 && result.card2.editors_insight) {
-    result.card2.editors_insight = cleanText(result.card2.editors_insight, 70, false);
+    result.card2.editors_insight = cleanText(result.card2.editors_insight, 90, false);
   }
 
   // Card 3
@@ -315,9 +315,9 @@ async function generateCardContent(selectedNews) {
   "card2": {
     "section_title": "무슨 일이야?",
     "bullets": [
-      "15자 내외 키워드 팩트 1 (강조 단어는 반드시 <hl>태그</hl> 활용. 예: 美 인플레이션 <hl>2.5%</hl> 기록)",
-      "15자 내외 키워드 팩트 2 (강조 단어는 반드시 <hl>태그</hl> 활용)",
-      "15자 내외 키워드 팩트 3 (강조 단어는 반드시 <hl>태그</hl> 활용)"
+      "45자 내외 구체적인 팩트와 맥락 설명 1 (단순 나열 불가, 완전한 문장으로 상세히. 예: 인터넷은행들이 가계대출 규제를 피해 <hl>개인사업자 대출</hl>을 49%나 늘렸습니다.)",
+      "45자 내외 구체적인 팩트와 맥락 설명 2 (강조 단어는 반드시 <hl>태그</hl> 활용 및 문장형 종결)",
+      "45자 내외 구체적인 팩트와 맥락 설명 3 (강조 단어는 반드시 <hl>태그</hl> 활용 및 문장형 종결)"
     ],
     "editors_insight": "팩트에 대한 한 줄 에디터 평 (강조 단어는 반드시 <hl>태그</hl> 활용)",
     "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
