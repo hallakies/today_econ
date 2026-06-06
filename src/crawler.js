@@ -16,16 +16,28 @@ async function fetchNews(rssUrl) {
       return [];
     }
 
-    const items = feed.items.map(item => {
-      // Extract cleanest summary possible
-      const summary = item.contentSnippet || item.content || item.description || '';
-      return {
-        title: item.title ? item.title.trim() : '',
-        link: item.link ? item.link.trim() : '',
-        pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
-        summary: summary.trim().substring(0, 300),
-      };
-    });
+    const items = feed.items
+      .map(item => {
+        // Extract cleanest summary possible
+        const summary = item.contentSnippet || item.content || item.description || '';
+        return {
+          title: item.title ? item.title.trim() : '',
+          link: item.link ? item.link.trim() : '',
+          pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
+          summary: summary.trim().substring(0, 300),
+        };
+      })
+      .filter(item => {
+        const lowerTitle = item.title.toLowerCase();
+        // Filter out completely irrelevant news types early
+        if (lowerTitle.includes('[인사]')) return false;
+        if (lowerTitle.includes('[부고]')) return false;
+        if (lowerTitle.includes('[동정]')) return false;
+        if (lowerTitle.includes('[알림]')) return false;
+        if (lowerTitle.includes('[게시판]')) return false;
+        if (lowerTitle.includes('[부음]')) return false;
+        return true;
+      });
 
     console.log(`[Crawler] Successfully parsed ${items.length} items.`);
     return items;
