@@ -28,7 +28,12 @@ async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') 
       console.log('[Renderer] Using POLLINATIONS_API_KEY for authorization.');
     }
     
-    const response = await fetch(pollinationsUrl, { headers });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+    
+    const response = await fetch(pollinationsUrl, { headers, signal: controller.signal });
+    clearTimeout(timeout);
+    
     if (response.ok) {
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
