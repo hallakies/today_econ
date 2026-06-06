@@ -176,8 +176,47 @@ function validateAndRepairContent(jsonData) {
     // Remove double spaces
     clean = clean.replace(/\s+/g, ' ').trim();
 
-    if (clean.length > maxLength) {
-      clean = clean.substring(0, maxLength);
+    // If over limit, find a natural break point instead of cutting mid-sentence
+    const visibleText = clean.replace(/<\/?hl>/gi, '');
+    if (visibleText.length > maxLength) {
+      let visibleCount = 0;
+      let inTag = false;
+      let cutIndex = clean.length;
+      let lastSpaceIdx = -1;
+
+      for (let i = 0; i < clean.length; i++) {
+        if (clean[i] === '<' && (clean.substring(i).match(/^<\/?hl>/i))) {
+          inTag = true;
+        }
+        if (inTag) {
+          if (clean[i] === '>') inTag = false;
+          continue;
+        }
+        visibleCount++;
+        if (clean[i] === ' ') lastSpaceIdx = i;
+        if (visibleCount >= maxLength) {
+          cutIndex = i + 1;
+          break;
+        }
+      }
+
+      const minAcceptable = Math.floor(maxLength * 0.75);
+      let bestCut = cutIndex;
+      if (lastSpaceIdx > 0) {
+        let vc = 0; let it = false;
+        for (let j = 0; j < lastSpaceIdx; j++) {
+          if (clean[j] === '<' && clean.substring(j).match(/^<\/?hl>/i)) it = true;
+          if (it) { if (clean[j] === '>') it = false; continue; }
+          vc++;
+        }
+        if (vc >= minAcceptable) bestCut = lastSpaceIdx;
+      }
+
+      clean = clean.substring(0, bestCut).trim();
+      clean = clean.replace(/[\uc740\ub294\uc774\uac00\uc744\ub97c\uc5d0\uc11c\uc758\ub85c\uc640\uacfc\ub3c4\ub9cc\ubd80\ud130\uae4c\uc9c0]$/, '');
+      const openCount = (clean.match(/<hl>/gi) || []).length;
+      const closeCount = (clean.match(/<\/hl>/gi) || []).length;
+      if (openCount > closeCount) clean += '</hl>';
     }
     return clean;
   }
@@ -262,9 +301,16 @@ async function generateCardContent(selectedNews) {
    - 불필요한 조사와 서술어는 생략하고, 명사형 종결이나 직관적 키워드 위주로 작성하십시오.
 4. **카드 2와 카드 3의 완전 분리 및 실질적 Action 강제 (필수)**:
    - **카드 2(card2)**: 기사 내용의 핵심 팩트(Fact) 요약 3가지입니다. (배지명 추천: "무슨 일이야?")
-   - **카드 3(card3)**: 기사 사건이 독자의 지갑에 미칠 영향과 독자가 취해야 할 실생활 행동 지침(Action) 3가지입니다. (배지명 추천: "그래서 어떻게 돼?")
-   - **카피라이팅 톤앤매너 변경 (Actionable CTA)**: 카드 3(card3)의 불릿 포인트와 에디터 평은 절대로 건조한 명사형 요약이나 나열(예: 'IR 자료 바로 확인', '해외 전력 투자 검토')로 작성하지 마십시오. 유저에게 직접 말을 거는 듯한 행동 유도(CTA) 문장(예: "<hl>지금 당장 DART에서 IR 자료를 열어보세요!</hl>", "<hl>내 계좌의 에너지 섹터 비중</hl>, 지금이 점검할 타이밍입니다!")으로 역동적인 톤앤매너를 변환하여 작성하십시오.
-     각 불릿 포인트는 20자 내외의 구체적인 행동 팁이어야 합니다. 두 카드의 불릿 포인트는 절대 겹치거나 같아서는 안 되며, 완전히 구분되어야 합니다.
+   - **카드 3(card3)**: **20~30대 직장인, 재테크 초보자**가 이 뉴스를 보고 "앞으로 어떻게 될까? 나는 뭘 준비해야 하지?"에 대한 답을 얻을 수 있는 **실생활 행동 지침 및 동향 예측** 3가지입니다. (배지명 추천: "그래서 어떻게 돼?")
+   - **[CRITICAL] 페르소나 및 관점 제약**: 단순한 행동 지시를 넘어, **향후 시장 흐름에 대한 예측이나 경제적 사고(Thinking)의 확장**을 반드시 포함하여 작성하십시오. 무조건적으로 주식이나 ETF 투자를 권유하지 마십시오.
+     - [부동산/금리 뉴스]: 금리 기조 변화에 따른 자금 이동 예측, 향후 대출/투자 전략 재점검
+     - [물가/소비 뉴스]: 가격 변동이 실생활과 연관 산업에 미칠 나비효과 예측, 예산 방어 전략
+     - [정책/행정 뉴스]: 정책이 바꿀 산업 지형도 추론, 내 지갑(세금/지원금)에 미치는 파급력 계산
+     - [산업/기업 뉴스]: 해당 이슈가 1~3년 뒤 바꿀 미래상, 유망 연관 섹터의 트렌드 변화 주시
+   - **[CRITICAL] 허위/가상의 금융 상품 추천 절대 금지**: "연구ETF", "공공기관ETF" 등 존재하지 않는 가상의 주식이나 펀드, ETF를 지어내서 추천하지 마십시오. 확신할 수 없다면 직접적인 매수 권유 대신 "관련 산업 트렌드 점검" 정도로 순화하십시오.
+   - **카피라이팅 톤앤매너 (Actionable CTA & Insight)**: 유저에게 직접 말을 거는 듯한 행동 유도와, 앞으로의 경제 흐름에 대해 생각할 거리를 함께 던져주십시오.
+     예시: "<hl>금리 인하기</hl>에 자금이 어디로 이동할지 미리 예측해 보세요!", "<hl>관련 생태계 재편</hl>이 내 직업/투자에 미칠 영향을 점검하세요!"
+     각 불릿 포인트는 20~25자 내외의 구체적인 행동 팁 및 예측이어야 합니다. 두 카드의 불릿 포인트는 절대 겹치거나 같아서는 안 됩니다.
 5. **에디토리얼 인사이트(editors_insight) 작성**:
    - 가벼워 보이는 말풍선이나 이모티콘 독백 대신, 뉴스 레터 스타일의 **격식 있고 신뢰감 주는 한 줄 요약 평(인사이트)**을 20자 내외의 정중한 어조로 작성하세요. (이모지 남발 금지, 최대 1개)
    - **중요**: 해당 카드의 제목이나 불릿 포인트에 사용된 텍스트를 그대로 반복하지 마십시오. 예를 들어, 불릿이 "2500억 펀드 조성"이면 인사이트는 "중소기업의 설비 자금난이 해소될 전망입니다"와 같이 **원인 분석, 영향력, 혹은 거시적 경제 전망**으로 완전히 다르게 서술해야 합니다. 단어를 그대로 재활용하여 대충 만든 인상을 주는 행위를 엄격히 금지합니다.
@@ -320,7 +366,7 @@ async function generateCardContent(selectedNews) {
     "editors_insight": "대책에 대한 행동 유도 에디터 평 (강조 단어는 반드시 <hl>태그</hl> 활용. 예: <hl>리스크 관리</hl>를 지금 시작해야 합니다)",
     "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
   },
-  "instagram_caption": "인스타그램 업로드용 긴 글 본문 멘트 (이모지 포함, 영어 번역식 해시태그는 넣지 말 것)"
+  "instagram_caption": "인스타그램 업로드용 긴 글 본문 멘트 (<hl> 태그 및 해시태그 금지, **이모지/특수기호 절대 사용 금지** - 텍스트로만 작성)"
 }`;
 
   let userPrompt = `### 선택된 뉴스 기사 정보:
@@ -340,7 +386,6 @@ async function generateCardContent(selectedNews) {
   try {
     console.log('[Generator] Requesting content generation from Groq...');
     let resultText = '';
-    
     try {
       const response = await callGroqWithRetry({
         model: 'openai/gpt-oss-120b',
@@ -348,31 +393,63 @@ async function generateCardContent(selectedNews) {
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
-        response_format: { type: 'json_object' },
         temperature: 0.7,
         max_tokens: 3000,
       });
-      resultText = response.choices[0].message.content.trim();
+      resultText = (response.choices[0]?.message?.content || '').trim();
+      console.log('[Generator] Main model raw response length:', resultText.length);
+      if (!resultText) throw new Error("Main model returned empty content");
     } catch (apiError) {
-      console.warn('[Generator] 70B/120B failed or rate-limited. Error:', apiError);
-      console.warn('[Generator] Falling back to Llama 3.1 8B with low max_tokens...');
+      console.warn('[Generator] Main model failed. Error:', apiError.message || apiError);
+      console.warn('[Generator] Falling back to Llama 3.3 70B...');
       const response = await callGroqWithRetry({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
-        response_format: { type: 'json_object' },
         temperature: 0.7,
-        max_tokens: 800, // Fit within 6000 TPM limit
+        max_tokens: 3000,
       }, 3, 3000);
-      resultText = response.choices[0].message.content.trim();
+      resultText = (response.choices[0]?.message?.content || '').trim();
+      console.log('[Generator] Fallback model raw response length:', resultText.length);
+      if (!resultText) throw new Error("Fallback model returned empty content");
     }
 
     console.log('[Generator] Raw content generated from LLM. Validating & Sanitizing...');
-    let resultJson = JSON.parse(resultText);
+    console.log('[Generator] Raw LLM Text snippet (first 300 chars):', resultText.substring(0, 300));
+    
+    // Strip markdown code block wrapper if present
+    let jsonText = resultText;
+    const jsonBlockMatch = jsonText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (jsonBlockMatch) {
+      jsonText = jsonBlockMatch[1].trim();
+    }
+    // Extract json object explicitly
+    if (!jsonText.startsWith('{')) {
+      const firstBrace = jsonText.indexOf('{');
+      if (firstBrace >= 0) jsonText = jsonText.substring(firstBrace);
+    }
 
-    // If it's industrial, double check we force obsidian/cyber
+    let resultJson;
+    try {
+      resultJson = JSON.parse(jsonText);
+    } catch (parseError) {
+      console.error('[Generator] JSON parse failed. Attempting repair of truncated JSON...');
+      console.error('[Generator] Raw jsonText snippet:', jsonText.substring(Math.max(0, jsonText.length - 200)));
+      let repaired = jsonText.trim();
+      const openBraces = (repaired.match(/\{/g) || []).length;
+      const closeBraces = (repaired.match(/\}/g) || []).length;
+      if (openBraces > closeBraces) {
+        repaired += '}'.repeat(openBraces - closeBraces);
+      }
+      try {
+        resultJson = JSON.parse(repaired);
+      } catch (repairError) {
+        console.error('[Generator] Repair failed. Repaired text snippet:', repaired.substring(Math.max(0, repaired.length - 200)));
+        throw new Error('Failed to parse and repair JSON from model output');
+      }
+    }
     if (isIndustrial) {
       resultJson.template_theme = 'obsidian';
       resultJson.theme_color = '#00d2ff';

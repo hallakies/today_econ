@@ -51,7 +51,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
           ${content.editors_insight ? `
             <div class="w-full max-w-[950px] mx-auto rounded-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-[#0A0E1A]/85 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
               <span class="text-5xl shrink-0">💡</span>
-              <p class="text-left text-slate-100 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
+              <p class="text-left text-slate-100 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
           
@@ -78,7 +78,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
               </svg>
             `}
           </div>
-          <p class="font-body text-4xl text-slate-100 font-extrabold leading-normal break-keep">${highlightText(bullet, themeColor)}</p>
+          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-normal break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('<div class="w-full h-px bg-white/5 my-1"></div>');
 
@@ -86,7 +86,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-[#0A0E1A]/70 to-[#0A0E1A] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-[#0A0E1A]/80 to-[#0A0E1A] z-10"></div>
         <div class="ambient-glow glow-primary w-[700px] h-[700px] bottom-[-200px] right-[-200px] z-10"></div>
         
         <header class="w-full pt-16 flex justify-between items-center z-20">
@@ -95,7 +95,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
           <span class="material-symbols-outlined text-primary text-6xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center pb-24 mt-24' : 'justify-end pb-16'}">
+        <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center mt-16' : 'justify-end pb-16'}">
           <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_30px_70px_rgba(0,0,0,0.7)] border border-white/10 ${!isFact ? 'mb-8' : ''}">
             <div class="mb-4">
               <span class="inline-block px-8 py-2.5 rounded-full font-label-caps text-2xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
@@ -108,7 +108,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
           </div>
@@ -179,6 +179,22 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
         .slide-container {
           background-color: #0A0E1A;
         }
+        .bullet-text {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: keep-all;
+        }
+        .insight-text {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: keep-all;
+        }
       </style>
     </head>
     <body class="text-white antialiased flex items-center justify-center min-h-screen">
@@ -219,7 +235,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           ${content.editors_insight ? `
             <div class="w-full max-w-[950px] mx-auto rounded-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-[#FDFBF7]/90 border border-slate-200/80 shadow-[0_15px_40px_rgba(0,0,0,0.06)]">
               <span class="text-5xl shrink-0">💡</span>
-              <p class="text-left text-slate-800 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
+              <p class="text-left text-slate-800 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
           
@@ -248,7 +264,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
               </svg>
             `}
           </div>
-          <p class="font-body text-4xl text-slate-800 font-extrabold leading-normal break-keep">${highlightText(bullet, themeColor)}</p>
+          <p class="font-body text-3.5xl text-slate-800 font-extrabold leading-normal break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('<div class="w-full h-px bg-slate-200/60 my-1"></div>');
 
@@ -256,7 +272,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/20 via-[#FDFBF7]/70 to-[#FDFBF7] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/40 via-[#FDFBF7]/80 to-[#FDFBF7] z-10"></div>
         
         <header class="w-full pt-16 flex justify-between items-center z-20">
           <span class="material-symbols-outlined text-slate-800 text-6xl">trending_up</span>
@@ -264,7 +280,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           <span class="material-symbols-outlined text-slate-800 text-6xl">more_horiz</span>
         </header>
 
-        <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center pb-24 mt-24' : 'justify-end pb-16'}">
+        <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center mt-16' : 'justify-end pb-16'}">
           <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_45px_rgba(0,0,0,0.06)] ${!isFact ? 'mb-8' : ''}">
             <div class="mb-4">
               <span class="inline-block px-8 py-2.5 rounded font-label-caps text-2xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
@@ -277,7 +293,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-slate-200/80 flex items-start gap-4 text-secondary bg-secondary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
-                <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
+                <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
           </div>
@@ -335,6 +351,22 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           backdrop-filter: blur(30px);
           border: 1px solid rgba(255, 255, 255, 0.95);
         }
+        .bullet-text {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: keep-all;
+        }
+        .insight-text {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: keep-all;
+        }
       </style>
     </head>
     <body class="text-slate-800 antialiased flex items-center justify-center min-h-screen">
@@ -376,7 +408,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           ${content.editors_insight ? `
             <div class="w-full max-w-[950px] mx-auto rounded-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-[#140727]/85 border border-[#ebb2ff]/20 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
               <span class="text-5xl shrink-0">💡</span>
-              <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
+              <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
           
@@ -399,7 +431,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           <div class="w-12 h-12 rounded-full bg-slate-900/60 flex items-center justify-center border ${dotBorder} shrink-0 shadow-[0_0_15px_${bulletGlow}]">
             <span class="w-4 h-4 rounded-full ${dotPulseColor} animate-pulse"></span>
           </div>
-          <p class="font-body text-4xl text-slate-100 font-extrabold leading-normal break-keep">${highlightText(bullet, themeColor)}</p>
+          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-normal break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('<div class="w-full h-px bg-white/10 my-2"></div>');
 
@@ -407,7 +439,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#140727]/20 via-[#140727]/70 to-[#140727] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#140727]/40 via-[#140727]/80 to-[#140727] z-10"></div>
         
         <header class="w-full pt-16 flex justify-between items-center z-20">
           <span class="material-symbols-outlined text-neon-green text-6xl">insights</span>
@@ -415,7 +447,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           <span class="material-symbols-outlined text-slate-300 text-6xl">more_vert</span>
         </header>
 
-        <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center pb-24 mt-24' : 'justify-end pb-16'}">
+        <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center mt-16' : 'justify-end pb-16'}">
           <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-[#ebb2ff]/20 ${!isFact ? 'mb-8' : ''}">
             <div class="mb-4">
               <span class="inline-block px-8 py-2.5 rounded border text-slate-200 font-label-caps text-2xl tracking-widest uppercase" style="border-color: ${badgeBorderColor}; background: ${badgeBorderColor}15; box-shadow: 0 0 10px ${badgeGlowColor};">${badgeText}</span>
@@ -428,7 +460,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
-                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl">${highlightText(content.editors_insight, themeColor)}</p>
+                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
           </div>
@@ -496,6 +528,22 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
         }
         .slide-container {
           background-color: #140727;
+        }
+        .bullet-text {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: keep-all;
+        }
+        .insight-text {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: keep-all;
         }
       </style>
     </head>

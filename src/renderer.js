@@ -18,8 +18,9 @@ async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') 
     console.log('[Renderer] Attempting Pollinations.ai image generation...');
     const encodedPrompt = encodeURIComponent(cleanPrompt);
     
-    // Use the official gen.pollinations.ai endpoint
-    const pollinationsUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?width=800&height=800&nologo=true&seed=${Math.floor(Math.random() * 100000)}`;
+    // Use the official gen.pollinations.ai endpoint with negative prompt to prevent text in images
+    const negativePrompt = encodeURIComponent('text, letters, words, characters, alphabet, watermark, low quality, blurry, logo, signature, national flag, coat of arms, emblem, badge, crest, heraldry, banner with symbols, country flag');
+    const pollinationsUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?width=800&height=800&nologo=true&seed=${Math.floor(Math.random() * 100000)}&negative=${negativePrompt}`;
     
     const headers = {};
     if (config.pollinationsApiKey) {
@@ -30,8 +31,13 @@ async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') 
     const response = await fetch(pollinationsUrl, { headers });
     if (response.ok) {
       const arrayBuffer = await response.arrayBuffer();
-      console.log('[Renderer] Successfully generated image via Pollinations.ai.');
-      return Buffer.from(arrayBuffer);
+      const buffer = Buffer.from(arrayBuffer);
+      // Validate: reject suspiciously small images (< 5KB likely means error/placeholder)
+      if (buffer.length < 5000) {
+        throw new Error(`Image too small (${buffer.length} bytes), likely a placeholder or error`);
+      }
+      console.log(`[Renderer] Successfully generated image via Pollinations.ai (${(buffer.length / 1024).toFixed(1)}KB).`);
+      return buffer;
     } else {
       throw new Error(`Pollinations API returned status ${response.status}`);
     }
@@ -39,20 +45,30 @@ async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') 
     console.warn('[Renderer] Pollinations API failed. Loading curated theme-specific 3D fluid gradient image...', error.message || error);
     
     // Curated 3D abstract fluid gradient artworks, 100% cohesive and matching theme colors (9:16 aspect ratio)
+    // 6 images per theme for variety
     const obsidianFallbacks = [
-      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080&h=1920&fit=crop&q=80', // obsidian 3D wave 1
-      'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=1080&h=1920&fit=crop&q=80', // obsidian 3D wave 2
-      'https://images.unsplash.com/photo-1604871000636-074fa5117945?w=1080&h=1920&fit=crop&q=80'  // obsidian 3D wave 3
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080&h=1920&fit=crop&q=80', // dark 3D fluid 1
+      'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=1080&h=1920&fit=crop&q=80', // dark 3D fluid 2
+      'https://images.unsplash.com/photo-1604871000636-074fa5117945?w=1080&h=1920&fit=crop&q=80', // dark 3D fluid 3
+      'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1080&h=1920&fit=crop&q=80', // gradient mesh dark
+      'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=1080&h=1920&fit=crop&q=80', // deep blue gradient
+      'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=1080&h=1920&fit=crop&q=80'  // dark abstract wave
     ];
     const ivoryFallbacks = [
-      'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=1080&h=1920&fit=crop&q=80', // Ivory warm 3D wave 1
-      'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=1080&h=1920&fit=crop&q=80', // Ivory warm 3D wave 2
-      'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1080&h=1920&fit=crop&q=80'  // Ivory warm 3D wave 3
+      'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=1080&h=1920&fit=crop&q=80', // warm pastel wave 1
+      'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=1080&h=1920&fit=crop&q=80', // warm pastel wave 2
+      'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1080&h=1920&fit=crop&q=80', // warm gradient 3
+      'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1080&h=1920&fit=crop&q=80', // soft warm abstract
+      'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=1080&h=1920&fit=crop&q=80', // pastel 3D shapes
+      'https://images.unsplash.com/photo-1614851099511-773084f6911d?w=1080&h=1920&fit=crop&q=80'  // warm light gradient
     ];
     const cyberFallbacks = [
-      'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1080&h=1920&fit=crop&q=80', // neon abstract wave 1
-      'https://images.unsplash.com/photo-1563089145-599997674d42?w=1080&h=1920&fit=crop&q=80', // neon abstract wave 2
-      'https://images.unsplash.com/photo-1550684847-75bdda21cc95?w=1080&h=1920&fit=crop&q=80'  // neon abstract wave 3
+      'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1080&h=1920&fit=crop&q=80', // neon abstract 1
+      'https://images.unsplash.com/photo-1563089145-599997674d42?w=1080&h=1920&fit=crop&q=80', // neon abstract 2
+      'https://images.unsplash.com/photo-1550684847-75bdda21cc95?w=1080&h=1920&fit=crop&q=80', // neon abstract 3
+      'https://images.unsplash.com/photo-1633259584604-afdc243122ea?w=1080&h=1920&fit=crop&q=80', // purple neon mesh
+      'https://images.unsplash.com/photo-1620121692029-d088224ddc74?w=1080&h=1920&fit=crop&q=80', // cyber gradient
+      'https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=1080&h=1920&fit=crop&q=80'  // holographic abstract
     ];
 
     let fallbacks = obsidianFallbacks;

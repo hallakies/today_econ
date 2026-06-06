@@ -52,13 +52,34 @@ async function run() {
     const selectedNews = await selectNews(newsList);
     console.log(`[Main] Selected news title: "${selectedNews.title}"`);
 
-    // Pausing 5 seconds to prevent Groq TPM rate limit issues
-    console.log('[Main] Pausing for 5 seconds...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Pausing 8 seconds to prevent Groq TPM rate limit issues (increased from 5s)
+    console.log('[Main] Pausing for 8 seconds to reset Groq TPM window...');
+    await new Promise(resolve => setTimeout(resolve, 8000));
 
     // 3. Generate card content (Title, fact bullet points, action points, prompts, caption)
     const cardContent = await generateCardContent(selectedNews);
     console.log('[Main] Content and prompts generated successfully.');
+
+    // --- Quality Gate: Validate generated content ---
+    const qualityWarnings = [];
+    if (!cardContent.instagram_caption || cardContent.instagram_caption.trim().length < 30) {
+      qualityWarnings.push('instagram_caption is empty or too short');
+    }
+    if (!cardContent.card1 || !cardContent.card1.title) {
+      qualityWarnings.push('card1.title is missing');
+    }
+    if (!cardContent.card2 || !Array.isArray(cardContent.card2.bullets) || cardContent.card2.bullets.length < 3) {
+      qualityWarnings.push(`card2.bullets has only ${cardContent.card2?.bullets?.length || 0} items (expected 3)`);
+    }
+    if (!cardContent.card3 || !Array.isArray(cardContent.card3.bullets) || cardContent.card3.bullets.length < 3) {
+      qualityWarnings.push(`card3.bullets has only ${cardContent.card3?.bullets?.length || 0} items (expected 3)`);
+    }
+    if (qualityWarnings.length > 0) {
+      console.warn('[Main] ⚠️ Quality Gate warnings:');
+      qualityWarnings.forEach(w => console.warn(`  - ${w}`));
+    } else {
+      console.log('[Main] ✅ Quality Gate passed. All required fields present.');
+    }
 
     // 4. Generate illustrations and render the HTML slides to PNG files
     renderedFiles = await renderCardImages(cardContent);

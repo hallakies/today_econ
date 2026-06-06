@@ -104,15 +104,17 @@ async function selectNews(newsList) {
 오늘 수집된 뉴스 목록을 보고, 최근 다룬 뉴스들과 중복되거나 너무 유사한 주제(예: 매일 조금씩 변하는 코스피 수치, 환율의 미세한 변동 등 매일 반복되는 시황)는 철저히 배제하고, 독자들이 흥미를 가질 만한 '오늘 가장 중요하고 실생활에 파급력이 큰 경제 뉴스' 1개를 선정해야 합니다.
 
 다음 규칙을 준수하세요:
-1. 최근 다룬 뉴스 목록에 있는 주제와 겹치거나 매우 유사한 뉴스는 제외하세요.
-2. 기사의 파급성, 실생활 연관성, 교육성(어려운 단어를 설명하기 좋은 뉴스)을 최우선으로 고려하세요.
-3. 결과를 정확히 JSON 포맷으로만 응답해야 합니다. 다른 사족이나 마크다운 백틱없이 순수한 JSON 객체여야 합니다.
+1. 최근 다룬 뉴스 목록에 있는 주제와 겹치거나 매우 유사한 뉴스는 제외하세요.
+2. 기사의 파급성, 특히 **20~30대 직장인과 재테크 초보의 지갑(금리, 환율, 부동산, 물가, 세금 등 실생활)**에 직접적인 영향을 주는 뉴스를 최우선으로 고려하세요. 거시적/행정적/기업전용 뉴스는 후순위로 미루세요.
+3. 결과를 정확히 JSON 포맷으로 응답해야 합니다.
 
-응답 JSON 형식:
+응답 JSON 형식:
+\`\`\`json
 {
-  "selected_index": <선정한 기사의 인덱스 숫자>,
-  "reason": "해당 기사를 선정한 이유 (한국어)"
-}`;
+  "selected_index": <선정한 기사의 인덱스 숫자>,
+  "reason": "해당 기사를 선정한 이유 (한국어)"
+}
+\`\`\``;
 
   const userPrompt = `### 최근 7일 동안 이미 인스타그램에 업로드한 뉴스 목록:
 ${historyListText}
@@ -133,29 +135,50 @@ ${todayNewsText}
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
-        response_format: { type: 'json_object' },
         temperature: 0.1,
         max_tokens: 1000,
       });
-      resultText = response.choices[0].message.content.trim();
+      resultText = (response.choices[0]?.message?.content || '').trim();
+      console.log('[Selector] Main model response length:', resultText.length);
+      if (!resultText) throw new Error("Main model returned empty content");
     } catch (apiError) {
-      console.warn('[Selector] 70B/120B failed or rate-limited. Error:', apiError);
-      console.warn('[Selector] Falling back to Llama 3.1 8B...');
+      console.warn('[Selector] 70B/120B failed or returned empty. Error:', apiError.message || apiError);
+      console.warn('[Selector] Falling back to Llama 3.3 70B...');
       const response = await callGroqWithRetry({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
-        response_format: { type: 'json_object' },
         temperature: 0.1,
-        max_tokens: 300,
+        max_tokens: 1000,
       }, 3, 3000);
-      resultText = response.choices[0].message.content.trim();
+      resultText = (response.choices[0]?.message?.content || '').trim();
+      console.log('[Selector] Fallback model response length:', resultText.length);
+      if (!resultText) {
+         console.warn('[Selector] Fallback model also returned empty content.');
+      }
     }
 
-    console.log('[Selector] Received response from Groq:', resultText);
-    const resultJson = JSON.parse(resultText);
+    // Strip markdown code block wrapper if present
+    let jsonText = resultText;
+    const jsonBlockMatch = jsonText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (jsonBlockMatch) {
+      jsonText = jsonBlockMatch[1].trim();
+    }
+    // Extract json object explicitly
+    if (!jsonText.startsWith('{')) {
+      const firstBrace = jsonText.indexOf('{');
+      if (firstBrace >= 0) jsonText = jsonText.substring(firstBrace);
+    }
+    
+    let resultJson;
+    try {
+      resultJson = JSON.parse(jsonText);
+    } catch (parseError) {
+      console.error('[Selector] JSON parse failed, returning fallback. Text was:', resultText);
+      return newsList[0];
+    }
     const selectedIndex = parseInt(resultJson.selected_index, 10);
     
     if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= slicedNewsList.length) {
