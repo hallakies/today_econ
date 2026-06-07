@@ -2,8 +2,8 @@ name: Daily Economic Card News Creator
 
 on:
   schedule:
-    # Runs daily at 23:00 UTC (8:00 AM KST)
-    - cron: '0 23 * * *'
+    # Runs twice a day: 00:00 UTC (9:00 AM KST) and 12:00 UTC (9:00 PM KST)
+    - cron: '0 0,12 * * *'
   workflow_dispatch:
     # Allows manual triggering from the GitHub Actions tab
 
