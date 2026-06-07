@@ -97,6 +97,18 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
               ${bulletsHtml}
             </ul>
 
+            ${content.hard_terms && content.hard_terms.length > 0 ? `
+              <div class="mt-6 flex flex-wrap gap-3">
+                ${content.hard_terms.map(term => `
+                  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/80 border border-white/5 shadow-inner">
+                    <span class="text-primary font-bold text-xl">${term.term}</span>
+                    <span class="text-slate-500 text-xl">|</span>
+                    <span class="text-slate-300 text-xl">${term.explanation}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
@@ -274,6 +286,18 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
               ${bulletsHtml}
             </ul>
 
+            ${content.hard_terms && content.hard_terms.length > 0 ? `
+              <div class="mt-6 flex flex-wrap gap-3">
+                ${content.hard_terms.map(term => `
+                  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50 shadow-sm">
+                    <span class="text-secondary font-bold text-xl">${term.term}</span>
+                    <span class="text-slate-300 text-xl">|</span>
+                    <span class="text-slate-600 text-xl">${term.explanation}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-slate-200/80 flex items-start gap-4 text-secondary bg-secondary/5 rounded-2xl py-5 px-6">
                 <span class="text-4xl">💡</span>
@@ -432,6 +456,18 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
             <ul class="space-y-4">
               ${bulletsHtml}
             </ul>
+
+            ${content.hard_terms && content.hard_terms.length > 0 ? `
+              <div class="mt-6 flex flex-wrap gap-3">
+                ${content.hard_terms.map(term => `
+                  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-primary/30 shadow-[0_0_10px_rgba(235,178,255,0.1)]">
+                    <span class="text-primary font-bold text-xl">${term.term}</span>
+                    <span class="text-slate-600 text-xl">|</span>
+                    <span class="text-slate-300 text-xl">${term.explanation}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
 
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">

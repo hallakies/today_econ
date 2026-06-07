@@ -17,6 +17,10 @@ const mockData = {
       "인플레이션 안정화 신호",
       "경기 침체 선제적 예방"
     ],
+    hard_terms: [
+      { "term": "기준금리", "explanation": "한국은행이 정하는 이자율의 기준점" },
+      { "term": "빅컷", "explanation": "금리를 한 번에 0.5%p나 크게 내리는 것" }
+    ],
     editors_insight: "빅컷 단행으로 금리 하락 국면 진입",
     image_prompt: "Minimalist modern 3D vector illustration, cute pastel claymation style, a clock with gears and dollar bills, isolated on clean solid background, financial theme, no text"
   },
@@ -26,6 +30,9 @@ const mockData = {
       "변동금리 대출 갈아타기",
       "고금리 예적금 막차 가입",
       "자산 포트폴리오 다각화"
+    ],
+    hard_terms: [
+      { "term": "포트폴리오", "explanation": "계란을 한 바구니에 담지 않는 분산 투자" }
     ],
     editors_insight: "대출 금리 변동 추이를 주시해야 합니다.",
     image_prompt: "Minimalist modern 3D vector illustration, cute pastel claymation style, a plant growing out of a coin stack, isolated on clean solid background, financial theme, no text"

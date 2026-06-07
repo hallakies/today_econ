@@ -126,19 +126,8 @@ function validateAndRepairContent(jsonData) {
     clean = clean.replace(/^미국의?\s*/g, '');
     
     if (!isActionCard) {
-      // Ending verb forms -> noun/action forms (only for fact cards)
-      clean = clean.replace(/대비해야함$/g, '대비');
-      clean = clean.replace(/대책을\s*검토해야함$/g, '대책 마련');
-      clean = clean.replace(/검토해야함$/g, '검토');
-      clean = clean.replace(/개선\s*필요$/g, '개선');
-      clean = clean.replace(/마련해야함$/g, '마련');
-      clean = clean.replace(/마련해야\s*함$/g, '마련');
-      clean = clean.replace(/해결해야함$/g, '해결');
-      clean = clean.replace(/대비해야\s*함$/g, '대비');
-      clean = clean.replace(/필요함$/g, '필요');
-      clean = clean.replace(/요구됨$/g, '요구');
-      clean = clean.replace(/전망됨$/g, '전망');
-      clean = clean.replace(/우려됨$/g, '우려');
+      // Intentionally empty. We preserve natural sentence endings (~다, ~요)
+      // to prevent losing meaning through extreme truncation.
     }
 
     // Remove double spaces
@@ -181,7 +170,6 @@ function validateAndRepairContent(jsonData) {
       }
 
       clean = clean.substring(0, bestCut).trim();
-      clean = clean.replace(/[\uc740\ub294\uc774\uac00\uc744\ub97c\uc5d0\uc11c\uc758\ub85c\uc640\uacfc\ub3c4\ub9cc\ubd80\ud130\uae4c\uc9c0]$/, '');
       const openCount = (clean.match(/<hl>/gi) || []).length;
       const closeCount = (clean.match(/<\/hl>/gi) || []).length;
       if (openCount > closeCount) clean += '</hl>';
@@ -269,10 +257,10 @@ async function generateCardContent(selectedNews) {
    - **[CRITICAL] 명사형 종결이나 단어 나열식 요약은 절대 금지**합니다. 반드시 "~다", "~전망입니다", "~예상됩니다" 등 **서술어가 포함된 완전한 문장**으로 끝맺으세요.
 4. **카드 2와 카드 3의 완전 분리 및 실질적 Action 강제 (필수)**:
    - **카드 2(card2)**: 기사 내용의 핵심 팩트(Fact) 요약 3가지입니다. (배지명 추천: "무슨 일이야?")
-   - **카드 3(card3)**: **20~30대 직장인, 재테크 초보자**가 이 뉴스를 보고 "앞으로 어떻게 될까? 나는 뭘 준비해야 하지?"에 대한 답을 얻을 수 있도록 다음 **3가지 스텝(예측 -> 영향 -> 행동)**으로 구성하십시오. (배지명 추천: "그래서 어떻게 돼?")
+   - **카드 3(card3)**: **20~30대 직장인, 재테크 초보자**가 이 뉴스를 보고 "앞으로 어떻게 될까? 나는 뭘 준비해야 하지?"에 대한 답을 얻을 수 있도록 다음 **3가지 스텝(예측 -> 영향 -> 가벼운 행동)**으로 구성하십시오. (배지명 추천: "그래서 어떻게 돼?")
      - [불릿 1 - 예측]: 해당 뉴스가 불러올 단기적 시장/산업 트렌드 변화 (예: "반도체 장비 수요 급증 전망")
      - [불릿 2 - 영향]: 이 이슈가 내 지갑/자산/소비에 미치는 파급력 (예: "가전제품 가격 인하로 가계 지출 절감 가능성")
-     - [불릿 3 - 행동]: 지금 당장 취해야 할 구체적 행동 지침 (예: "환율 변동 대비 현금 흐름 점검하세요!")
+     - [불릿 3 - 행동]: 너무 무리한 투자 조언(특정 주식 매수 등)은 배제하고, 일상에서 당장 취할 수 있는 가벼운 실천적 액션 아이템 1가지를 제안하십시오. (예: "환율 변동 대비 현금 흐름 점검하세요!")
    - **[CRITICAL] 페르소나 오류(내부 직원 빙의) 절대 금지**: 독자는 해당 뉴스에 등장하는 기업의 임직원이 아닙니다. 절대 "부서 협업 설계하세요", "보고 라인 점검하세요"와 같이 내부 직원을 향한 엉뚱한 업무 지시를 내리지 마십시오. 철저히 외부 투자자 및 일반 소비자의 관점을 유지하십시오.
    - **[CRITICAL] 허위/가상의 금융 상품 추천 절대 금지**: "연구ETF", "공공기관ETF" 등 존재하지 않는 가상의 주식이나 펀드, ETF를 지어내서 추천하지 마십시오. 확신할 수 없다면 직접적인 매수 권유 대신 "관련 산업 트렌드 점검" 정도로 순화하십시오.
 5. **에디토리얼 인사이트(editors_insight) 작성**:
@@ -282,9 +270,9 @@ async function generateCardContent(selectedNews) {
 6. **비주얼 컨셉 및 FLUX 이미지 프롬프트 (로컬라이즈 및 일관성 필수)**:
    - 각 카드에 어울리는 고해상도 FLUX.1-schnell 이미지 생성 프롬프트를 **반드시 순수한 영어로만 (NO KOREAN)** 구체적으로 작성하세요.
    - **필수 스타일 제약**: 모든 카드 이미지가 동일한 비주얼 톤앤매너를 유지해야 합니다. 다음 스타일 키워드를 프롬프트에 메인으로 고정 포함하십시오: "Consistent minimalist 3D vector illustration style, cute pastel claymation, isolated on clean solid background, financial theme, no text in image".
-   - **글자 생성 절대 금지**: 이미지 내부에 'REVENUE', 'BUSINESS', 'MONEY', 숫자 등 어떠한 문자도 렌더링되지 않도록 프롬프트에서 **지폐(banknotes), 문서(documents), 모니터(screens), 차트 레이블** 등의 묘사를 원천 금지하십시오. 텍스트가 적힐 수 없는 완전히 추상적인 구형, 큐브 형태의 도형이나 보석으로 대체하십시오.
-   - **로컬라이제이션(한국화) 포기 및 메타포 사용 필수**: 서양 AI 모델은 한국 화폐를 그릴 줄 모릅니다. "한국 원화 지폐"를 지시하면 달러를 그리므로 지폐 묘사 자체를 금지하십시오. 대신 경제/재물을 상징할 때는 **"황금 돼지저금통(gold piggy bank), 황금 동전 무더기(pile of gold coins), 상승하는 추상적 3D 황금 화살표(abstract 3D gold arrow), 빛나는 보석"** 등의 보편적인 메타포를 프롬프트에 강제하십시오.
-   - **비주얼 통일성 및 1차원 매칭 회피**: 실사 사진 분위기는 철저히 배제하십시오. 뉴스 팩트를 너무 1차원적으로 묘사하여 재미없게 그리지 말고, 3D 클레이 장난감 피규어나 매끄러운 세라믹 질감의 도형으로 비유하십시오.
+   - **글자 생성 절대 금지**: 이미지 내부에 'REVENUE', 'BUSINESS', 'MONEY', 숫자 등 어떠한 문자도 렌더링되지 않도록 프롬프트 작성 시 각별히 주의하십시오.
+   - **고품질 에디토리얼 메타포 사용 필수**: 기사의 핵심 맥락(예: 인공지능, 부동산, 무역)을 반영하되, 너무 1차원적이고 조잡한 일상 사물(예: 흔한 돼지저금통, 실제 동전 무더기)이나 사람 얼굴은 배제하십시오. 대신 세련된 은유(Metaphor)를 사용하여 프리미엄 3D 에디토리얼 일러스트 스타일로 생성되도록 유도하십시오. (예: "abstract glowing 3d sphere representing artificial intelligence", "elegant minimalist architectural structures for real estate")
+   - **비주얼 통일성**: 실사 사진 분위기는 철저히 배제하십시오. 3D 클레이 장난감 피규어나 매끄러운 세라믹 질감 등을 활용하여 모던하고 신뢰감 있는 브랜드 감성을 구축하십시오.
    - **도메인 맞춤 라우팅 및 톤앤매너 강제 (CRITICAL)**: 뉴스 주제가 '산업', '에너지', '금융', '중공업', '건설' 등에 해당한다면, 뷰티 채널에 어울릴 법한 "추상적인 마블링, 스모크 그래픽, 화려한 형형색색의 질감"은 절대 프롬프트에 묘사되지 않도록 강하게 네거티브 제약(negative constraints)을 거십시오. 대신 "묵직하고 쨍한 명암비(High-contrast)를 살린 인더스트리얼(Industrial Noir) 풍"이나 "신뢰감을 주는 다크 코퍼레이트(Dark Corporate) 테마"를 이미지 프롬프트에 강제 주입하십시오.
 7. **디자인 테마 및 강조 색상 선정 (template_theme & theme_color)**:
    - 뉴스의 주제와 분위기에 맞는 디자인 테마를 선정하세요:
@@ -296,9 +284,9 @@ async function generateCardContent(selectedNews) {
    - **[CRITICAL] 이모지(Emoji) 및 슬랙 숏코드 절대 금지**: 슬랙 앱에서 텍스트를 복사할 때 이모지가 깨지거나 숏코드로 변환되는 버그가 있습니다. 이를 원천 차단하기 위해 **모든 종류의 그림 이모지(👀, 📝, 📈 등) 및 슬랙 숏코드(:eyes: 등) 사용을 100% 금지**합니다.
    - 강조가 필요할 때는 오직 슬랙이 건드릴 수 없는 **기본 텍스트 특수 기호(■, ▶, ✔, 📌, 💡 등)**만을 사용하십시오.
    - 본문 내 해시태그를 길게 나열하는 대신 텍스트 본문만 자연스럽게 생성하십시오. (해시태그는 스크립트 내부에서 깔끔한 한국어 태그로 후처리 삽입할 것입니다)
-9. **콘텐츠 중복 절대 금지 규칙 (CRITICAL)**:
-   - 'card1.title', 'card1.editors_insight', 'card2.bullets', 'card2.editors_insight', 'card3.bullets', 'card3.editors_insight' 각 영역 간의 동일한 핵심 단어나 핵심 수식어구의 중복/반복 노출을 철저히 금지합니다.
-   - 각 영역은 반드시 아래와 같이 완전히 독립적인 관점과 깊이의 원고로 구성되어야 합니다.
+9. **콘텐츠 중복 배제 규칙 (CRITICAL)**:
+   - 다른 카드(슬라이드) 간에 핵심 단어가 이어지는 것은 자연스러운 맥락 연결이므로 허용합니다.
+   - 단, **동일한 카드(슬라이드) 내부에서 3개의 불릿 포인트끼리** 또는 **불릿 포인트와 에디터 평 사이에** 핵심 단어가 반복적으로 노출되는 것은 가독성을 해치므로 철저히 금지합니다. 단일 카드 내에서는 다채로운 어휘와 유의어를 사용하십시오.
 
 반드시 마크다운 백틱 없이 순수한 JSON 포맷으로만 응답해야 합니다.
 
@@ -319,6 +307,9 @@ async function generateCardContent(selectedNews) {
       "45자 내외 구체적인 팩트와 맥락 설명 2 (강조 단어는 반드시 <hl>태그</hl> 활용 및 문장형 종결)",
       "45자 내외 구체적인 팩트와 맥락 설명 3 (강조 단어는 반드시 <hl>태그</hl> 활용 및 문장형 종결)"
     ],
+    "hard_terms": [
+      { "term": "어려운 경제 용어1", "explanation": "초등학생도 이해할 수 있는 10~15자 내외의 아주 쉬운 비유나 풀이" }
+    ],
     "editors_insight": "팩트에 대한 한 줄 에디터 평 (강조 단어는 반드시 <hl>태그</hl> 활용)",
     "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
   },
@@ -327,7 +318,10 @@ async function generateCardContent(selectedNews) {
     "bullets": [
       "45자 내외 [예측]: 뉴스가 불러올 단기적 트렌드/시장 변화 (예: 외상매출채권 <hl>상환청구권 폐지</hl>로 중소기업 연쇄 부도 위험이 감소할 전망입니다.)",
       "45자 내외 [영향]: 내 지갑/자산/업무에 미치는 실질적 파급력 (예: 원청기업의 파산 리스크를 떠안지 않아 중소기업의 <hl>현금 흐름</hl>이 크게 개선됩니다.)",
-      "45자 내외 [행동]: 지금 당장 취할 구체적 행동 지침 (피상적 조언 불가, 반드시 구체적인 동사 종결. 예: 주거래 은행을 통해 <hl>대출 상환 조건</hl>이 어떻게 바뀌는지 즉시 확인해보세요!)"
+      "45자 내외 [행동]: 지금 당장 취할 구체적 가벼운 행동 지침 (예: 주거래 은행을 통해 <hl>대출 상환 조건</hl>이 어떻게 바뀌는지 즉시 확인해보세요!)"
+    ],
+    "hard_terms": [
+      { "term": "어려운 경제 용어2 (없으면 빈 배열 [])", "explanation": "쉬운 비유나 풀이" }
     ],
     "editors_insight": "대책에 대한 행동 유도 에디터 평 (강조 단어는 반드시 <hl>태그</hl> 활용. 예: <hl>리스크 관리</hl>를 지금 시작해야 합니다)",
     "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
