@@ -88,28 +88,22 @@ async function generateImage(prompt, fallbackIndex = 0, themeName = 'obsidian') 
       // Curated 3D abstract fluid gradient artworks, 100% cohesive and matching theme colors (9:16 aspect ratio)
       // 6 images per theme for variety
       const obsidianFallbacks = [
-      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080&h=1920&fit=crop&q=80', // dark 3D fluid 1
-      'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=1080&h=1920&fit=crop&q=80', // dark 3D fluid 2
-      'https://images.unsplash.com/photo-1604871000636-074fa5117945?w=1080&h=1920&fit=crop&q=80', // dark 3D fluid 3
-      'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1080&h=1920&fit=crop&q=80', // gradient mesh dark
-      'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=1080&h=1920&fit=crop&q=80', // deep blue gradient
-      'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=1080&h=1920&fit=crop&q=80'  // dark abstract wave
+      'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1080&h=1920&fit=crop&q=80', // trading chart
+      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1080&h=1920&fit=crop&q=80', // dark premium architecture
+      'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1080&h=1920&fit=crop&q=80', // abstract finance
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080&h=1920&fit=crop&q=80'  // dark 3D fluid
     ];
     const ivoryFallbacks = [
-      'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=1080&h=1920&fit=crop&q=80', // warm pastel wave 1
-      'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=1080&h=1920&fit=crop&q=80', // warm pastel wave 2
-      'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1080&h=1920&fit=crop&q=80', // warm gradient 3
-      'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1080&h=1920&fit=crop&q=80', // soft warm abstract
-      'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=1080&h=1920&fit=crop&q=80', // pastel 3D shapes
-      'https://images.unsplash.com/photo-1614851099511-773084f6911d?w=1080&h=1920&fit=crop&q=80'  // warm light gradient
+      'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1080&h=1920&fit=crop&q=80', // modern architecture real estate
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1080&h=1920&fit=crop&q=80', // premium interior
+      'https://images.unsplash.com/photo-1449844908441-8829872d2607?w=1080&h=1920&fit=crop&q=80', // warm city view
+      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1080&h=1920&fit=crop&q=80'  // premium mansion
     ];
     const cyberFallbacks = [
-      'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1080&h=1920&fit=crop&q=80', // neon abstract 1
-      'https://images.unsplash.com/photo-1563089145-599997674d42?w=1080&h=1920&fit=crop&q=80', // neon abstract 2
-      'https://images.unsplash.com/photo-1550684847-75bdda21cc95?w=1080&h=1920&fit=crop&q=80', // neon abstract 3
-      'https://images.unsplash.com/photo-1633259584604-afdc243122ea?w=1080&h=1920&fit=crop&q=80', // purple neon mesh
-      'https://images.unsplash.com/photo-1620121692029-d088224ddc74?w=1080&h=1920&fit=crop&q=80', // cyber gradient
-      'https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=1080&h=1920&fit=crop&q=80'  // holographic abstract
+      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1080&h=1920&fit=crop&q=80', // circuit board tech
+      'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1080&h=1920&fit=crop&q=80', // digital code cyber
+      'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1080&h=1920&fit=crop&q=80', // cyber security
+      'https://images.unsplash.com/photo-1633259584604-afdc243122ea?w=1080&h=1920&fit=crop&q=80'  // purple neon tech
     ];
 
     let fallbacks = obsidianFallbacks;

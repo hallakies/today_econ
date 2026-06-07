@@ -97,7 +97,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor, newsDate = '
             </ul>
 
             ${content.hard_terms && content.hard_terms.length > 0 ? `
-              <div class="mt-8 flex flex-wrap gap-3">
+              <div class="mt-12 flex flex-wrap gap-3">
                 ${content.hard_terms.map(term => `
                   <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/5 border border-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.3)] backdrop-blur-sm">
                     <span class="text-primary font-black text-xl">${term.term}</span>
@@ -109,7 +109,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor, newsDate = '
             ` : ''}
 
             ${content.editors_insight ? `
-              <div class="mt-8 pt-8 border-t border-white/10">
+              <div class="mt-14 pt-8 border-t border-white/10">
                 <div class="flex items-start gap-4 text-primary bg-primary/5 rounded-r-2xl py-6 px-8 border-l-[6px]" style="border-left-color: ${themeColor}; box-shadow: -4px 0 15px ${themeColor}30;">
                   <p class="text-left text-slate-200 leading-relaxed font-extrabold text-2.5xl insight-text italic opacity-95">${highlightText(content.editors_insight, themeColor)}</p>
                 </div>
@@ -277,7 +277,7 @@ function renderIvory(cardType, content, imageBase64, themeColor, newsDate = 'TOD
             </ul>
 
             ${content.hard_terms && content.hard_terms.length > 0 ? `
-              <div class="mt-8 flex flex-wrap gap-3">
+              <div class="mt-12 flex flex-wrap gap-3">
                 ${content.hard_terms.map(term => `
                   <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/80 border border-slate-200/80 shadow-[0_5px_15px_rgba(0,0,0,0.05)] backdrop-blur-sm">
                     <span class="text-secondary font-black text-xl">${term.term}</span>
@@ -289,7 +289,7 @@ function renderIvory(cardType, content, imageBase64, themeColor, newsDate = 'TOD
             ` : ''}
 
             ${content.editors_insight ? `
-              <div class="mt-8 pt-8 border-t border-slate-200/80">
+              <div class="mt-14 pt-8 border-t border-slate-200/80">
                 <div class="flex items-start gap-4 text-secondary bg-secondary/5 rounded-r-2xl py-6 px-8 border-l-[6px]" style="border-left-color: ${themeColor}; box-shadow: -4px 0 15px ${themeColor}20;">
                   <p class="text-left text-slate-800 leading-relaxed font-extrabold text-2.5xl insight-text italic opacity-95">${highlightText(content.editors_insight, themeColor)}</p>
                 </div>
@@ -439,7 +439,7 @@ function renderCyber(cardType, content, imageBase64, themeColor, newsDate = 'TOD
             </ul>
 
             ${content.hard_terms && content.hard_terms.length > 0 ? `
-              <div class="mt-8 flex flex-wrap gap-3">
+              <div class="mt-12 flex flex-wrap gap-3">
                 ${content.hard_terms.map(term => `
                   <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/60 border border-primary/40 shadow-[0_0_15px_rgba(188,19,254,0.3)] backdrop-blur-md">
                     <span class="text-primary font-black text-xl">${term.term}</span>
@@ -451,7 +451,7 @@ function renderCyber(cardType, content, imageBase64, themeColor, newsDate = 'TOD
             ` : ''}
 
             ${content.editors_insight ? `
-              <div class="mt-8 pt-8 border-t border-white/10">
+              <div class="mt-14 pt-8 border-t border-white/10">
                 <div class="flex items-start gap-4 text-primary bg-primary/5 rounded-r-2xl py-6 px-8 border-l-[6px]" style="border-left-color: ${themeColor}; box-shadow: -4px 0 15px ${themeColor}40;">
                   <p class="text-left text-slate-200 leading-relaxed font-extrabold text-2.5xl insight-text italic drop-shadow-md opacity-95">${highlightText(content.editors_insight, themeColor)}</p>
                 </div>

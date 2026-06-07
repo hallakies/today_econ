@@ -284,12 +284,10 @@ async function generateCardContent(selectedNews) {
      - "obsidian": 정통 거시경제, 금리, 기업 실적, 증시 시황 뉴스용. (추천 theme_color: "#00d2ff" 또는 네온 블루)
      - "ivory": 친근한 실생활 민생 경제, 정책, 부동산, 일반 소비재 뉴스용. (추천 theme_color: "#705d00" 또는 짙은 골드)
      - "cyber": 미래지향적인 반도체, IT, 빅테크, AI, 코인/암호화폐 뉴스용. (추천 theme_color: "#bc13fe" 또는 네온 퍼플)
-8. **인스타그램 게시글 멘트 (instagram_caption) - 슬랙 복붙 버그 우회**:
-   - 슬라이드 내용을 단순히 요약하지 말고, 독자에게 질문을 던지거나('내 돈을 로봇에게 맡겨도 될까요?') 공감을 유도하는 친근한 소통형 대화체(해요체)로 작성하십시오.
-   - 줄바꿈과 기호를 풍부하게 섞어 친근하고 후킹(Hooking)하게 작성하세요.
-   - **[CRITICAL] 이모지(Emoji) 및 슬랙 숏코드 절대 금지**: 슬랙 앱에서 텍스트를 복사할 때 이모지가 깨지거나 숏코드로 변환되는 버그가 있습니다. 이를 원천 차단하기 위해 **모든 종류의 그림 이모지(👀, 📝, 📈 등) 및 슬랙 숏코드(:eyes: 등) 사용을 100% 금지**합니다.
-   - 강조가 필요할 때는 오직 슬랙이 건드릴 수 없는 **기본 텍스트 특수 기호(■, ▶, ✔, 📌, 💡 등)**만을 사용하십시오.
-   - 본문 내 해시태그를 길게 나열하는 대신 텍스트 본문만 자연스럽게 생성하십시오. (해시태그는 스크립트 내부에서 깔끔한 한국어 태그로 후처리 삽입할 것입니다)
+   - 슬라이드 내용을 단순히 요약하지 말고, 독자에게 질문을 던지거나 공감을 유도하는 친근한 소통형 대화체(해요체, 습니다체 믹스)로 작성하십시오.
+   - **[CRITICAL] 기계적인 "~수 있습니다" 반복 금지**: "중요할 수 있습니다", "필요할 수 있습니다"와 같은 번역투의 모호한 문장 및 똑같은 문장의 중복을 철저히 배제하세요.
+   - **[CRITICAL] 이모지(Emoji) 및 슬랙 숏코드 절대 금지**: 슬랙 숏코드 버그 방지를 위해 모든 종류의 그림 이모지(👀, 📝, 📈 등) 및 숏코드 사용을 100% 금지합니다. 오직 기본 텍스트 특수 기호(■, ▶, ✔, 📌, 💡 등)만 사용하십시오.
+   - 본문 내 해시태그는 넣지 마십시오. (자동으로 삽입됩니다)
 9. **콘텐츠 중복 배제 규칙 (CRITICAL)**:
    - 다른 카드(슬라이드) 간에 핵심 단어가 이어지는 것은 자연스러운 맥락 연결이므로 허용합니다.
    - 단, **동일한 카드(슬라이드) 내부에서 3개의 불릿 포인트끼리** 또는 **불릿 포인트와 에디터 평 사이에** 핵심 단어가 반복적으로 노출되는 것은 가독성을 해치므로 철저히 금지합니다. 단일 카드 내에서는 다채로운 어휘와 유의어를 사용하십시오.
@@ -349,101 +347,134 @@ async function generateCardContent(selectedNews) {
 3. 대신 "Consistent minimalist 3D vector illustration style, high-contrast industrial noir theme, metallic steel gray and dark navy background, clean solid background, financial/industrial theme, no text in image, dramatic cinematic lighting"과 같은 묵직하고 명도 대비가 높은 인더스트리얼 테마를 강제 주입해 영어 프롬프트를 작성하십시오.`;
   }
 
-  try {
-    console.log('[Generator] Requesting content generation from Groq...');
-    let resultText = '';
-    try {
-      const response = await callGroqWithRetry({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt.normalize('NFC') },
-          { role: 'user', content: userPrompt.normalize('NFC') }
-        ],
-        temperature: 0.7,
-        max_tokens: 6000,
-      });
-      resultText = (response.choices[0]?.message?.content || '').trim();
-      console.log('[Generator] Main model raw response length:', resultText.length);
-      if (!resultText) throw new Error("Main model returned empty content");
-    } catch (apiError) {
-      console.warn('[Generator] Main model failed. Error:', apiError.message || apiError);
-      console.warn('[Generator] Falling back to llama-3.1-8b-instant...');
-      const response = await callGroqWithRetry({
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          { role: 'system', content: systemPrompt.normalize('NFC') },
-          { role: 'user', content: userPrompt.normalize('NFC') }
-        ],
-        temperature: 0.7,
-        max_tokens: 3000,
-      }, 3, 3000);
-      resultText = (response.choices[0]?.message?.content || '').trim();
-      console.log('[Generator] Fallback model raw response length:', resultText.length);
-      if (!resultText) throw new Error("Fallback model returned empty content");
-    }
+  let attempt = 0;
+  const maxAttempts = 3;
+  let lastError = null;
 
-    console.log('[Generator] Raw content generated from LLM. Validating & Sanitizing...');
-    console.log('[Generator] Raw LLM Text snippet (first 300 chars):', resultText.substring(0, 300));
-    
-    // Strip markdown code block wrapper if present
-    let jsonText = resultText;
-    const jsonBlockMatch = jsonText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-    if (jsonBlockMatch) {
-      jsonText = jsonBlockMatch[1].trim();
-    }
-    // Extract json object explicitly
-    if (!jsonText.startsWith('{')) {
-      const firstBrace = jsonText.indexOf('{');
-      if (firstBrace >= 0) jsonText = jsonText.substring(firstBrace);
-    }
-
-    let resultJson;
+  while (attempt < maxAttempts) {
+    attempt++;
     try {
-      resultJson = JSON.parse(jsonText);
-    } catch (parseError) {
-      console.error('[Generator] JSON parse failed. Attempting repair of truncated JSON...');
-      console.error('[Generator] Raw jsonText snippet:', jsonText.substring(Math.max(0, jsonText.length - 200)));
-      let repaired = jsonText.trim();
-      const openBraces = (repaired.match(/\{/g) || []).length;
-      const closeBraces = (repaired.match(/\}/g) || []).length;
-      if (openBraces > closeBraces) {
-        repaired += '}'.repeat(openBraces - closeBraces);
-      }
+      console.log(`[Generator] Requesting content generation from Groq... (Attempt ${attempt}/${maxAttempts})`);
+      let resultText = '';
       try {
+        const response = await callGroqWithRetry({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: systemPrompt.normalize('NFC') },
+            { role: 'user', content: userPrompt.normalize('NFC') }
+          ],
+          temperature: 0.5, // Lowered from 0.7 to 0.5 for stability and reduced hallucinations
+          max_tokens: 6000,
+        });
+        resultText = (response.choices[0]?.message?.content || '').trim();
+        console.log('[Generator] Main model raw response length:', resultText.length);
+        if (!resultText) throw new Error("Main model returned empty content");
+      } catch (apiError) {
+        console.warn('[Generator] Main model failed. Error:', apiError.message || apiError);
+        console.warn('[Generator] Falling back to llama-3.1-8b-instant...');
+        const response = await callGroqWithRetry({
+          model: 'llama-3.1-8b-instant',
+          messages: [
+            { role: 'system', content: systemPrompt.normalize('NFC') },
+            { role: 'user', content: userPrompt.normalize('NFC') }
+          ],
+          temperature: 0.5,
+          max_tokens: 3000,
+        }, 3, 3000);
+        resultText = (response.choices[0]?.message?.content || '').trim();
+        if (!resultText) throw new Error("Fallback model returned empty content");
+      }
+
+      // Strip markdown code block wrapper if present
+      let jsonText = resultText;
+      const jsonBlockMatch = jsonText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+      if (jsonBlockMatch) {
+        jsonText = jsonBlockMatch[1].trim();
+      }
+      if (!jsonText.startsWith('{')) {
+        const firstBrace = jsonText.indexOf('{');
+        if (firstBrace >= 0) jsonText = jsonText.substring(firstBrace);
+      }
+
+      let resultJson;
+      try {
+        resultJson = JSON.parse(jsonText);
+      } catch (parseError) {
+        console.error('[Generator] JSON parse failed. Attempting repair of truncated JSON...');
+        let repaired = jsonText.trim();
+        const openBraces = (repaired.match(/\{/g) || []).length;
+        const closeBraces = (repaired.match(/\}/g) || []).length;
+        if (openBraces > closeBraces) {
+          repaired += '}'.repeat(openBraces - closeBraces);
+        }
         resultJson = JSON.parse(repaired);
-      } catch (repairError) {
-        console.error('[Generator] Repair failed. Repaired text snippet:', repaired.substring(Math.max(0, repaired.length - 200)));
-        throw new Error('Failed to parse and repair JSON from model output');
+      }
+
+      // --- STRICT VALIDATION LAYER ---
+      if (!resultJson.card2 || !resultJson.card3) {
+        throw new Error("Validation Failed: Missing card2 or card3.");
+      }
+      
+      const c2Str = (resultJson.card2.bullets || []).map(b => b.replace(/<\/?hl>/g, '').trim()).join('');
+      const c3Str = (resultJson.card3.bullets || []).map(b => b.replace(/<\/?hl>/g, '').trim()).join('');
+      
+      if (c2Str.length > 10 && c2Str === c3Str) {
+        throw new Error("Validation Failed: Card 2 and Card 3 are perfectly identical (LLM Hallucination).");
+      }
+
+      const caption = resultJson.instagram_caption || '';
+      const suItDaCount = (caption.match(/수 있습니다/g) || []).length;
+      if (suItDaCount >= 3) {
+        throw new Error("Validation Failed: Repetitive verb endings ('수 있습니다' > 3 times).");
+      }
+      
+      const sentences = caption.split(/(?<=[.!?])\s+/);
+      if (sentences.length > 2) {
+        for (let i = 0; i < sentences.length - 1; i++) {
+          for (let j = i + 1; j < sentences.length; j++) {
+            if (sentences[i].length > 15 && sentences[i] === sentences[j]) {
+              throw new Error("Validation Failed: instagram_caption contains exact duplicate sentences.");
+            }
+          }
+        }
+      }
+      // -------------------------------
+
+      if (isIndustrial) {
+        resultJson.template_theme = 'obsidian';
+        resultJson.theme_color = '#00d2ff';
+      }
+
+      // 1. Validate & repair length truncations
+      resultJson = validateAndRepairContent(resultJson);
+
+      // 2. Recursively sanitize
+      resultJson = sanitizeJsonRecursively(resultJson);
+
+      // 3. Finalize caption
+      resultJson.instagram_caption = finalizeCaption(resultJson.instagram_caption);
+
+      if (selectedNews && selectedNews.date) {
+        resultJson.news_date = selectedNews.date;
+      } else {
+        const today = new Date();
+        resultJson.news_date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
+      }
+
+      console.log('[Generator] Successfully finalized and cleaned card content.');
+      return resultJson;
+
+    } catch (error) {
+      lastError = error;
+      console.warn(`[Generator] Attempt ${attempt} failed with error: ${error.message}`);
+      if (attempt < maxAttempts) {
+        console.warn(`[Generator] Retrying...`);
       }
     }
-    if (isIndustrial) {
-      resultJson.template_theme = 'obsidian';
-      resultJson.theme_color = '#00d2ff';
-    }
-
-    // 1. Validate & repair potential duplicate content bugs
-    resultJson = validateAndRepairContent(resultJson);
-
-    // 2. Recursively sanitize all text fields (including titles, subtitles, bullets, bubbles)
-    resultJson = sanitizeJsonRecursively(resultJson);
-
-    // 3. Finalize and sanitize the Instagram caption separately (handling hashtags)
-    resultJson.instagram_caption = finalizeCaption(resultJson.instagram_caption);
-
-    console.log('[Generator] Successfully finalized and cleaned card content.');
-    // Add the original news date for the template UI
-    if (selectedNews && selectedNews.date) {
-      resultJson.news_date = selectedNews.date;
-    } else {
-      const today = new Date();
-      resultJson.news_date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
-    }
-
-    return resultJson;
-  } catch (error) {
-    console.error('[Generator] Failed to generate card content:', error);
-    throw error;
   }
+  
+  console.error('[Generator] All attempts failed. Throwing last error.');
+  throw lastError;
 }
 
 module.exports = {
