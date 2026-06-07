@@ -29,7 +29,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor, newsDate = '
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-[#0A0E1A]/70 to-[#0A0E1A] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A0E1A]/40 to-[#0A0E1A]/90 z-10"></div>
         <div class="ambient-glow glow-primary w-[700px] h-[700px] bottom-[-200px] right-[-200px] z-10"></div>
         
         <!-- Header removed for cleaner UI -->
@@ -45,9 +45,8 @@ function renderObsidian(cardType, content, imageBase64, themeColor, newsDate = '
           </div>
           
           ${content.editors_insight ? `
-            <div class="w-full max-w-[950px] mx-auto rounded-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-[#0A0E1A]/85 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-              <div class="w-1.5 h-16 bg-primary rounded-full shadow-[0_0_10px_rgba(0,210,255,0.6)] shrink-0"></div>
-              <p class="text-left text-slate-100 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+            <div class="w-full max-w-[950px] mx-auto rounded-r-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-black/40 border-y border-r border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] border-l-[6px]" style="border-left-color: ${themeColor}; box-shadow: -4px 0 20px ${themeColor}40;">
+              <p class="text-left text-slate-100 leading-relaxed font-extrabold text-2.5xl insight-text italic opacity-95">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
           
@@ -74,7 +73,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor, newsDate = '
               </svg>
             `}
           </div>
-          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-normal break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
+          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-relaxed break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('<div class="w-full h-px bg-white/5 my-1"></div>');
 
@@ -87,8 +86,8 @@ function renderObsidian(cardType, content, imageBase64, themeColor, newsDate = '
         
         <!-- Header removed for cleaner UI -->
 
-        <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center mt-16' : 'justify-end pb-16'}">
-          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_30px_70px_rgba(0,0,0,0.7)] border border-white/10 ${!isFact ? 'mb-8' : ''}">
+        <main class="flex-1 flex flex-col z-20 justify-center mt-16">
+          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_30px_70px_rgba(0,0,0,0.7)] border border-white/10">
             <div class="mb-4">
               <span class="inline-block px-8 py-2.5 rounded-full font-label-caps text-2xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
             </div>
@@ -98,21 +97,22 @@ function renderObsidian(cardType, content, imageBase64, themeColor, newsDate = '
             </ul>
 
             ${content.hard_terms && content.hard_terms.length > 0 ? `
-              <div class="mt-6 flex flex-wrap gap-3">
+              <div class="mt-8 flex flex-wrap gap-3">
                 ${content.hard_terms.map(term => `
-                  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/80 border border-white/5 shadow-inner">
-                    <span class="text-primary font-bold text-xl">${term.term}</span>
-                    <span class="text-slate-500 text-xl">|</span>
-                    <span class="text-slate-300 text-xl">${term.explanation}</span>
+                  <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/5 border border-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.3)] backdrop-blur-sm">
+                    <span class="text-primary font-black text-xl">${term.term}</span>
+                    <span class="text-primary/40 text-xl">|</span>
+                    <span class="text-slate-200 font-bold text-xl opacity-90">${term.explanation}</span>
                   </div>
                 `).join('')}
               </div>
             ` : ''}
 
             ${content.editors_insight ? `
-              <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
-                <div class="w-1 h-12 bg-primary rounded-full shrink-0"></div>
-                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+              <div class="mt-8 pt-8 border-t border-white/10">
+                <div class="flex items-start gap-4 text-primary bg-primary/5 rounded-r-2xl py-6 px-8 border-l-[6px]" style="border-left-color: ${themeColor}; box-shadow: -4px 0 15px ${themeColor}30;">
+                  <p class="text-left text-slate-200 leading-relaxed font-extrabold text-2.5xl insight-text italic opacity-95">${highlightText(content.editors_insight, themeColor)}</p>
+                </div>
               </div>
             ` : ''}
           </div>
@@ -209,7 +209,7 @@ function renderIvory(cardType, content, imageBase64, themeColor, newsDate = 'TOD
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/20 via-[#FDFBF7]/70 to-[#FDFBF7] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#FDFBF7]/50 to-[#FDFBF7]/95 z-10"></div>
         
         <!-- Header removed for cleaner UI -->
 
@@ -224,9 +224,8 @@ function renderIvory(cardType, content, imageBase64, themeColor, newsDate = 'TOD
           </div>
           
           ${content.editors_insight ? `
-            <div class="w-full max-w-[950px] mx-auto rounded-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-[#FDFBF7]/90 border border-slate-200/80 shadow-[0_15px_40px_rgba(0,0,0,0.06)]">
-              <div class="w-1.5 h-16 bg-slate-800 rounded-full shrink-0"></div>
-              <p class="text-left text-slate-800 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+            <div class="w-full max-w-[950px] mx-auto rounded-r-[28px] p-8 flex items-center gap-6 backdrop-blur-xl bg-white/40 border-y border-r border-slate-200/50 shadow-[0_20px_45px_rgba(0,0,0,0.06)] border-l-[6px]" style="border-left-color: ${themeColor}; box-shadow: -4px 0 20px ${themeColor}30;">
+              <p class="text-left text-slate-800 leading-relaxed font-extrabold text-2.5xl insight-text italic opacity-95">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
           
@@ -255,7 +254,7 @@ function renderIvory(cardType, content, imageBase64, themeColor, newsDate = 'TOD
               </svg>
             `}
           </div>
-          <p class="font-body text-3.5xl text-slate-800 font-extrabold leading-normal break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
+          <p class="font-body text-3.5xl text-slate-800 font-extrabold leading-relaxed break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('<div class="w-full h-px bg-slate-200/60 my-1"></div>');
 
@@ -263,12 +262,12 @@ function renderIvory(cardType, content, imageBase64, themeColor, newsDate = 'TOD
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7]/40 via-[#FDFBF7]/80 to-[#FDFBF7] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7]/40 to-transparent z-10"></div>
         
         <!-- Header removed for cleaner UI -->
 
-        <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center mt-16' : 'justify-end pb-16'}">
-          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_45px_rgba(0,0,0,0.06)] ${!isFact ? 'mb-8' : ''}">
+        <main class="flex-1 flex flex-col z-20 justify-center mt-16">
+          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_45px_rgba(0,0,0,0.06)]">
             <div class="mb-4">
               <span class="inline-block px-8 py-2.5 rounded font-label-caps text-2xl tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
             </div>
@@ -278,21 +277,22 @@ function renderIvory(cardType, content, imageBase64, themeColor, newsDate = 'TOD
             </ul>
 
             ${content.hard_terms && content.hard_terms.length > 0 ? `
-              <div class="mt-6 flex flex-wrap gap-3">
+              <div class="mt-8 flex flex-wrap gap-3">
                 ${content.hard_terms.map(term => `
-                  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50 shadow-sm">
-                    <span class="text-secondary font-bold text-xl">${term.term}</span>
+                  <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/80 border border-slate-200/80 shadow-[0_5px_15px_rgba(0,0,0,0.05)] backdrop-blur-sm">
+                    <span class="text-secondary font-black text-xl">${term.term}</span>
                     <span class="text-slate-300 text-xl">|</span>
-                    <span class="text-slate-600 text-xl">${term.explanation}</span>
+                    <span class="text-slate-700 font-bold text-xl opacity-95">${term.explanation}</span>
                   </div>
                 `).join('')}
               </div>
             ` : ''}
 
             ${content.editors_insight ? `
-              <div class="mt-8 pt-8 border-t border-slate-200/80 flex items-start gap-4 text-secondary bg-secondary/5 rounded-2xl py-5 px-6">
-                <div class="w-1 h-12 bg-secondary rounded-full shrink-0"></div>
-                <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+              <div class="mt-8 pt-8 border-t border-slate-200/80">
+                <div class="flex items-start gap-4 text-secondary bg-secondary/5 rounded-r-2xl py-6 px-8 border-l-[6px]" style="border-left-color: ${themeColor}; box-shadow: -4px 0 15px ${themeColor}20;">
+                  <p class="text-left text-slate-800 leading-relaxed font-extrabold text-2.5xl insight-text italic opacity-95">${highlightText(content.editors_insight, themeColor)}</p>
+                </div>
               </div>
             ` : ''}
           </div>
@@ -376,7 +376,7 @@ function renderCyber(cardType, content, imageBase64, themeColor, newsDate = 'TOD
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between p-16 select-none">
         <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="illustration" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#140727]/30 via-[#140727]/70 to-[#140727] z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-[#140727] via-[#140727]/60 to-transparent z-10"></div>
         
         <!-- Header removed for cleaner UI -->
 
@@ -392,9 +392,8 @@ function renderCyber(cardType, content, imageBase64, themeColor, newsDate = 'TOD
           </div>
           
           ${content.editors_insight ? `
-            <div class="w-full max-w-[950px] mx-auto rounded-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-[#140727]/85 border border-[#ebb2ff]/20 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-              <div class="w-1.5 h-16 bg-primary rounded-full shadow-[0_0_15px_rgba(235,178,255,0.8)] shrink-0"></div>
-              <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+            <div class="w-full max-w-[950px] mx-auto rounded-r-[28px] p-8 flex items-center gap-6 backdrop-blur-3xl bg-black/40 border-y border-r border-[#ebb2ff]/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-l-[6px]" style="border-left-color: ${themeColor}; box-shadow: -4px 0 20px ${themeColor}40;">
+              <p class="text-left text-white leading-relaxed font-extrabold text-2.5xl insight-text italic drop-shadow-lg opacity-95">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
           
@@ -417,7 +416,7 @@ function renderCyber(cardType, content, imageBase64, themeColor, newsDate = 'TOD
           <div class="w-12 h-12 rounded-full bg-slate-900/60 flex items-center justify-center border ${dotBorder} shrink-0 mt-1.5 shadow-[0_0_15px_${bulletGlow}]">
             <span class="w-4 h-4 rounded-full ${dotPulseColor} animate-pulse"></span>
           </div>
-          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-normal break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
+          <p class="font-body text-3.5xl text-slate-100 font-extrabold leading-relaxed break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('<div class="w-full h-px bg-white/10 my-2"></div>');
 
@@ -429,8 +428,8 @@ function renderCyber(cardType, content, imageBase64, themeColor, newsDate = 'TOD
         
         <!-- Header removed for cleaner UI -->
 
-        <main class="flex-1 flex flex-col z-20 ${isFact ? 'justify-center mt-16' : 'justify-end pb-16'}">
-          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-[#ebb2ff]/20 ${!isFact ? 'mb-8' : ''}">
+        <main class="flex-1 flex flex-col z-20 justify-center mt-16">
+          <div class="glass-card w-full max-w-[950px] mx-auto rounded-[36px] p-12 space-y-8 shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-[#ebb2ff]/20">
             <div class="mb-4">
               <span class="inline-block px-8 py-2.5 rounded border text-slate-200 font-label-caps text-2xl tracking-widest uppercase" style="border-color: ${badgeBorderColor}; background: ${badgeBorderColor}15; box-shadow: 0 0 10px ${badgeGlowColor};">${badgeText}</span>
             </div>
@@ -440,21 +439,22 @@ function renderCyber(cardType, content, imageBase64, themeColor, newsDate = 'TOD
             </ul>
 
             ${content.hard_terms && content.hard_terms.length > 0 ? `
-              <div class="mt-6 flex flex-wrap gap-3">
+              <div class="mt-8 flex flex-wrap gap-3">
                 ${content.hard_terms.map(term => `
-                  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-primary/30 shadow-[0_0_10px_rgba(235,178,255,0.1)]">
-                    <span class="text-primary font-bold text-xl">${term.term}</span>
-                    <span class="text-slate-600 text-xl">|</span>
-                    <span class="text-slate-300 text-xl">${term.explanation}</span>
+                  <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/60 border border-primary/40 shadow-[0_0_15px_rgba(188,19,254,0.3)] backdrop-blur-md">
+                    <span class="text-primary font-black text-xl">${term.term}</span>
+                    <span class="text-primary/30 text-xl">|</span>
+                    <span class="text-slate-200 font-bold text-xl opacity-95">${term.explanation}</span>
                   </div>
                 `).join('')}
               </div>
             ` : ''}
 
             ${content.editors_insight ? `
-              <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
-                <div class="w-1 h-12 bg-primary rounded-full shadow-[0_0_10px_rgba(235,178,255,0.6)] shrink-0"></div>
-                <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+              <div class="mt-8 pt-8 border-t border-white/10">
+                <div class="flex items-start gap-4 text-primary bg-primary/5 rounded-r-2xl py-6 px-8 border-l-[6px]" style="border-left-color: ${themeColor}; box-shadow: -4px 0 15px ${themeColor}40;">
+                  <p class="text-left text-slate-200 leading-relaxed font-extrabold text-2.5xl insight-text italic drop-shadow-md opacity-95">${highlightText(content.editors_insight, themeColor)}</p>
+                </div>
               </div>
             ` : ''}
           </div>
