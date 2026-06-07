@@ -354,22 +354,22 @@ async function generateCardContent(selectedNews) {
     let resultText = '';
     try {
       const response = await callGroqWithRetry({
-        model: 'openai/gpt-oss-120b',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
         temperature: 0.7,
-        max_tokens: 3000,
+        max_tokens: 6000,
       });
       resultText = (response.choices[0]?.message?.content || '').trim();
       console.log('[Generator] Main model raw response length:', resultText.length);
       if (!resultText) throw new Error("Main model returned empty content");
     } catch (apiError) {
       console.warn('[Generator] Main model failed. Error:', apiError.message || apiError);
-      console.warn('[Generator] Falling back to Llama 3.3 70B...');
+      console.warn('[Generator] Falling back to llama-3.1-8b-instant...');
       const response = await callGroqWithRetry({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         messages: [
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }

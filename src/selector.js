@@ -133,7 +133,7 @@ ${todayNewsText}
     
     try {
       const response = await callGroqWithRetry({
-        model: 'openai/gpt-oss-120b',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }
@@ -146,9 +146,9 @@ ${todayNewsText}
       if (!resultText) throw new Error("Main model returned empty content");
     } catch (apiError) {
       console.warn('[Selector] 70B/120B failed or returned empty. Error:', apiError.message || apiError);
-      console.warn('[Selector] Falling back to Llama 3.3 70B...');
+      console.warn('[Selector] Falling back to llama-3.1-8b-instant...');
       const response = await callGroqWithRetry({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         messages: [
           { role: 'system', content: systemPrompt.normalize('NFC') },
           { role: 'user', content: userPrompt.normalize('NFC') }

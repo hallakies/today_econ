@@ -47,8 +47,7 @@
 ## 3. 기술적 고민과 문제 해결 이력 (Struggles & Solutions)
 
 ### 3.1 LLM 모델 선택 및 비교
-* **후보**: `openai/gpt-oss-120b` vs `llama-3.3-70b-versatile` (Groq 제공)
-* **결정**: **openai/gpt-oss-120b** 모델을 메인으로 사용합니다. 이 모델은 하루 허용량(TPD)이 더 넉넉하며, 복잡한 지문 요약 및 한국어 경제 용어 처리에 우수합니다. JSON Mode의 안정적인 출력을 위해 `max_tokens` 설정을 selector 단계는 1000, generator 단계는 3000으로 충분히 할당하여 사용합니다.
+* **결정**: **llama-3.3-70b-versatile** (Groq 제공) 모델을 메인으로 사용합니다. 이 모델은 하루 허용량(TPD) 및 분당 토큰 제한(TPM, 12,000)이 `gpt-oss-120b`보다 넉넉하여, 카드 뉴스 3장 분량의 긴 한국어 JSON 출력을 짤림(Truncation) 없이 안정적으로 생성하는 데 최적화되어 있습니다. JSON Mode의 안정적인 출력을 위해 `max_tokens` 설정을 selector 단계는 1000, generator 단계는 6000으로 충분히 할당하여 사용합니다.
 
 ### 3.2 Groq API Rate Limit (429 및 413 에러) 대응
 무료 API 키의 특성상 낮은 TPM(Tokens Per Minute)과 RPM(Requests Per Minute) 제한으로 인해 장애가 빈번히 발생했습니다.
@@ -60,8 +59,8 @@
   * **NFC 정규화**: Mac OS 환경에서 복사된 코드 파일 내 한글 텍스트가 NFD(자음/모음 분리) 상태로 저장되어 LLM 토크나이저에서 토큰 수가 3~5배 부풀려지는 현상 발견. API 요청 직전에 모든 프롬프트 스트링에 `.normalize('NFC')`를 실행하여 토큰 사용량을 70% 이상 절감.
   * **지수 백오프 기반 재시도 루프 (`callGroqWithRetry`)**: 429 에러 감지 시 초기 대기 시간을 8,000ms로 늘리고 배수를 2.0으로 상향(8s ➡️ 16s ➡️ 32s ➡️ 64s)하여 sliding window 해제 시간을 안정적으로 보장.
 
-### 3.3 비활성화된(Decommissioned) 모델 이슈
-* **해결**: 지원 중단된 모델을 전면 제거하고 메인 추론 모델로 `openai/gpt-oss-120b`, 그리고 fallback 모델로 `llama-3.1-8b-instant`를 사용하도록 정비하였습니다.
+### 3.3 비활성화된(Decommissioned) 모델 및 TPM 한도 에러 대응
+* **해결**: 지원 중단된 모델을 전면 제거하고, 413 Request Too Large 에러 방지 및 짤림 현상 방지를 위해 메인 추론 모델로 12,000 TPM 한도를 가진 `llama-3.3-70b-versatile`로 교체하였습니다. Fallback 모델로는 `llama-3.1-8b-instant`를 사용하도록 정비하였습니다.
 
 ### 3.4 Tailwind 글자 크기 버그
 * **문제**: 모바일 뷰포트에서 타이틀과 슬라이드 제목의 글자 크기가 지정되지 않아 tiny 폰트로 렌더링되는 현상.
