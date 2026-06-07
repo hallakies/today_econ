@@ -139,7 +139,7 @@ ${todayNewsText}
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
         temperature: 0.1,
-        max_tokens: 4000,
+        max_tokens: 1000,
       });
       resultText = (response.choices[0]?.message?.content || '').trim();
       console.log('[Selector] Main model response length:', resultText.length);
@@ -154,7 +154,7 @@ ${todayNewsText}
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
         temperature: 0.1,
-        max_tokens: 4000,
+        max_tokens: 1000,
       }, 3, 3000);
       resultText = (response.choices[0]?.message?.content || '').trim();
       console.log('[Selector] Fallback model response length:', resultText.length);

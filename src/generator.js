@@ -360,7 +360,7 @@ async function generateCardContent(selectedNews) {
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
         temperature: 0.7,
-        max_tokens: 8000,
+        max_tokens: 3000,
       });
       resultText = (response.choices[0]?.message?.content || '').trim();
       console.log('[Generator] Main model raw response length:', resultText.length);
@@ -375,7 +375,7 @@ async function generateCardContent(selectedNews) {
           { role: 'user', content: userPrompt.normalize('NFC') }
         ],
         temperature: 0.7,
-        max_tokens: 8000,
+        max_tokens: 3000,
       }, 3, 3000);
       resultText = (response.choices[0]?.message?.content || '').trim();
       console.log('[Generator] Fallback model raw response length:', resultText.length);
