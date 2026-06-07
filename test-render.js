@@ -37,6 +37,7 @@ const mockData = {
     editors_insight: "대출 금리 변동 추이를 주시해야 합니다.",
     image_prompt: "Minimalist modern 3D vector illustration, cute pastel claymation style, a plant growing out of a coin stack, isolated on clean solid background, financial theme, no text"
   },
+  news_date: "2026.6.7",
   instagram_caption: "오늘의 경제 1분 요약!..."
 };
 

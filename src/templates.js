@@ -22,7 +22,7 @@ function highlightText(text, themeColor) {
 /**
  * Obsidian Theme (Dark Mode Premium Glassmorphism)
  */
-function renderObsidian(cardType, content, imageBase64, themeColor) {
+function renderObsidian(cardType, content, imageBase64, themeColor, newsDate = 'TODAY') {
   let innerHtml = '';
   
   if (cardType === 'title') {
@@ -38,7 +38,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
           <!-- Full bleed typography, no modal container -->
           <div class="w-full max-w-[950px] mx-auto space-y-6 text-left px-4">
             <div>
-              <span class="inline-block px-8 py-2.5 rounded-full bg-primary/20 border border-primary/40 text-primary font-label-caps text-2xl tracking-widest backdrop-blur-md">TODAY</span>
+              <span class="inline-block px-8 py-2.5 rounded-full bg-primary/20 border border-primary/40 text-primary font-label-caps text-2xl tracking-widest backdrop-blur-md">${newsDate}</span>
             </div>
             <h1 class="font-display text-7xl font-black text-white leading-tight break-keep drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">${highlightText(content.title.replace(/\n/g, '<br/>'), themeColor)}</h1>
             <p class="font-body text-4xl text-slate-200 break-keep leading-relaxed font-black drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">${highlightText(content.subtitle, themeColor)}</p>
@@ -46,7 +46,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
           
           ${content.editors_insight ? `
             <div class="w-full max-w-[950px] mx-auto rounded-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-[#0A0E1A]/85 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-              <span class="text-5xl shrink-0">💡</span>
+              <div class="w-1.5 h-16 bg-primary rounded-full shadow-[0_0_10px_rgba(0,210,255,0.6)] shrink-0"></div>
               <p class="text-left text-slate-100 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
@@ -111,7 +111,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
 
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
-                <span class="text-4xl">💡</span>
+                <div class="w-1 h-12 bg-primary rounded-full shrink-0"></div>
                 <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
@@ -120,7 +120,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
           <div class="w-full flex flex-col items-center space-y-6">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-200 font-bold text-2.5xl py-4 px-8 rounded-full backdrop-blur-2xl bg-black/60 border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.5)] max-w-[950px] mx-auto">
-                💡 오늘의 경제, 내일도 쉽고 빠르게 👉 <span style="color: ${themeColor}; text-shadow: 0 0 8px ${themeColor}80;">[팔로우]</span>
+                오늘의 경제, 내일도 쉽고 빠르게 👉 <span style="color: ${themeColor}; text-shadow: 0 0 8px ${themeColor}80;">[팔로우]</span>
               </div>
             ` : ''}
             <div class="footer-area text-slate-400 font-black text-center text-2.5xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.9)]">📍 @today.econ</div>
@@ -211,7 +211,7 @@ function renderObsidian(cardType, content, imageBase64, themeColor) {
 /**
  * Ivory Theme (Light Mode Premium Editorial)
  */
-function renderIvory(cardType, content, imageBase64, themeColor) {
+function renderIvory(cardType, content, imageBase64, themeColor, newsDate = 'TODAY') {
   let innerHtml = '';
   
   if (cardType === 'title') {
@@ -226,7 +226,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           <!-- Full bleed typography, no modal container -->
           <div class="w-full max-w-[950px] mx-auto space-y-6 text-left px-4">
             <div>
-              <span class="inline-block px-8 py-2.5 rounded bg-slate-800 text-white font-label-caps text-2xl tracking-widest">TODAY</span>
+              <span class="inline-block px-8 py-2.5 rounded bg-slate-800 text-white font-label-caps text-2xl tracking-widest">${newsDate}</span>
             </div>
             <h1 class="font-display text-7xl font-black text-slate-800 leading-tight break-keep drop-shadow-[0_2px_8px_rgba(255,255,255,0.8)]">${highlightText(content.title.replace(/\n/g, '<br/>'), themeColor)}</h1>
             <p class="font-body text-4xl text-slate-700 break-keep leading-relaxed font-black drop-shadow-[0_2px_6px_rgba(255,255,255,0.8)]">${highlightText(content.subtitle, themeColor)}</p>
@@ -234,7 +234,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           
           ${content.editors_insight ? `
             <div class="w-full max-w-[950px] mx-auto rounded-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-[#FDFBF7]/90 border border-slate-200/80 shadow-[0_15px_40px_rgba(0,0,0,0.06)]">
-              <span class="text-5xl shrink-0">💡</span>
+              <div class="w-1.5 h-16 bg-slate-800 rounded-full shrink-0"></div>
               <p class="text-left text-slate-800 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
@@ -300,7 +300,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
 
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-slate-200/80 flex items-start gap-4 text-secondary bg-secondary/5 rounded-2xl py-5 px-6">
-                <span class="text-4xl">💡</span>
+                <div class="w-1 h-12 bg-secondary rounded-full shrink-0"></div>
                 <p class="text-left text-slate-700 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
@@ -309,7 +309,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
           <div class="w-full flex flex-col items-center space-y-6">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-800 font-bold text-2.5xl py-4 px-8 rounded-full backdrop-blur-2xl bg-white/70 border border-slate-200 shadow-[0_10px_25px_rgba(0,0,0,0.05)] max-w-[950px] mx-auto">
-                💡 오늘의 경제, 내일도 쉽고 빠르게 👉 <span style="color: ${themeColor}; text-shadow: 0 0 4px ${themeColor}40;">[팔로우]</span>
+                오늘의 경제, 내일도 쉽고 빠르게 👉 <span style="color: ${themeColor}; text-shadow: 0 0 4px ${themeColor}40;">[팔로우]</span>
               </div>
             ` : ''}
             <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
@@ -387,7 +387,7 @@ function renderIvory(cardType, content, imageBase64, themeColor) {
 /**
  * Cyber Theme (Neon Purple/Pink Futuristic Cyberpunk)
  */
-function renderCyber(cardType, content, imageBase64, themeColor) {
+function renderCyber(cardType, content, imageBase64, themeColor, newsDate = 'TODAY') {
   let innerHtml = '';
   
   if (cardType === 'title') {
@@ -402,7 +402,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           <!-- Full bleed typography, no modal container -->
           <div class="w-full max-w-[950px] mx-auto space-y-6 text-left px-4">
             <div>
-              <span class="inline-block px-8 py-2.5 rounded border border-secondary text-secondary font-label-caps text-2xl tracking-widest uppercase shadow-[0_0_12px_rgba(255,75,137,0.5)]">#MARKET_UPDATE</span>
+              <span class="inline-block px-8 py-2.5 rounded border border-secondary text-secondary font-label-caps text-2xl tracking-widest shadow-[0_0_12px_rgba(255,75,137,0.5)]">${newsDate}</span>
             </div>
             <h1 class="font-display text-7xl font-black text-white leading-tight break-keep drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">${highlightText(content.title.replace(/\n/g, '<br/>'), themeColor)}</h1>
             <div class="w-32 h-1.5 bg-primary shadow-[0_0_15px_rgba(235,178,255,0.9)] mt-2"></div>
@@ -411,7 +411,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           
           ${content.editors_insight ? `
             <div class="w-full max-w-[950px] mx-auto rounded-[28px] p-8 flex items-center gap-6 backdrop-blur-2xl bg-[#140727]/85 border border-[#ebb2ff]/20 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-              <span class="text-5xl shrink-0">💡</span>
+              <div class="w-1.5 h-16 bg-primary rounded-full shadow-[0_0_15px_rgba(235,178,255,0.8)] shrink-0"></div>
               <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
@@ -471,7 +471,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
 
             ${content.editors_insight ? `
               <div class="mt-8 pt-8 border-t border-white/10 flex items-start gap-4 text-primary bg-primary/5 rounded-2xl py-5 px-6">
-                <span class="text-4xl">💡</span>
+                <div class="w-1 h-12 bg-primary rounded-full shadow-[0_0_10px_rgba(235,178,255,0.6)] shrink-0"></div>
                 <p class="text-left text-slate-200 leading-normal font-extrabold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
               </div>
             ` : ''}
@@ -480,7 +480,7 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
           <div class="w-full flex flex-col items-center space-y-6">
             ${!isFact ? `
               <div class="cta-banner w-full text-center text-slate-200 font-bold text-2.5xl py-4 px-8 rounded-full backdrop-blur-2xl bg-black/60 border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.5)] max-w-[950px] mx-auto">
-                💡 오늘의 경제, 내일도 쉽고 빠르게 👉 <span style="color: ${themeColor}; text-shadow: 0 0 8px ${themeColor}80;">[팔로우]</span>
+                오늘의 경제, 내일도 쉽고 빠르게 👉 <span style="color: ${themeColor}; text-shadow: 0 0 8px ${themeColor}80;">[팔로우]</span>
               </div>
             ` : ''}
             <div class="footer-area text-slate-500 font-black text-center text-2.5xl">📍 @today.econ</div>
@@ -569,15 +569,15 @@ function renderCyber(cardType, content, imageBase64, themeColor) {
 /**
  * Builds HTML code dynamically based on selected theme
  */
-function buildThemeHtml(themeName, themeColor, cardType, content, imageBase64) {
+function buildThemeHtml(themeName, themeColor, cardType, content, imageBase64, newsDate) {
   const normalized = (themeName || 'obsidian').toLowerCase();
   
   if (normalized === 'ivory') {
-    return renderIvory(cardType, content, imageBase64, themeColor);
+    return renderIvory(cardType, content, imageBase64, themeColor, newsDate);
   } else if (normalized === 'cyber') {
-    return renderCyber(cardType, content, imageBase64, themeColor);
+    return renderCyber(cardType, content, imageBase64, themeColor, newsDate);
   } else {
-    return renderObsidian(cardType, content, imageBase64, themeColor);
+    return renderObsidian(cardType, content, imageBase64, themeColor, newsDate);
   }
 }
 

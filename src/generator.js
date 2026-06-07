@@ -100,7 +100,7 @@ function finalizeCaption(caption) {
   clean = clean.replace(/\s+/g, ' ').trim();
   
   // Append highly-curated professional Korean financial hashtags
-  const standardHashtags = '\n\n#재테크 #경제공부 #경제뉴스 #오늘의경제 #직장인재테크 #재테크초보 #today_econ';
+  const standardHashtags = '\n\n#경제공부 #경제뉴스 #오늘의경제 #10초경제 #today.econ';
   clean += standardHashtags;
   
   return clean;
@@ -228,9 +228,11 @@ function validateAndRepairContent(jsonData) {
 /**
  * Generates the contents for the 3 Instagram slides and the Instagram post caption.
  * @param {{title: string, link: string, pubDate: string, summary: string}} selectedNews 
+ * @param {{title: string, link: string, pubDate: string, summary: string, date: string}} selectedNews 
  * @returns {Promise<{
  *   template_theme: string,
  *   theme_color: string,
+ *   news_date: string,
  *   card1: { title: string, subtitle: string, editors_insight: string, image_prompt: string },
  *   card2: { section_title: string, bullets: Array<string>, editors_insight: string, image_prompt: string },
  *   card3: { section_title: string, bullets: Array<string>, editors_insight: string, image_prompt: string },
@@ -246,8 +248,9 @@ async function generateCardContent(selectedNews) {
 
 ### 작성 지침:
 1. **태그 기반 동적 타이포그래피 강조 (필수)**:
-   - 기사의 핵심 키워드, 중요한 수치, 금액, 고유명사(예: '2조 원', '사우디 자푸라', '아람코' 등)는 텍스트(타이틀, 서브타이틀, 불릿, 에디터 인사이트 모두 포함) 내에서 반드시 \`<hl>강조텍스트</hl>\` 태그로 감싸주세요.
-   - 예시: "사우디 <hl>자푸라 2단계</hl> 발전소 수주", "<hl>한전 2조원</hl> 매출 기대"
+   - 단순 숫자나 조사가 아닌, 의미가 완성된 명사구 전체(예: '24시간 운용', '블랙박스 리스크')를 반드시 \`<hl>강조텍스트</hl>\` 태그로 감싸주세요.
+   - 기사의 핵심 키워드, 중요한 수치, 금액, 고유명사 등을 포함한 덩어리(명사구)를 감싸야 합니다.
+   - 예시: "사우디 <hl>자푸라 2단계 발전소</hl> 수주", "<hl>한전 2조원 매출</hl> 기대"
 2. **쉬운 용어 설명**:
    - 어려운 경제 용어는 초보자도 쉽게 알 수 있도록 괄호안에 아주 친절한 설명이나 비유를 붙여주세요.
      (예: "연준(미국의 중앙은행으로 세계 경제의 돈줄을 쥐고 있는 곳)", "LTV(집값 대비 대출한도 - 1억짜리 집이면 최대 얼마까지 대출해줄지 정하는 비율)")
@@ -255,12 +258,14 @@ async function generateCardContent(selectedNews) {
    - 릴스 화면에서 시청자가 읽기 좋으면서도, 단순 겉핥기가 아닌 깊이 있는 정보를 제공하십시오.
    - 각 불릿 포인트는 **구체적인 데이터와 맥락이 포함된 완전한 문장(한국어 30~45자 내외)**으로 작성해야 합니다. 너무 짧고 건조한 단어 나열은 절대 금지합니다.
    - **[CRITICAL] 명사형 종결이나 단어 나열식 요약은 절대 금지**합니다. 반드시 "~다", "~전망입니다", "~예상됩니다" 등 **서술어가 포함된 완전한 문장**으로 끝맺으세요.
+   - **[CRITICAL] 불릿 연속 주어 반복 금지**: 연속된 불릿에서 동일한 주어(기사 핵심 키워드, 예: '로보어드바이저')로 문장을 시작하는 것을 엄격히 금지합니다. 맥락상 주어를 생략하거나 다채로운 대명사와 문장 구조를 사용하세요.
+   - **[CRITICAL] 종결 어미 다채롭게 구성**: 하나의 카드 안에서 불릿 포인트들의 끝맺음말(어미)이 중복되지 않도록 다채롭게 구성하라 (예: ~확대 중입니다, ~전망입니다, ~확인해 보세요 등).
 4. **카드 2와 카드 3의 완전 분리 및 실질적 Action 강제 (필수)**:
    - **카드 2(card2)**: 기사 내용의 핵심 팩트(Fact) 요약 3가지입니다. (배지명 추천: "무슨 일이야?")
    - **카드 3(card3)**: **20~30대 직장인, 재테크 초보자**가 이 뉴스를 보고 "앞으로 어떻게 될까? 나는 뭘 준비해야 하지?"에 대한 답을 얻을 수 있도록 다음 **3가지 스텝(예측 -> 영향 -> 가벼운 행동)**으로 구성하십시오. (배지명 추천: "그래서 어떻게 돼?")
      - [불릿 1 - 예측]: 해당 뉴스가 불러올 단기적 시장/산업 트렌드 변화 (예: "반도체 장비 수요 급증 전망")
      - [불릿 2 - 영향]: 이 이슈가 내 지갑/자산/소비에 미치는 파급력 (예: "가전제품 가격 인하로 가계 지출 절감 가능성")
-     - [불릿 3 - 행동]: 너무 무리한 투자 조언(특정 주식 매수 등)은 배제하고, 일상에서 당장 취할 수 있는 가벼운 실천적 액션 아이템 1가지를 제안하십시오. (예: "환율 변동 대비 현금 흐름 점검하세요!")
+     - [불릿 3 - 행동]: 단순한 조언(~중요합니다)을 금지하고, 일상에서 당장 취할 수 있는 구체적인 행동을 촉구하는 명령문 형태(~해보세요)로 작성하십시오. (예: "내 투자 성향에 맞는 앱을 다운받아 무료 시뮬레이션을 돌려보세요!", "환율 변동 대비 현금 흐름 점검하세요!")
    - **[CRITICAL] 페르소나 오류(내부 직원 빙의) 절대 금지**: 독자는 해당 뉴스에 등장하는 기업의 임직원이 아닙니다. 절대 "부서 협업 설계하세요", "보고 라인 점검하세요"와 같이 내부 직원을 향한 엉뚱한 업무 지시를 내리지 마십시오. 철저히 외부 투자자 및 일반 소비자의 관점을 유지하십시오.
    - **[CRITICAL] 허위/가상의 금융 상품 추천 절대 금지**: "연구ETF", "공공기관ETF" 등 존재하지 않는 가상의 주식이나 펀드, ETF를 지어내서 추천하지 마십시오. 확신할 수 없다면 직접적인 매수 권유 대신 "관련 산업 트렌드 점검" 정도로 순화하십시오.
 5. **에디토리얼 인사이트(editors_insight) 작성**:
@@ -280,7 +285,8 @@ async function generateCardContent(selectedNews) {
      - "ivory": 친근한 실생활 민생 경제, 정책, 부동산, 일반 소비재 뉴스용. (추천 theme_color: "#705d00" 또는 짙은 골드)
      - "cyber": 미래지향적인 반도체, IT, 빅테크, AI, 코인/암호화폐 뉴스용. (추천 theme_color: "#bc13fe" 또는 네온 퍼플)
 8. **인스타그램 게시글 멘트 (instagram_caption) - 슬랙 복붙 버그 우회**:
-   - 줄바꿈과 기호를 풍부하게 섞어 친근한 해요체로 작성하세요.
+   - 슬라이드 내용을 단순히 요약하지 말고, 독자에게 질문을 던지거나('내 돈을 로봇에게 맡겨도 될까요?') 공감을 유도하는 친근한 소통형 대화체(해요체)로 작성하십시오.
+   - 줄바꿈과 기호를 풍부하게 섞어 친근하고 후킹(Hooking)하게 작성하세요.
    - **[CRITICAL] 이모지(Emoji) 및 슬랙 숏코드 절대 금지**: 슬랙 앱에서 텍스트를 복사할 때 이모지가 깨지거나 숏코드로 변환되는 버그가 있습니다. 이를 원천 차단하기 위해 **모든 종류의 그림 이모지(👀, 📝, 📈 등) 및 슬랙 숏코드(:eyes: 등) 사용을 100% 금지**합니다.
    - 강조가 필요할 때는 오직 슬랙이 건드릴 수 없는 **기본 텍스트 특수 기호(■, ▶, ✔, 📌, 💡 등)**만을 사용하십시오.
    - 본문 내 해시태그를 길게 나열하는 대신 텍스트 본문만 자연스럽게 생성하십시오. (해시태그는 스크립트 내부에서 깔끔한 한국어 태그로 후처리 삽입할 것입니다)
@@ -425,6 +431,14 @@ async function generateCardContent(selectedNews) {
     resultJson.instagram_caption = finalizeCaption(resultJson.instagram_caption);
 
     console.log('[Generator] Successfully finalized and cleaned card content.');
+    // Add the original news date for the template UI
+    if (selectedNews && selectedNews.date) {
+      resultJson.news_date = selectedNews.date;
+    } else {
+      const today = new Date();
+      resultJson.news_date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
+    }
+
     return resultJson;
   } catch (error) {
     console.error('[Generator] Failed to generate card content:', error);

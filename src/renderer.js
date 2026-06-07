@@ -185,7 +185,8 @@ async function renderCardImages(generatedJson) {
         themeColor,
         cardTypes[i],
         cardContents[i],
-        cardImages[i]
+        cardImages[i],
+        generatedJson.news_date
       );
 
       await page.setContent(htmlContent);
