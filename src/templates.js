@@ -28,31 +28,41 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
   
   if (cardType === 'title') {
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between select-none">
-        <img class="absolute inset-0 w-full h-full object-cover z-0" src="data:image/png;base64,${imageBase64}" alt="news" />
-        <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/95 z-10"></div>
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-16 px-16 select-none">
+        <!-- Ambient Blur Background -->
+        <div class="absolute inset-0 z-0 overflow-hidden">
+          <img class="w-full h-full object-cover filter blur-[80px] opacity-35 scale-110" src="data:image/png;base64,${imageBase64}" alt="ambient" />
+          <div class="absolute inset-0 bg-[#0f1724]/75"></div>
+        </div>
         
-        <main class="flex-1 flex flex-col z-20 justify-end px-16 pb-20 space-y-8">
-          <div class="w-full max-w-[950px] mx-auto space-y-6 text-left">
-            <div class="flex items-center gap-4">
-              <span class="inline-block px-6 py-2 rounded-full text-white/90 font-bold text-2xl tracking-wider" style="background: ${themeColor}30; border: 1px solid ${themeColor}50;">${newsDate}</span>
-            </div>
-            <h1 class="font-display text-[4.2rem] font-black text-white leading-[1.2] break-keep drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
-            <p class="font-body text-3.5xl text-white/80 break-keep leading-relaxed font-bold drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">${highlightText(content.subtitle, themeColor)}</p>
+        <!-- Top Header Area -->
+        <header class="w-full max-w-[950px] mx-auto flex items-center justify-between z-20">
+          <div class="flex items-center gap-4">
+            <span class="inline-block px-5 py-2 rounded-full text-white/95 font-bold text-xl tracking-wider bg-white/10 border border-white/15 backdrop-blur-md">${newsDate}</span>
+            <span class="text-white/40 font-black text-2xl tracking-wide">@today.econ</span>
+          </div>
+          <div class="w-20 h-20 flex items-center justify-center shrink-0">
+            ${mascotHtml}
+          </div>
+        </header>
+
+        <!-- Center Image Frame (Prevents Cropping) -->
+        <div class="w-full max-w-[950px] mx-auto h-[620px] rounded-[32px] overflow-hidden border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.6)] bg-black/35 flex items-center justify-center z-20 relative">
+          <img class="w-full h-full object-contain" src="data:image/png;base64,${imageBase64}" alt="news image" />
+        </div>
+
+        <!-- Bottom Typography Area -->
+        <main class="w-full max-w-[950px] mx-auto space-y-6 z-20 text-left">
+          <div class="space-y-4">
+            <h1 class="font-display text-[3.8rem] font-black text-white leading-[1.25] break-keep drop-shadow-[0_4px_15px_rgba(0,0,0,0.7)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
+            <p class="font-body text-2.5xl text-white/70 break-keep leading-relaxed font-bold">${highlightText(content.subtitle, themeColor)}</p>
           </div>
           
           ${content.editors_insight ? `
-            <div class="w-full max-w-[950px] mx-auto rounded-2xl p-7 flex items-center gap-6 backdrop-blur-2xl bg-white/10 border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
-              <p class="text-left text-white/90 leading-relaxed font-bold text-2.5xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+            <div class="rounded-2xl p-6 flex items-center gap-6 backdrop-blur-2xl bg-white/[0.06] border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.3)]">
+              <p class="text-left text-white/90 leading-relaxed font-bold text-2xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
-          
-          <div class="w-full max-w-[950px] mx-auto flex items-center justify-between">
-            <div class="text-white/50 font-black text-2.5xl">@today.econ</div>
-            <div class="flex items-center gap-3">
-              ${mascotHtml}
-            </div>
-          </div>
         </main>
       </div>
     `;
@@ -80,9 +90,12 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
       `).join('<div class="w-full h-px bg-white/8 my-1"></div>');
 
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between select-none">
-        <img class="absolute inset-0 w-full h-full object-cover z-0 opacity-30" src="data:image/png;base64,${imageBase64}" alt="news" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#0f1724] via-[#0f1724]/95 to-[#0f1724] z-10"></div>
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-16 select-none">
+        <!-- Ambient Blur Background for Inner Slides -->
+        <div class="absolute inset-0 z-0 overflow-hidden">
+          <img class="w-full h-full object-cover filter blur-[100px] opacity-20 scale-125" src="data:image/png;base64,${imageBase64}" alt="ambient" />
+          <div class="absolute inset-0 bg-[#0f1724]/85"></div>
+        </div>
         
         <main class="flex-1 flex flex-col z-20 justify-center px-16">
           <div class="w-full max-w-[950px] mx-auto rounded-[32px] p-11 space-y-7 bg-white/[0.06] backdrop-blur-xl border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.5)]">
@@ -129,13 +142,16 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
             ` : '<div></div>'}
             <div class="flex items-center gap-4">
               <span class="text-white/40 font-black text-2xl">@today.econ</span>
-              ${mascotHtml}
+              <div class="w-16 h-16 flex items-center justify-center shrink-0">
+                ${mascotHtml}
+              </div>
             </div>
           </div>
         </main>
       </div>
     `;
   }
+
 
   return `
     <!DOCTYPE html>

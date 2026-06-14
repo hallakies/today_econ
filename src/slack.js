@@ -28,10 +28,17 @@ async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}) {
     };
   });
 
-  const newsRef = selectedNews.link ? `\n\n🔗 *원본 기사 (팩트체크용):*\n<${selectedNews.link}|${selectedNews.title}>\n` : '';
+  // Extract body and hashtags from instagramCaption to insert the original news source link in between
+  const hashtagsPattern = /\n\n#경제공부.*/s;
+  let captionBody = instagramCaption;
+  const hashtags = '\n\n#경제공부 #경제뉴스 #오늘의경제 #10초경제 #today.econ';
+  
+  if (hashtagsPattern.test(instagramCaption)) {
+    captionBody = instagramCaption.replace(hashtagsPattern, '').trim();
+  }
 
-  // Prepare caption text message referencing the upload
-  const captionMessage = `📈 *오늘의 경제 카드 뉴스 생성 완료!*${newsRef}\n아래 점선 사이의 텍스트를 복사하여 인스타그램 본문 멘트로 사용하세요.\n\n-----------------------------\n\n${instagramCaption}\n\n-----------------------------`;
+  const newsRef = selectedNews.link ? `\n\n🔗 원본 기사:\n<${selectedNews.link}|${selectedNews.title}>` : '';
+  const captionMessage = `${captionBody}${newsRef}${hashtags}`;
 
   try {
     // 1. Upload files first (without initial_comment to prevent duplicate posts in some slack APIs)
