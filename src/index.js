@@ -1,6 +1,6 @@
 const fs = require('fs');
 const config = require('../config');
-const { fetchNews } = require('./crawler');
+const { fetchNews, fetchOgImage } = require('./crawler');
 const { selectNews, saveHistoryEntry } = require('./selector');
 const { generateCardContent } = require('./generator');
 const { renderCardImages } = require('./renderer');
@@ -52,13 +52,22 @@ async function run() {
     const selectedNews = await selectNews(newsList);
     console.log(`[Main] Selected news title: "${selectedNews.title}"`);
 
-    // Pausing 8 seconds to prevent Groq TPM rate limit issues (increased from 5s)
+    // 3. Fetch og:image from the selected article
+    console.log('[Main] Fetching article thumbnail (og:image)...');
+    const ogImageUrl = await fetchOgImage(selectedNews.link);
+    if (ogImageUrl) {
+      console.log(`[Main] Found og:image: ${ogImageUrl.substring(0, 80)}...`);
+    } else {
+      console.log('[Main] No og:image found. Will use fallback background.');
+    }
+
+    // Pausing 8 seconds to prevent Groq TPM rate limit issues
     console.log('[Main] Pausing for 8 seconds to reset Groq TPM window...');
     await new Promise(resolve => setTimeout(resolve, 8000));
 
-    // 3. Generate card content (Title, fact bullet points, action points, prompts, caption)
+    // 4. Generate card content (Title, fact bullet points, action points, caption)
     const cardContent = await generateCardContent(selectedNews);
-    console.log('[Main] Content and prompts generated successfully.');
+    console.log('[Main] Content generated successfully.');
 
     // --- Quality Gate: Validate generated content ---
     const qualityWarnings = [];
@@ -81,19 +90,19 @@ async function run() {
       console.log('[Main] ✅ Quality Gate passed. All required fields present.');
     }
 
-    // 4. Generate illustrations and render the HTML slides to PNG files
-    renderedFiles = await renderCardImages(cardContent);
+    // 5. Render HTML slides to PNG files (using news og:image as background)
+    renderedFiles = await renderCardImages(cardContent, ogImageUrl);
     console.log(`[Main] Successfully rendered ${renderedFiles.length} slides.`);
 
-    // 5. Send images and Instagram caption to Slack
+    // 6. Send images and Instagram caption to Slack
     await sendToSlack(renderedFiles, cardContent.instagram_caption, selectedNews);
     console.log('[Main] News and images sent to Slack!');
 
-    // 6. Save the news item title to history to prevent future duplicates
+    // 7. Save the news item title to history to prevent future duplicates
     saveHistoryEntry(selectedNews.title);
     console.log('[Main] Saved selected news title to history file.');
 
-    // 7. Cleanup temp PNG files so they aren't committed to Git
+    // 8. Cleanup temp PNG files so they aren't committed to Git
     cleanupTempFiles(renderedFiles);
 
     console.log('[Main] --- Pipeline execution completed successfully! ---');

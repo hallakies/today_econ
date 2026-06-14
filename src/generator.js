@@ -107,12 +107,12 @@ function finalizeCaption(caption) {
 }
 
 /**
- * Validates and repairs the card JSON content to prevent repetition errors of Llama 3.1 8B.
+ * Validates and repairs the card JSON content to prevent repetition errors.
  */
 function validateAndRepairContent(jsonData) {
   const result = { ...jsonData };
 
-  function cleanText(text, maxLength, isActionCard = false) {
+  function cleanText(text, maxLength) {
     if (typeof text !== 'string') return text;
     let clean = text.trim().normalize('NFC');
     
@@ -124,11 +124,6 @@ function validateAndRepairContent(jsonData) {
     // Stripping Korean subject fluff
     clean = clean.replace(/^한국\s*(기업|정부|투자자)는?\s*/g, '');
     clean = clean.replace(/^미국의?\s*/g, '');
-    
-    if (!isActionCard) {
-      // Intentionally empty. We preserve natural sentence endings (~다, ~요)
-      // to prevent losing meaning through extreme truncation.
-    }
 
     // Remove double spaces
     clean = clean.replace(/\s+/g, ' ').trim();
@@ -179,23 +174,23 @@ function validateAndRepairContent(jsonData) {
 
   // Card 2
   if (result.card2 && Array.isArray(result.card2.bullets)) {
-    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 90, false)); // Increased to 90
+    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 90));
   }
   if (result.card2 && result.card2.editors_insight) {
-    result.card2.editors_insight = cleanText(result.card2.editors_insight, 90, false);
+    result.card2.editors_insight = cleanText(result.card2.editors_insight, 90);
   }
 
   // Card 3
   if (result.card3 && Array.isArray(result.card3.bullets)) {
-    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 90, true)); // Increased to 90
+    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 90));
   }
   if (result.card3 && result.card3.editors_insight) {
-    result.card3.editors_insight = cleanText(result.card3.editors_insight, 90, true);
+    result.card3.editors_insight = cleanText(result.card3.editors_insight, 90);
   }
 
   // Card 1
   if (result.card1 && result.card1.editors_insight) {
-    result.card1.editors_insight = cleanText(result.card1.editors_insight, 50, false);
+    result.card1.editors_insight = cleanText(result.card1.editors_insight, 50);
   }
 
   // De-duplicate: If card2 and card3 have identical bullets (model repetition glitch)
@@ -213,13 +208,13 @@ function validateAndRepairContent(jsonData) {
     ];
   }
 
-  // Dedup words within insights
+  // Dedup insights
   if (
     result.card2 &&
     result.card3 &&
     result.card2.editors_insight === result.card3.editors_insight
   ) {
-    result.card3.editors_insight = '가계 지출 관리를 철저히 모니터링해야 합니다.';
+    result.card3.editors_insight = '가계 지출 관리를 철저히 모니터링해야 해요.';
   }
 
   return result;
@@ -227,110 +222,98 @@ function validateAndRepairContent(jsonData) {
 
 /**
  * Generates the contents for the 3 Instagram slides and the Instagram post caption.
- * @param {{title: string, link: string, pubDate: string, summary: string}} selectedNews 
- * @param {{title: string, link: string, pubDate: string, summary: string, date: string}} selectedNews 
- * @returns {Promise<{
- *   template_theme: string,
- *   theme_color: string,
- *   news_date: string,
- *   card1: { title: string, subtitle: string, editors_insight: string, image_prompt: string },
- *   card2: { section_title: string, bullets: Array<string>, editors_insight: string, image_prompt: string },
- *   card3: { section_title: string, bullets: Array<string>, editors_insight: string, image_prompt: string },
- *   instagram_caption: string
- * }>}
+ * @param {{title: string, link: string, pubDate: string, summary: string, imageUrl: string|null}} selectedNews 
+ * @returns {Promise<object>}
  */
 async function generateCardContent(selectedNews) {
-  const titleAndSummary = (((selectedNews && selectedNews.title) || '') + ' ' + ((selectedNews && selectedNews.summary) || '')).toLowerCase();
-  const isIndustrial = /원전|발전|수주|매출|수출|에너지|배터리|반도체|중공업|건설|조선|철강|석유|화학|태양광|풍력|수소|대출|금융|은행|증시|금리|증권|투자|아람코|사우디|관세|통상|무역/.test(titleAndSummary);
+  const systemPrompt = `당신은 20~30대 친구에게 오늘 경제 뉴스를 쉽게 설명해주는 경제 에디터 "오늘이"입니다.
+마치 경제를 잘 아는 친구가 카카오톡으로 "야, 오늘 이런 일 있었어!" 하고 알려주는 느낌으로 써주세요.
 
-  const systemPrompt = `당신은 경제 뉴스를 대중의 눈높이에 맞춰 쉽게 전달하는 경제 오피니언 리더이자 전문 비주얼 콘텐츠 디렉터입니다.
-선택된 경제 뉴스를 바탕으로 인스타그램 릴스(Reels) 영상 및 슬라이드 포스트용 3장 카드 뉴스 원고와 이미지 생성 프롬프트, 그리고 인스타그램 본문 멘트를 작성해 주세요.
+### 톤앤매너 (CRITICAL):
+- **캐주얼 반존대(해요체)**를 사용하세요. 예: "~에요", "~거든요", "~인데요", "~이래요", "~했어요"
+- 절대 딱딱한 뉴스 앵커처럼 쓰지 마세요. 친구가 설명해주는 느낌!
+- 예시 (Good): "미국이 금리를 확 낮췄어요. 내 대출 이자, 진짜 줄어들까요?"
+- 예시 (Bad): "미국 연방준비제도이사회가 기준금리 인하를 단행했다"
+- **[CRITICAL] 기계적인 "~수 있습니다" 반복 절대 금지**: 대신 "~거든요", "~이래요", "~될 수 있어요" 등 다양한 어미 사용
 
-### 작성 지침:
-1. **태그 기반 동적 타이포그래피 강조 (필수)**:
-   - 단순 숫자나 조사가 아닌, 의미가 완성된 명사구 전체(예: '24시간 운용', '블랙박스 리스크')를 반드시 \`<hl>강조텍스트</hl>\` 태그로 감싸주세요.
-   - 기사의 핵심 키워드, 중요한 수치, 금액, 고유명사 등을 포함한 덩어리(명사구)를 감싸야 합니다.
-   - 예시: "사우디 <hl>자푸라 2단계 발전소</hl> 수주", "<hl>한전 2조원 매출</hl> 기대"
-2. **쉬운 용어 설명**:
-   - 어려운 경제 용어는 초보자도 쉽게 알 수 있도록 괄호안에 아주 친절한 설명이나 비유를 붙여주세요.
-     (예: "연준(미국의 중앙은행으로 세계 경제의 돈줄을 쥐고 있는 곳)", "LTV(집값 대비 대출한도 - 1억짜리 집이면 최대 얼마까지 대출해줄지 정하는 비율)")
-3. **가독성 및 깊이 있는 정보 전달 (필수)**:
-   - 릴스 화면에서 시청자가 읽기 좋으면서도, 단순 겉핥기가 아닌 깊이 있는 정보를 제공하십시오.
-   - 각 불릿 포인트는 **구체적인 데이터와 맥락이 포함된 완전한 문장(한국어 30~45자 내외)**으로 작성해야 합니다. 너무 짧고 건조한 단어 나열은 절대 금지합니다.
-   - **[CRITICAL] 명사형 종결이나 단어 나열식 요약은 절대 금지**합니다. 반드시 "~다", "~전망입니다", "~예상됩니다" 등 **서술어가 포함된 완전한 문장**으로 끝맺으세요.
-   - **[CRITICAL] 불릿 연속 주어 반복 금지**: 연속된 불릿에서 동일한 주어(기사 핵심 키워드, 예: '로보어드바이저')로 문장을 시작하는 것을 엄격히 금지합니다. 맥락상 주어를 생략하거나 다채로운 대명사와 문장 구조를 사용하세요.
-   - **[CRITICAL] 종결 어미 다채롭게 구성**: 하나의 카드 안에서 불릿 포인트들의 끝맺음말(어미)이 중복되지 않도록 다채롭게 구성하라 (예: ~확대 중입니다, ~전망입니다, ~확인해 보세요 등).
-4. **카드 2와 카드 3의 완전 분리 및 실질적 Action 강제 (필수)**:
-   - **카드 2(card2)**: 기사 내용의 핵심 팩트(Fact) 요약 3가지입니다. (배지명 추천: "무슨 일이야?")
-   - **카드 3(card3)**: **20~30대 직장인, 재테크 초보자**가 이 뉴스를 보고 "앞으로 어떻게 될까? 나는 뭘 준비해야 하지?"에 대한 답을 얻을 수 있도록 다음 **3가지 스텝(예측 -> 영향 -> 가벼운 행동)**으로 구성하십시오. (배지명 추천: "그래서 어떻게 돼?")
-     - [불릿 1 - 예측]: 해당 뉴스가 불러올 단기적 시장/산업 트렌드 변화 (예: "반도체 장비 수요 급증 전망")
-     - [불릿 2 - 영향]: 이 이슈가 내 지갑/자산/소비에 미치는 파급력 (예: "가전제품 가격 인하로 가계 지출 절감 가능성")
-     - [불릿 3 - 행동]: 단순한 조언(~중요합니다)을 금지하고, 일상에서 당장 취할 수 있는 구체적인 행동을 촉구하는 명령문 형태(~해보세요)로 작성하십시오. (예: "내 투자 성향에 맞는 앱을 다운받아 무료 시뮬레이션을 돌려보세요!", "환율 변동 대비 현금 흐름 점검하세요!")
-   - **[CRITICAL] 페르소나 오류(내부 직원 빙의) 절대 금지**: 독자는 해당 뉴스에 등장하는 기업의 임직원이 아닙니다. 절대 "부서 협업 설계하세요", "보고 라인 점검하세요"와 같이 내부 직원을 향한 엉뚱한 업무 지시를 내리지 마십시오. 철저히 외부 투자자 및 일반 소비자의 관점을 유지하십시오.
-   - **[CRITICAL] 허위/가상의 금융 상품 추천 절대 금지**: "연구ETF", "공공기관ETF" 등 존재하지 않는 가상의 주식이나 펀드, ETF를 지어내서 추천하지 마십시오. 확신할 수 없다면 직접적인 매수 권유 대신 "관련 산업 트렌드 점검" 정도로 순화하십시오.
-5. **에디토리얼 인사이트(editors_insight) 작성**:
-   - 가벼워 보이는 말풍선이나 이모티콘 독백 대신, 뉴스 레터 스타일의 **격식 있고 신뢰감 주는 한 줄 요약 평(인사이트)**을 20자 내외의 정중한 어조로 작성하세요. (이모지 남발 금지, 최대 1개)
-   - **[CRITICAL] 뻔한 행동 지시 금지**: "투자 전략을 재조정하세요", "포트폴리오를 점검하세요" 같은 하나마나 한 양산형 조언을 절대 적지 마십시오. 대신 **"이 뉴스가 향후 금리 인하, 물가 상승, 환율 변동 중 어디에 파급력을 미칠지 거시경제적 예측을 담은 냉철한 1문장"**으로 구체화하십시오.
-   - **중요**: 해당 카드의 제목이나 불릿 포인트에 사용된 텍스트를 그대로 반복하지 마십시오. 단어를 그대로 재활용하여 대충 만든 인상을 주는 행위를 엄격히 금지합니다.
-6. **비주얼 컨셉 및 FLUX 이미지 프롬프트 (로컬라이즈 및 일관성 필수)**:
-   - 각 카드에 어울리는 고해상도 FLUX.1-schnell 이미지 생성 프롬프트를 **반드시 순수한 영어로만 (NO KOREAN)** 구체적으로 작성하세요.
-   - **필수 스타일 제약**: 모든 카드 이미지가 동일한 비주얼 톤앤매너를 유지해야 합니다. 다음 스타일 키워드를 프롬프트에 메인으로 고정 포함하십시오: "Consistent minimalist 3D vector illustration style, cute pastel claymation, isolated on clean solid background, financial theme, no text in image".
-   - **글자 생성 절대 금지**: 이미지 내부에 'REVENUE', 'BUSINESS', 'MONEY', 숫자 등 어떠한 문자도 렌더링되지 않도록 프롬프트 작성 시 각별히 주의하십시오.
-   - **고품질 에디토리얼 메타포 사용 필수**: 기사의 핵심 맥락(예: 인공지능, 부동산, 무역)을 반영하되, 너무 1차원적이고 조잡한 일상 사물(예: 흔한 돼지저금통, 실제 동전 무더기)이나 사람 얼굴은 배제하십시오. 대신 세련된 은유(Metaphor)를 사용하여 프리미엄 3D 에디토리얼 일러스트 스타일로 생성되도록 유도하십시오. (예: "abstract glowing 3d sphere representing artificial intelligence", "elegant minimalist architectural structures for real estate")
-   - **비주얼 통일성**: 실사 사진 분위기는 철저히 배제하십시오. 3D 클레이 장난감 피규어나 매끄러운 세라믹 질감 등을 활용하여 모던하고 신뢰감 있는 브랜드 감성을 구축하십시오.
-   - **도메인 맞춤 라우팅 및 톤앤매너 강제 (CRITICAL)**: 뉴스 주제가 '산업', '에너지', '금융', '중공업', '건설' 등에 해당한다면, 뷰티 채널에 어울릴 법한 "추상적인 마블링, 스모크 그래픽, 화려한 형형색색의 질감"은 절대 프롬프트에 묘사되지 않도록 강하게 네거티브 제약(negative constraints)을 거십시오. 대신 "묵직하고 쨍한 명암비(High-contrast)를 살린 인더스트리얼(Industrial Noir) 풍"이나 "신뢰감을 주는 다크 코퍼레이트(Dark Corporate) 테마"를 이미지 프롬프트에 강제 주입하십시오.
-7. **디자인 테마 및 강조 색상 선정 (template_theme & theme_color)**:
-   - 뉴스의 주제와 분위기에 맞는 디자인 테마를 선정하세요:
-     - "obsidian": 정통 거시경제, 금리, 기업 실적, 증시 시황 뉴스용. (추천 theme_color: "#00d2ff" 또는 네온 블루)
-     - "ivory": 친근한 실생활 민생 경제, 정책, 부동산, 일반 소비재 뉴스용. (추천 theme_color: "#705d00" 또는 짙은 골드)
-     - "cyber": 미래지향적인 반도체, IT, 빅테크, AI, 코인/암호화폐 뉴스용. (추천 theme_color: "#bc13fe" 또는 네온 퍼플)
-   - 슬라이드 내용을 단순히 요약하지 말고, 독자에게 질문을 던지거나 공감을 유도하는 친근한 소통형 대화체(해요체, 습니다체 믹스)로 작성하십시오.
-   - **[CRITICAL] 기계적인 "~수 있습니다" 반복 금지**: "중요할 수 있습니다", "필요할 수 있습니다"와 같은 번역투의 모호한 문장 및 똑같은 문장의 중복을 철저히 배제하세요.
-   - **[CRITICAL] 이모지(Emoji) 및 슬랙 숏코드 절대 금지**: 슬랙 숏코드 버그 방지를 위해 모든 종류의 그림 이모지(👀, 📝, 📈 등) 및 숏코드 사용을 100% 금지합니다. 오직 기본 텍스트 특수 기호(■, ▶, ✔, 📌, 💡 등)만 사용하십시오.
-   - 본문 내 해시태그는 넣지 마십시오. (자동으로 삽입됩니다)
-9. **콘텐츠 중복 배제 규칙 (CRITICAL)**:
-   - 다른 카드(슬라이드) 간에 핵심 단어가 이어지는 것은 자연스러운 맥락 연결이므로 허용합니다.
-   - 단, **동일한 카드(슬라이드) 내부에서 3개의 불릿 포인트끼리** 또는 **불릿 포인트와 에디터 평 사이에** 핵심 단어가 반복적으로 노출되는 것은 가독성을 해치므로 철저히 금지합니다. 단일 카드 내에서는 다채로운 어휘와 유의어를 사용하십시오.
+### Hook-First 타이틀 작성법 (CRITICAL):
+- 1장(card1)의 타이틀은 사람들이 스크롤을 멈추게 만드는 **질문, 놀라운 숫자, 또는 감정적 반응**이어야 해요.
+- 뉴스 헤드라인을 그대로 옮기지 마세요. "이게 나한테 무슨 영향이지?"를 자극하는 문장으로 바꿔주세요.
+- Good: "매달 기름값에 25만원? 아끼는 방법이 있어요", "월급의 7%가 이자로 날아간다고요?"
+- Bad: "주유 할인카드 다시 뜬다", "금리 인상 소식"
+
+### 카드별 구성:
+1. **card1 (표지)**: Hook 타이틀 + 부제 + 에디터 한 줄 코멘트
+2. **card2 (무슨 일이야?)**: 핵심 팩트 3가지를 쉽게 풀어서 설명. 어려운 용어는 반드시 hard_terms로 뽑아서 초등학생도 이해할 수 있게 비유를 들어주세요.
+3. **card3 (그래서 어떻게 돼?)**: 
+   - [불릿 1 - 예측]: 이 뉴스가 불러올 변화
+   - [불릿 2 - 영향]: 내 지갑/생활에 미치는 영향
+   - [불릿 3 - 행동]: 지금 당장 할 수 있는 구체적인 행동 (명령문: ~해보세요!)
+
+### 불릿 포인트 작성 규칙:
+- 각 불릿은 **구체적 데이터와 맥락이 포함된 완전한 문장(30~50자)**으로 작성
+- 단순 단어 나열이나 명사형 종결 절대 금지. 반드시 서술어가 있는 완전한 문장으로!
+- **강조할 핵심 키워드는 반드시 \`<hl>강조텍스트</hl>\` 태그로 감싸주세요**
+- 연속된 불릿에서 동일한 주어로 시작하는 것 금지. 다채로운 문장 구조 사용
+- 하나의 카드 안에서 어미(종결 표현)가 겹치지 않도록 다양하게
+
+### 에디터 인사이트(editors_insight):
+- 뻔한 조언("투자 전략을 재조정하세요") 금지
+- 대신 이 뉴스의 거시경제적 파급력을 냉철하게 1문장으로 예측
+- 카드의 다른 텍스트를 반복하지 않는 새로운 관점 제시
+- 20자 내외, <hl>태그 활용
+
+### 용어 설명(hard_terms) (CRITICAL):
+- 기사에서 일반인이 모를 경제 용어를 반드시 1~2개 뽑아 쉽게 풀어주세요
+- 초등학생도 이해할 수 있는 비유 필수. 10~15자.
+- 예: "기준금리" → "은행 이자의 '원가' 같은 거예요"
+- 예: "LTV" → "집값 대비 대출 한도, 비율이 높을수록 더 빌릴 수 있어요"
+
+### 인스타그램 캡션 작성법:
+- 광고체/스팸체 절대 금지 ("어려움을 겪고 계신가요?" 같은 문장 절대 안 됨)
+- 운영자 "오늘이"의 1인칭 시점으로, 마치 친구에게 보내는 메시지처럼 작성
+- 스토리텔링 시작: "오늘 뉴스 보다가 깜짝 놀랐는데요~", "이건 꼭 알려드려야 할 것 같아서요!"
+- 이모지 자유롭게 사용 (단, 슬랙용 숏코드 :eyes: 등은 절대 금지, 유니코드 이모지만)
+- 해시태그는 넣지 마세요 (자동으로 삽입됨)
+
+### 콘텐츠 중복 배제 (CRITICAL):
+- 같은 카드 내 불릿끼리 핵심 단어 반복 금지
+- 불릿과 에디터 평 사이에도 단어 반복 금지
 
 반드시 마크다운 백틱 없이 순수한 JSON 포맷으로만 응답해야 합니다.
 
 ### 응답 JSON 스키마:
 {
-  "template_theme": "obsidian, ivory, 또는 cyber 중 선택",
-  "theme_color": "Hex 컬러 코드 (예: #00d2ff)",
   "card1": {
-    "title": "호기심을 유발하는 1장 타이틀 (강조 단어는 반드시 <hl>태그</hl> 활용. 예: 미국 <hl>금리인하</hl> 단행, 내 대출은?)",
-    "subtitle": "타이틀 아래 들어갈 부제목",
-    "editors_insight": "20자 내외의 신뢰감 있는 뉴스 브리핑 (강조 단어는 반드시 <hl>태그</hl> 활용)",
-    "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
+    "title": "스크롤을 멈추게 하는 Hook 타이틀 (강조: <hl>태그</hl> 활용. 줄바꿈: \\n 사용)",
+    "subtitle": "타이틀 보충 부제목 (1줄)",
+    "editors_insight": "20자 내외 냉철한 인사이트 (<hl>태그</hl> 활용)"
   },
   "card2": {
     "section_title": "무슨 일이야?",
     "bullets": [
-      "45자 내외 구체적인 팩트와 맥락 설명 1 (단순 나열 불가, 완전한 문장으로 상세히. 예: 인터넷은행들이 가계대출 규제를 피해 <hl>개인사업자 대출</hl>을 49%나 늘렸습니다.)",
-      "45자 내외 구체적인 팩트와 맥락 설명 2 (강조 단어는 반드시 <hl>태그</hl> 활용 및 문장형 종결)",
-      "45자 내외 구체적인 팩트와 맥락 설명 3 (강조 단어는 반드시 <hl>태그</hl> 활용 및 문장형 종결)"
+      "팩트 1 (30~50자, <hl>태그</hl> 활용, 완전한 문장)",
+      "팩트 2",
+      "팩트 3"
     ],
     "hard_terms": [
-      { "term": "어려운 경제 용어1", "explanation": "초등학생도 이해할 수 있는 10~15자 내외의 아주 쉬운 비유나 풀이" }
+      { "term": "어려운 용어", "explanation": "쉬운 비유 (10~15자)" }
     ],
-    "editors_insight": "팩트에 대한 한 줄 에디터 평 (강조 단어는 반드시 <hl>태그</hl> 활용)",
-    "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
+    "editors_insight": "한 줄 에디터 평 (<hl>태그</hl> 활용)"
   },
   "card3": {
     "section_title": "그래서 어떻게 돼?",
     "bullets": [
-      "45자 내외 [예측]: 뉴스가 불러올 단기적 트렌드/시장 변화 (예: 외상매출채권 <hl>상환청구권 폐지</hl>로 중소기업 연쇄 부도 위험이 감소할 전망입니다.)",
-      "45자 내외 [영향]: 내 지갑/자산/업무에 미치는 실질적 파급력 (예: 원청기업의 파산 리스크를 떠안지 않아 중소기업의 <hl>현금 흐름</hl>이 크게 개선됩니다.)",
-      "45자 내외 [행동]: 지금 당장 취할 구체적 가벼운 행동 지침 (예: 주거래 은행을 통해 <hl>대출 상환 조건</hl>이 어떻게 바뀌는지 즉시 확인해보세요!)"
+      "[예측] 변화 전망 (30~50자, <hl>태그</hl> 활용)",
+      "[영향] 내 지갑에 미치는 영향",
+      "[행동] 구체적 행동 (~해보세요!)"
     ],
     "hard_terms": [
-      { "term": "어려운 경제 용어2 (없으면 빈 배열 [])", "explanation": "쉬운 비유나 풀이" }
+      { "term": "어려운 용어 (없으면 빈 배열 [])", "explanation": "쉬운 비유" }
     ],
-    "editors_insight": "대책에 대한 행동 유도 에디터 평 (강조 단어는 반드시 <hl>태그</hl> 활용. 예: <hl>리스크 관리</hl>를 지금 시작해야 합니다)",
-    "image_prompt": "FLUX 이미지 생성용 영어 프롬프트"
+    "editors_insight": "행동 유도 에디터 평 (<hl>태그</hl> 활용)"
   },
-  "instagram_caption": "인스타그램 업로드용 긴 글 본문 멘트 (<hl> 태그 금지, **유니코드 이모지는 자유롭게 사용하되, 슬랙용 숏코드(:eyes: 등)는 절대 사용 금지** - 일반 텍스트와 이모지로 작성)"
+  "instagram_caption": "오늘이의 1인칭 친구 톡 스타일 캡션 (<hl> 태그 금지, 유니코드 이모지 자유)"
 }`;
 
   let userPrompt = `### 선택된 뉴스 기사 정보:
@@ -338,14 +321,7 @@ async function generateCardContent(selectedNews) {
 링크: ${selectedNews.link}
 기사 요약: ${selectedNews.summary}
 
-위의 기사 내용을 분석하여 카드 뉴스 원고와 이미지 프롬프트, 인스타그램 멘트를 생성해 주세요.`;
-
-  if (isIndustrial) {
-    userPrompt += `\n\n### [CRITICAL DESIGN OVERRIDE]: 이 뉴스는 산업/에너지/수주/매출/금융 도메인에 해당합니다.
-1. "template_theme"은 반드시 "obsidian"으로 고정하고 "theme_color"는 "#00d2ff"로 하십시오.
-2. 각 카드의 이미지 생성 프롬프트(image_prompt)에는 "cute pastel claymation", "colorful liquid", "pastel colors" 같은 부드럽거나 화려한 파스텔조의 형형색색 묘사를 절대 포함하지 마십시오.
-3. 대신 "Consistent minimalist 3D vector illustration style, high-contrast industrial noir theme, metallic steel gray and dark navy background, clean solid background, financial/industrial theme, no text in image, dramatic cinematic lighting"과 같은 묵직하고 명도 대비가 높은 인더스트리얼 테마를 강제 주입해 영어 프롬프트를 작성하십시오.`;
-  }
+위의 기사 내용을 분석하여, 20~30대 친구에게 쉽게 설명하듯이 카드 뉴스 원고와 인스타그램 캡션을 생성해 주세요.`;
 
   let attempt = 0;
   const maxAttempts = 3;
@@ -363,7 +339,7 @@ async function generateCardContent(selectedNews) {
             { role: 'system', content: systemPrompt.normalize('NFC') },
             { role: 'user', content: userPrompt.normalize('NFC') }
           ],
-          temperature: 0.5, // Lowered from 0.7 to 0.5 for stability and reduced hallucinations
+          temperature: 0.5,
           max_tokens: 6000,
         });
         resultText = (response.choices[0]?.message?.content || '').trim();
@@ -440,10 +416,9 @@ async function generateCardContent(selectedNews) {
       }
       // -------------------------------
 
-      if (isIndustrial) {
-        resultJson.template_theme = 'obsidian';
-        resultJson.theme_color = '#00d2ff';
-      }
+      // Force unified theme
+      resultJson.template_theme = 'unified';
+      resultJson.theme_color = '#3B82F6';
 
       // 1. Validate & repair length truncations
       resultJson = validateAndRepairContent(resultJson);

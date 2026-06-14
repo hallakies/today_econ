@@ -2,89 +2,71 @@ const fs = require('fs');
 require('dotenv').config();
 const { renderCardImages } = require('./src/renderer');
 
-// Mock data representing a typical Llama-generated response
+// Mock data representing the new casual tone output
 const mockData = {
+  template_theme: 'unified',
+  theme_color: '#3B82F6',
   card1: {
-    title: "미국 금리가 내렸다고?\n내 대출 이자는 어떻게 될까?",
-    subtitle: "미국 연방준비제도(연준)의 깜짝 0.5%p 금리 인하 소식",
-    editors_insight: "미국 금리 인하 전격 단행",
-    image_prompt: "Minimalist modern 3D vector illustration, cute pastel claymation style, a piggy bank with percentage symbol, isolated on clean solid background, financial theme, no text"
+    title: "월급의 7%가\n이자로 날아간다고요?",
+    subtitle: "주담대 금리 7% 돌파, 내 대출은 괜찮을까",
+    editors_insight: "<hl>가계부채</hl> 위험 신호가 켜졌어요",
   },
   card2: {
     section_title: "무슨 일이야?",
     bullets: [
-      "미국 기준금리 0.5%p 인하",
-      "인플레이션 안정화 신호",
-      "경기 침체 선제적 예방"
+      "주택담보대출 <hl>최고 금리가 7%</hl>를 넘어섰어요",
+      "고환율과 고물가가 겹치면서 <hl>이자 부담</hl>이 눈덩이처럼 커지고 있거든요",
+      "은행들이 <hl>가산금리</hl>를 올리면서 신규 대출자들이 직격탄을 맞고 있어요"
     ],
     hard_terms: [
-      { "term": "기준금리", "explanation": "한국은행이 정하는 이자율의 기준점" },
-      { "term": "빅컷", "explanation": "금리를 한 번에 0.5%p나 크게 내리는 것" }
+      { "term": "가산금리", "explanation": "은행이 기준금리 위에 얹는 수수료예요" },
+      { "term": "주담대", "explanation": "집을 담보로 빌리는 대출이에요" }
     ],
-    editors_insight: "빅컷 단행으로 금리 하락 국면 진입",
-    image_prompt: "Minimalist modern 3D vector illustration, cute pastel claymation style, a clock with gears and dollar bills, isolated on clean solid background, financial theme, no text"
+    editors_insight: "<hl>금리 인하</hl> 기대와 달리 실질 부담은 증가세",
   },
   card3: {
     section_title: "그래서 어떻게 돼?",
     bullets: [
-      "변동금리 대출 갈아타기",
-      "고금리 예적금 막차 가입",
-      "자산 포트폴리오 다각화"
+      "<hl>변동금리</hl> 대출자의 월 상환액이 10~20만원 더 늘어날 전망이에요",
+      "전세 대출 이자까지 합치면 <hl>월 소득의 30%</hl> 이상이 이자로 빠질 수 있어요",
+      "주거래 은행 앱에서 <hl>금리 갈아타기</hl> 시뮬레이션 한번 돌려보세요!"
     ],
     hard_terms: [
-      { "term": "포트폴리오", "explanation": "계란을 한 바구니에 담지 않는 분산 투자" }
+      { "term": "변동금리", "explanation": "시장 상황에 따라 이자가 오르내려요" }
     ],
-    editors_insight: "대출 금리 변동 추이를 주시해야 합니다.",
-    image_prompt: "Minimalist modern 3D vector illustration, cute pastel claymation style, a plant growing out of a coin stack, isolated on clean solid background, financial theme, no text"
+    editors_insight: "<hl>고정금리</hl> 전환 타이밍을 놓치지 마세요",
   },
-  news_date: "2026.6.7",
-  instagram_caption: "오늘의 경제 1분 요약!..."
+  news_date: "2026.6.14",
+  instagram_caption: "오늘 뉴스 보다가 깜짝 놀랐는데요~ 주담대 금리가 7%를 넘었대요..."
 };
 
 async function runTest() {
-  const themes = ['obsidian', 'ivory', 'cyber'];
-  const colors = ['#00d2ff', '#705d00', '#bc13fe'];
+  console.log('[Test] --- Starting Unified Theme Render Test ---');
   
-  console.log('[Test] --- Starting Local Visual Render Test for 3 Stitch Themes ---');
-  console.log('[Test] This will generate 3 cards for each of the 3 themes (9 images in total).');
-  
-  const totalStartTime = Date.now();
-  
-  for (let i = 0; i < themes.length; i++) {
-    const theme = themes[i];
-    const color = colors[i];
-    console.log(`\n[Test] [Theme ${i + 1}/${themes.length}] Rendering: ${theme.toUpperCase()} (${color})...`);
+  const startTime = Date.now();
+  try {
+    // Test with a real news og:image URL (from MK economy)
+    const testOgImage = 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1080&h=1920&fit=crop&q=80';
     
-    const testData = {
-      ...mockData,
-      template_theme: theme,
-      theme_color: color
-    };
+    const files = await renderCardImages(mockData, testOgImage);
     
-    const themeStartTime = Date.now();
-    try {
-      const files = await renderCardImages(testData);
-      
-      // Rename outputs to preserve them separately
-      const renamedFiles = [];
-      for (let j = 0; j < files.length; j++) {
-        const oldPath = files[j];
-        const newPath = `${theme}_${j + 1}.png`;
-        if (fs.existsSync(oldPath)) {
-          fs.renameSync(oldPath, newPath);
-          renamedFiles.push(newPath);
-        }
+    console.log(`[Test] Success! Generated ${files.length} slides in ${((Date.now() - startTime) / 1000).toFixed(2)}s:`);
+    files.forEach(f => console.log(` - ${f}`));
+    
+    // Rename to preserve them
+    for (let j = 0; j < files.length; j++) {
+      const oldPath = files[j];
+      const newPath = `unified_${j + 1}.png`;
+      if (fs.existsSync(oldPath)) {
+        fs.renameSync(oldPath, newPath);
+        console.log(`[Test] Renamed: ${oldPath} -> ${newPath}`);
       }
-      
-      console.log(`[Test] Success! Generated ${theme} theme in ${((Date.now() - themeStartTime) / 1000).toFixed(2)}s:`);
-      renamedFiles.forEach(f => console.log(` - ${f}`));
-    } catch (error) {
-      console.error(`[Test] Failed to render theme ${theme}:`, error);
     }
+    
+    console.log(`\n[Test] --- Test Complete! Check unified_1.png, unified_2.png, unified_3.png ---`);
+  } catch (error) {
+    console.error('[Test] Failed:', error);
   }
-  
-  console.log(`\n[Test] --- Visual Render Test Completed! Total time: ${((Date.now() - totalStartTime) / 1000).toFixed(2)}s ---`);
-  console.log('[Test] You can now view all 9 PNG files in your workspace.');
 }
 
 runTest();
