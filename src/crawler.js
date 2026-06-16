@@ -29,6 +29,33 @@ async function fetchOgImage(articleUrl) {
     
     if (ogMatch && ogMatch[1]) {
       const imageUrl = ogMatch[1].trim();
+      const lowerUrl = imageUrl.toLowerCase();
+      
+      // Filter out typical brand logos or social share fallback images
+      const logoPatterns = [
+        'logo',
+        'default',
+        'bi_sns',
+        'ci_sns',
+        'sns_share',
+        'facebook_share',
+        'twitter_share',
+        'mk_bi',
+        'mk_ci',
+        'mk_logo',
+        'main_logo',
+        'snslogo',
+        'sns_logo',
+        'temp/logo',
+        'mklogo',
+        'brand'
+      ];
+      
+      if (logoPatterns.some(pattern => lowerUrl.includes(pattern))) {
+        console.log(`[Crawler] Filtered out corporate brand logo/fallback image: ${imageUrl}`);
+        return null;
+      }
+
       // Validate it looks like an actual image URL
       if (imageUrl.startsWith('http') && /\.(jpg|jpeg|png|webp|gif)/i.test(imageUrl)) {
         return imageUrl;

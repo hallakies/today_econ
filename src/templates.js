@@ -28,39 +28,39 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
   
   if (cardType === 'title') {
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-16 px-16 select-none">
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-18 px-16 select-none">
         <!-- Ambient Blur Background -->
         <div class="absolute inset-0 z-0 overflow-hidden">
-          <img class="w-full h-full object-cover filter blur-[80px] opacity-35 scale-110" src="data:image/png;base64,${imageBase64}" alt="ambient" />
+          <img class="w-full h-full object-cover filter blur-[90px] opacity-35 scale-110" src="data:image/png;base64,${imageBase64}" alt="ambient" />
           <div class="absolute inset-0 bg-[#0f1724]/75"></div>
         </div>
         
         <!-- Top Header Area -->
         <header class="w-full max-w-[950px] mx-auto flex items-center justify-between z-20">
           <div class="flex items-center gap-4">
-            <span class="inline-block px-5 py-2 rounded-full text-white/95 font-bold text-xl tracking-wider bg-white/10 border border-white/15 backdrop-blur-md">${newsDate}</span>
-            <span class="text-white/40 font-black text-2xl tracking-wide">@today.econ</span>
+            <span class="inline-block px-6 py-2.5 rounded-full text-white/95 font-black text-2xl tracking-wider bg-white/10 border border-white/15 backdrop-blur-md">${newsDate}</span>
+            <span class="text-white/50 font-black text-[2.2rem] tracking-wide">@today.econ</span>
           </div>
-          <div class="w-20 h-20 flex items-center justify-center shrink-0">
+          <div class="w-24 h-24 flex items-center justify-center shrink-0">
             ${mascotHtml}
           </div>
         </header>
 
         <!-- Center Image Frame (Prevents Cropping) -->
-        <div class="w-full max-w-[950px] mx-auto h-[620px] rounded-[32px] overflow-hidden border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.6)] bg-black/35 flex items-center justify-center z-20 relative">
+        <div class="w-full max-w-[950px] mx-auto h-[600px] rounded-[36px] overflow-hidden border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.65)] bg-black/35 flex items-center justify-center z-20 relative">
           <img class="w-full h-full object-contain" src="data:image/png;base64,${imageBase64}" alt="news image" />
         </div>
 
         <!-- Bottom Typography Area -->
-        <main class="w-full max-w-[950px] mx-auto space-y-6 z-20 text-left">
-          <div class="space-y-4">
-            <h1 class="font-display text-[3.8rem] font-black text-white leading-[1.25] break-keep drop-shadow-[0_4px_15px_rgba(0,0,0,0.7)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
-            <p class="font-body text-2.5xl text-white/70 break-keep leading-relaxed font-bold">${highlightText(content.subtitle, themeColor)}</p>
+        <main class="w-full max-w-[950px] mx-auto space-y-7 z-20 text-left">
+          <div class="space-y-5">
+            <h1 class="font-display text-[4.6rem] font-black text-white leading-[1.2] break-keep drop-shadow-[0_4px_15px_rgba(0,0,0,0.7)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
+            <p class="font-body text-[2.4rem] text-white/70 break-keep leading-relaxed font-bold">${highlightText(content.subtitle, themeColor)}</p>
           </div>
           
           ${content.editors_insight ? `
-            <div class="rounded-2xl p-6 flex items-center gap-6 backdrop-blur-2xl bg-white/[0.06] border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.3)]">
-              <p class="text-left text-white/90 leading-relaxed font-bold text-2xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+            <div class="rounded-2xl p-7 flex items-center gap-6 backdrop-blur-2xl bg-white/[0.06] border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.3)]">
+              <p class="text-left text-white/90 leading-relaxed font-black text-[2.2rem] insight-text">${highlightText(content.editors_insight, themeColor)}</p>
             </div>
           ` : ''}
         </main>
@@ -75,22 +75,22 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
 
     const bulletsHtml = content.bullets
       .map((bullet, idx) => `
-        <li class="flex items-start gap-5 py-3">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-2" style="background: ${isFact ? themeColor + '20' : '#10b98120'}; border: 2px solid ${isFact ? themeColor + '40' : '#10b98140'};">
+        <li class="flex items-start gap-6 py-5">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 mt-2.5" style="background: ${isFact ? themeColor + '20' : '#10b98120'}; border: 2px solid ${isFact ? themeColor + '40' : '#10b98140'};">
             ${isFact ? `
-              <span class="w-3.5 h-3.5 rounded-full" style="background: ${themeColor};"></span>
+              <span class="w-4 h-4 rounded-full" style="background: ${themeColor};"></span>
             ` : `
-              <svg class="w-5 h-5" style="color: ${badgeColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+              <svg class="w-6 h-6" style="color: ${badgeColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             `}
           </div>
-          <p class="font-body text-[2rem] text-white/90 font-bold leading-relaxed break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
+          <p class="font-body text-[2.5rem] text-white/95 font-bold leading-normal break-keep bullet-text">${highlightText(bullet, themeColor)}</p>
         </li>
-      `).join('<div class="w-full h-px bg-white/8 my-1"></div>');
+      `).join('<div class="w-full h-px bg-white/8 my-2"></div>');
 
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-16 select-none">
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-18 select-none">
         <!-- Ambient Blur Background for Inner Slides -->
         <div class="absolute inset-0 z-0 overflow-hidden">
           <img class="w-full h-full object-cover filter blur-[100px] opacity-20 scale-125" src="data:image/png;base64,${imageBase64}" alt="ambient" />
@@ -98,27 +98,27 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         </div>
         
         <main class="flex-1 flex flex-col z-20 justify-center px-16">
-          <div class="w-full max-w-[950px] mx-auto rounded-[32px] p-11 space-y-7 bg-white/[0.06] backdrop-blur-xl border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.5)]">
-            <div class="mb-3">
-              <span class="inline-block px-7 py-2.5 rounded-full font-bold text-[1.6rem] tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
+          <div class="w-full max-w-[950px] mx-auto rounded-[32px] p-12 space-y-8 bg-white/[0.06] backdrop-blur-xl border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.5)]">
+            <div class="mb-4">
+              <span class="inline-block px-8 py-3 rounded-full font-black text-[2.0rem] tracking-wider" style="background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder};">${badgeText}</span>
             </div>
             
-            <ul class="space-y-3">
+            <ul class="space-y-4">
               ${bulletsHtml}
             </ul>
 
             ${content.hard_terms && content.hard_terms.length > 0 ? `
-              <div class="mt-10 pt-7 border-t border-white/10">
-                <div class="flex items-center gap-2 mb-4">
-                  <span class="text-2xl" style="color: ${themeColor};">💡</span>
-                  <span class="text-white/60 font-bold text-xl tracking-wider">쉽게 말하면?</span>
+              <div class="mt-12 pt-8 border-t border-white/10">
+                <div class="flex items-center gap-3 mb-5">
+                  <span class="text-3xl" style="color: ${themeColor};">💡</span>
+                  <span class="text-white/60 font-black text-2xl tracking-wider">쉽게 말하면?</span>
                 </div>
-                <div class="flex flex-wrap gap-3">
+                <div class="flex flex-col gap-4">
                   ${content.hard_terms.map(term => `
-                    <div class="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/[0.06] border border-white/10">
-                      <span style="color: ${themeColor};" class="font-black text-[1.4rem]">${term.term}</span>
-                      <span class="text-white/20 text-xl">→</span>
-                      <span class="text-white/70 font-bold text-[1.3rem]">${term.explanation}</span>
+                    <div class="flex items-start gap-4 px-6 py-4 rounded-2xl bg-white/[0.06] border border-white/10">
+                      <span style="color: ${themeColor};" class="font-black text-[2.0rem] shrink-0 mt-0.5">${term.term}</span>
+                      <span class="text-white/20 text-2xl mt-0.5">→</span>
+                      <span class="text-white/80 font-bold text-[1.8rem] leading-relaxed">${term.explanation}</span>
                     </div>
                   `).join('')}
                 </div>
@@ -126,23 +126,23 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
             ` : ''}
 
             ${content.editors_insight ? `
-              <div class="mt-8 pt-6 border-t border-white/10">
-                <div class="flex items-start gap-4 rounded-2xl py-5 px-7 bg-white/[0.04] border-l-[5px]" style="border-left-color: ${themeColor};">
-                  <p class="text-left text-white/80 leading-relaxed font-bold text-2xl insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+              <div class="mt-10 pt-8 border-t border-white/10">
+                <div class="flex items-start gap-4 rounded-2xl py-6 px-8 bg-white/[0.04] border-l-[6px]" style="border-left-color: ${themeColor};">
+                  <p class="text-left text-white/85 leading-relaxed font-black text-[2.2rem] insight-text">${highlightText(content.editors_insight, themeColor)}</p>
                 </div>
               </div>
             ` : ''}
           </div>
           
-          <div class="w-full max-w-[950px] mx-auto flex items-center justify-between mt-10 px-4">
+          <div class="w-full max-w-[950px] mx-auto flex items-center justify-between mt-12 px-4">
             ${!isFact ? `
-              <div class="text-center text-white/60 font-bold text-2xl py-3 px-8 rounded-full bg-white/[0.06] border border-white/10">
+              <div class="text-center text-white/70 font-black text-[2.2rem] py-4 px-9 rounded-full bg-white/[0.06] border border-white/10">
                 오늘의 경제, 쉽고 빠르게 👉 <span style="color: ${themeColor};">[팔로우]</span>
               </div>
             ` : '<div></div>'}
-            <div class="flex items-center gap-4">
-              <span class="text-white/40 font-black text-2xl">@today.econ</span>
-              <div class="w-16 h-16 flex items-center justify-center shrink-0">
+            <div class="flex items-center gap-5">
+              <span class="text-white/40 font-black text-[2.2rem]">@today.econ</span>
+              <div class="w-20 h-20 flex items-center justify-center shrink-0">
                 ${mascotHtml}
               </div>
             </div>
@@ -151,7 +151,6 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
       </div>
     `;
   }
-
 
   return `
     <!DOCTYPE html>
@@ -172,8 +171,8 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
                 background: "#0f1724"
               },
               fontSize: {
-                '2.5xl': '1.75rem',
-                '3.5xl': '2.1rem',
+                '2.5xl': '2.1rem',
+                '3.5xl': '2.5rem',
               },
               fontFamily: {
                 sans: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
