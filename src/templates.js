@@ -28,14 +28,14 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
   
   if (cardType === 'title') {
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-18 px-16 select-none">
+      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-20 px-16 select-none">
         <!-- Ambient Blur Background -->
         <div class="absolute inset-0 z-0 overflow-hidden">
           <img class="w-full h-full object-cover filter blur-[90px] opacity-35 scale-110" src="data:image/png;base64,${imageBase64}" alt="ambient" />
           <div class="absolute inset-0 bg-[#0f1724]/75"></div>
         </div>
         
-        <!-- Top Header Area -->
+        <!-- Top Brand Header (Kept in flow to prevent overlap) -->
         <header class="w-full max-w-[950px] mx-auto flex items-center justify-between z-20">
           <div class="flex items-center gap-4">
             <span class="inline-block px-6 py-2.5 rounded-full text-white/95 font-black text-2xl tracking-wider bg-white/10 border border-white/15 backdrop-blur-md">${newsDate}</span>
@@ -46,23 +46,26 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
           </div>
         </header>
 
-        <!-- Center Image Frame (Prevents Cropping) -->
-        <div class="w-full max-w-[950px] mx-auto h-[600px] rounded-[36px] overflow-hidden border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.65)] bg-black/35 flex items-center justify-center z-20 relative">
-          <img class="w-full h-full object-contain" src="data:image/png;base64,${imageBase64}" alt="news image" />
-        </div>
-
-        <!-- Bottom Typography Area -->
-        <main class="w-full max-w-[950px] mx-auto space-y-7 z-20 text-left">
-          <div class="space-y-5">
-            <h1 class="font-display text-[4.6rem] font-black text-white leading-[1.2] break-keep drop-shadow-[0_4px_15px_rgba(0,0,0,0.7)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
-            <p class="font-body text-[2.4rem] text-white/70 break-keep leading-relaxed font-bold">${highlightText(content.subtitle, themeColor)}</p>
+        <!-- Compact Center Content Bundle (Image + Typography centered vertically via my-auto) -->
+        <main class="w-full max-w-[950px] mx-auto flex flex-col justify-center space-y-9 z-20 my-auto">
+          <!-- Center Image Frame (Prevents Cropping) -->
+          <div class="w-full h-[580px] rounded-[36px] overflow-hidden border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.65)] bg-black/35 flex items-center justify-center relative">
+            <img class="w-full h-full object-contain" src="data:image/png;base64,${imageBase64}" alt="news image" />
           </div>
-          
-          ${content.editors_insight ? `
-            <div class="rounded-2xl p-7 flex items-center gap-6 backdrop-blur-2xl bg-white/[0.06] border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.3)]">
-              <p class="text-left text-white/90 leading-relaxed font-black text-[2.2rem] insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+
+          <!-- Bottom Typography Area -->
+          <div class="w-full space-y-6 text-left">
+            <div class="space-y-5">
+              <h1 class="font-display text-[4.6rem] font-black text-white leading-[1.2] break-keep drop-shadow-[0_4px_15px_rgba(0,0,0,0.7)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
+              <p class="font-body text-[2.4rem] text-white/70 break-keep leading-relaxed font-bold">${highlightText(content.subtitle, themeColor)}</p>
             </div>
-          ` : ''}
+            
+            ${content.editors_insight ? `
+              <div class="rounded-2xl p-7 flex items-center gap-6 backdrop-blur-2xl bg-white/[0.06] border border-white/10 shadow-[0_15px_35px_rgba(0,0,0,0.3)]">
+                <p class="text-left text-white/90 leading-relaxed font-black text-[2.2rem] insight-text">${highlightText(content.editors_insight, themeColor)}</p>
+              </div>
+            ` : ''}
+          </div>
         </main>
       </div>
     `;
