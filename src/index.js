@@ -1,6 +1,6 @@
 const fs = require('fs');
 const config = require('../config');
-const { fetchNews, fetchOgImage } = require('./crawler');
+const { fetchNews, fetchOgImage, fetchArticleBody } = require('./crawler');
 const { selectNews, saveHistoryEntry } = require('./selector');
 const { generateCardContent } = require('./generator');
 const { renderCardImages } = require('./renderer');
@@ -51,6 +51,11 @@ async function run() {
     // 2. Select the single most important and non-duplicate news article
     const selectedNews = await selectNews(newsList);
     console.log(`[Main] Selected news title: "${selectedNews.title}"`);
+
+    // 2.5 Fetch full article body for deeper analysis
+    console.log('[Main] Fetching full article body...');
+    const fullText = await fetchArticleBody(selectedNews.link);
+    selectedNews.fullText = fullText || selectedNews.summary; // Fallback to summary if fetch fails
 
     // 3. Fetch og:image from the selected article
     console.log('[Main] Fetching article thumbnail (og:image)...');

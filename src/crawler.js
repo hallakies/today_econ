@@ -1,4 +1,5 @@
 const Parser = require('rss-parser');
+const cheerio = require('cheerio');
 const parser = new Parser();
 
 /**
@@ -120,7 +121,65 @@ async function fetchNews(rssUrl) {
   }
 }
 
+/**
+ * Fetches the full text of an article from its URL.
+ * @param {string} articleUrl The URL of the news article.
+ * @returns {Promise<string>} The full text of the article.
+ */
+async function fetchArticleBody(articleUrl) {
+  try {
+    console.log(`[Crawler] Fetching full article body from: ${articleUrl}`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch(articleUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+      },
+    });
+    clearTimeout(timeout);
+    
+    if (!response.ok) {
+      console.warn(`[Crawler] Failed to fetch article body, status: ${response.status}`);
+      return '';
+    }
+    
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Remove script, style, noscript, iframe tags to clean up the content
+    $('script, style, noscript, iframe, header, footer, nav, aside').remove();
+
+    // Most news sites put their main content in article, .article, #article, #content, etc.
+    let contentNode = $('article, .article, #article, .news_content, #news_body, #art_body, #dic_area');
+    
+    if (contentNode.length === 0) {
+      // Fallback: Just grab body and let text extraction handle the rest
+      contentNode = $('body');
+    }
+
+    // Extract text and clean up excess whitespace
+    let fullText = contentNode.text();
+    fullText = fullText.replace(/\\s+/g, ' ').trim();
+    
+    // Normalize to NFC to avoid tokenizer issues as instructed in AGENTS.md
+    if (fullText) {
+      fullText = fullText.normalize('NFC');
+    }
+
+    console.log(`[Crawler] Successfully extracted ${fullText.length} characters from article body.`);
+    return fullText;
+  } catch (error) {
+    console.error(`[Crawler] Failed to fetch article body: ${error.message}`);
+    return '';
+  }
+}
+
 module.exports = {
   fetchNews,
   fetchOgImage,
+  fetchArticleBody,
 };
