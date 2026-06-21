@@ -138,6 +138,20 @@ function validateAndRepairContent(jsonData) {
     clean = clean.replace(/된다\.$/g, '돼요.');
     clean = clean.replace(/것이다\.$/g, '것이에요.');
     clean = clean.replace(/수 있다\.$/g, '수 있어요.');
+    
+    // 명사형 꼬리 변환 및 할루시네이션 오타 후처리
+    clean = clean.replace(/원\.$/g, '원이에요.');
+    clean = clean.replace(/개\.$/g, '개예요.');
+    clean = clean.replace(/명\.$/g, '명이에요.');
+    clean = clean.replace(/지정\.$/g, '지정됐어요.');
+    clean = clean.replace(/원$/g, '원이에요');
+    clean = clean.replace(/개$/g, '개예요');
+    clean = clean.replace(/명$/g, '명이에요');
+    clean = clean.replace(/지정$/g, '지정됐어요');
+    clean = clean.replace(/하요\.$/g, '해요.');
+    clean = clean.replace(/하요$/g, '해요');
+    clean = clean.replace(/필요하요/g, '필요해요');
+
     // 위 패턴에 안 걸린 마지막 '다.' 안전하게 치환
     if (clean.endsWith('다.')) {
       clean = clean.substring(0, clean.length - 2) + '요.';
@@ -163,24 +177,67 @@ function validateAndRepairContent(jsonData) {
     return clean;
   }
 
+  // --- 2. <hl> 태그 강제 이식 및 금지어 덮어쓰기 로직 ---
+  function enforceHlTag(text) {
+    if (!text || typeof text !== 'string') return text;
+    if (text.includes('<hl>')) return text; // 이미 있으면 통과
+    
+    // <hl>이 없으면 띄어쓰기 기준 가장 긴 단어(조사 제외, 2글자 이상)를 찾아 강제로 씌움
+    const words = text.split(' ').filter(w => w.length >= 2 && !w.endsWith('요') && !w.endsWith('요.'));
+    if (words.length > 0) {
+      const target = words.reduce((a, b) => a.length > b.length ? a : b);
+      return text.replace(target, `<hl>${target}</hl>`);
+    }
+    return `<hl>${text}</hl>`; // 정 안되면 통째로 씌움
+  }
+
+  function censorAction(text) {
+    if (!text || typeof text !== 'string') return text;
+    const banRegex = /(주의|유의|파악|고려|대비|수립|확인)/;
+    if (banRegex.test(text)) {
+      return '지금 당장 HTS/MTS 앱을 켜서 내 계좌 상태부터 점검해보세요! <hl>머뭇거리다간 큰일나요!</hl>';
+    }
+    return text;
+  }
+
   // Card 2
   if (result.card2 && Array.isArray(result.card2.bullets)) {
-    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 130));
+    result.card2.bullets = result.card2.bullets.map(b => enforceHlTag(cleanText(b, 130)));
   }
 
   // Card 3
   if (result.card3 && Array.isArray(result.card3.bullets)) {
-    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 130));
+    result.card3.bullets = result.card3.bullets.map(b => enforceHlTag(cleanText(b, 130)));
   }
 
-  // Card 4 (Optional)
+  // Card 4 (Optional) - Action Card
   if (result.card4 && Array.isArray(result.card4.bullets)) {
-    result.card4.bullets = result.card4.bullets.map(b => cleanText(b, 130));
+    result.card4.bullets = result.card4.bullets.map((b, idx) => {
+      let cleaned = cleanText(b, 130);
+      if (idx === 1) cleaned = censorAction(cleaned); // 두 번째 불릿(액션) 금지어 덮어쓰기
+      return enforceHlTag(cleaned);
+    });
+  } else if (result.card3 && Array.isArray(result.card3.bullets)) {
+    // 만약 Card4가 없고 Card3가 마지막(액션) 카드라면?
+    // 이건 프롬프트에서 제어하므로 일단 Card3는 위에서 처리함.
+    // 확실하게 Card3의 두 번째 불릿도 액션일 수 있으니 필터링.
+    if (result.card3.section_title === "그래서 어떻게 돼?") {
+       result.card3.bullets = result.card3.bullets.map((b, idx) => {
+         let cleaned = b;
+         if (idx === 1) cleaned = censorAction(cleaned);
+         return enforceHlTag(cleaned);
+       });
+    }
   }
 
   // Core Insight
   if (result.core_insight) {
-    result.core_insight = cleanText(result.core_insight, 120);
+    let insight = cleanText(result.core_insight, 120);
+    const banRegex = /(주의|유의|파악|고려|대비|수립|확인)/;
+    if (banRegex.test(insight)) {
+      insight = '<hl>내 돈 아니라고 방관하다간 정말 깡통 찰 수 있어요!</hl> 지금 당장 행동하세요.';
+    }
+    result.core_insight = enforceHlTag(insight);
   }
 
   // De-duplicate: If card2 and card3 have identical bullets (model repetition glitch)
