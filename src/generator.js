@@ -178,12 +178,12 @@ function validateAndRepairContent(jsonData) {
 
   // Card 2
   if (result.card2 && Array.isArray(result.card2.bullets)) {
-    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 80));
+    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 150));
   }
 
   // Card 3
   if (result.card3 && Array.isArray(result.card3.bullets)) {
-    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 80));
+    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 150));
   }
 
   // Core Insight
@@ -294,8 +294,8 @@ async function generateCardContent(selectedNews) {
 당신의 페르소나는 "날카롭지만 친근하게, 어려운 경제 이면의 인사이트를 쉽게 짚어주는 똑똑한 멘토"입니다.
 
 ### 톤앤매너 (CRITICAL):
-- **글을 읽는게 아니라 '보게' 만드세요.** 절대 서술형으로 길게 늘어쓰지 마세요.
-- **[CRITICAL] 모든 불릿 포인트는 최대 20~30자 이내의 아주 짧고 강렬한 한 줄 요약이어야 합니다.**
+- **캐주얼하지만 가볍지 않은 반존대(해요체)**를 반드시 사용하세요. (예: "~거든요", "~인데요", "~이래요", "~했어요", "~더라고요", "~죠")
+- 절대로 기계적인 요약이나 명사형 종결(음/함)을 쓰지 마세요.
 - "초등학생 수준"으로 유치하게 쓰지 마세요. 독자는 똑똑하지만 경제 용어만 낯선 2030 직장인입니다.
 
 ### 생성 과정 (Chain of Thought):
@@ -307,16 +307,18 @@ JSON 응답을 생성할 때, 반드시 "analysis" 객체를 먼저 작성하여
 
 2. **카드 작성 (cards)**:
    - **image_prompt**: AI 배경 이미지를 만들기 위한 영문 프롬프트. 기사의 맥락을 담은 시네마틱하고 트렌디한 3D 아트, 글래스모피즘, 혹은 다크 무드 사진 프롬프트를 영어로 작성. (예: "A cinematic 3D abstract render of a golden vault cracking open, dark moody lighting, hyper-realistic")
-   - **core_insight**: 카드 전체를 관통하는 날카로운 에디터의 통찰 1문장.
+   - **core_insight**: 카드 전체를 관통하는 정곡을 찌르는 팩트폭행 1~2문장 카피라이팅. (예: "결국 대출 문턱만 높아져서 서민들만 피해를 보게 생겼어요.")
    - **card1 (표지)**: 스크롤을 멈추게 하는 날카로운 질문이나 역설적 상황.
-   - **card2 (무슨 일이야?)**: 기사의 핵심 팩트 딱 2~3가지를 아주 짧게 요약. (20자 내외)
+   - **card2 (무슨 일이야?)**: 기사의 핵심 팩트 딱 3가지를 서술형으로 아주 상세하게 설명.
    - **card3 (그래서 어떻게 돼?)**: 
-     * 첫 번째 불릿: 내 지갑(미시적)에 미치는 진짜 영향 (20자 내외)
-     * 두 번째 불릿: 당장 실천할 수 있는 뾰족한 액션 아이템 ("~해보세요") (20자 내외)
+     * 첫 번째 불릿: 내 지갑과 실생활에 미치는 진짜 영향 (상세하게)
+     * 두 번째 불릿: 구체적인 예측이나 부작용 (상세하게)
+     * 세 번째 불릿: 당장 실천할 수 있는 뾰족한 액션 아이템 ("~해보세요")
    - **hard_terms (용어 해설)**: 각 카드(2, 3)에서 어려운 용어를 뽑아 친근한 비유로 설명 ("~같은 거예요").
 
 ### 불릿 포인트 작성 규칙:
-- 구체적 데이터와 맥락이 포함되되, 군더더기를 다 빼고 **20~30자**로 압축하세요.
+- 각 불릿은 **반드시 완전한 문장 구조(해요체 서술어 포함)로 40~80자 길이**로 작성하여 맥락을 충분히 전달하세요. 
+- 기계적인 키워드 나열 절대 금지.
 - **강조할 핵심 키워드는 반드시 <hl>강조텍스트</hl> 태그로 감싸주세요**
 
 반드시 마크다운 백틱 없이 순수한 JSON 포맷으로만 응답하세요.
@@ -334,12 +336,12 @@ JSON 응답을 생성할 때, 반드시 "analysis" 객체를 먼저 작성하여
     },
     "card2": {
       "section_title": "무슨 일이야?",
-      "bullets": [ "아주 짧은 팩트 1", "아주 짧은 팩트 2", "아주 짧은 팩트 3" ],
+      "bullets": [ "상세한 서술형 팩트 1", "상세한 서술형 팩트 2", "상세한 서술형 팩트 3" ],
       "hard_terms": [ { "term": "용어", "explanation": "쉬운 비유" } ]
     },
     "card3": {
       "section_title": "그래서 어떻게 돼?",
-      "bullets": [ "내 지갑 영향 (매우 짧게)", "구체적 액션 (매우 짧게)" ],
+      "bullets": [ "내 지갑 영향 상세 설명", "구체적인 예측이나 부작용 상세 설명", "구체적 액션 아이템" ],
       "hard_terms": []
     }
   }

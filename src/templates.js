@@ -11,7 +11,7 @@ function highlightText(text, themeColor) {
 
 function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'TODAY', mascotBase64 = '', coreInsight = '') {
   const mascotHtml = mascotBase64 
-    ? `<img src="data:image/png;base64,${mascotBase64}" alt="오늘이" style="width: 140px; height: 140px; object-fit: contain; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));" />`
+    ? `<img src="data:image/png;base64,${mascotBase64}" alt="오늘이" style="width: 110px; height: 110px; object-fit: contain; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));" />`
     : '';
 
   let innerHtml = '';
@@ -40,11 +40,11 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
 
         <!-- Bottom Typography Area -->
         <main class="w-full z-20 pb-16 space-y-8 text-left">
-          <h1 class="font-display text-[5.5rem] font-black text-white leading-[1.3] break-keep drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
+          <h1 class="font-display text-[4.2rem] font-black text-white leading-[1.3] break-keep drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
           
           <div class="h-1 w-24 rounded-full" style="background: ${themeColor}; box-shadow: 0 0 15px ${themeColor};"></div>
           
-          <p class="font-body text-[3rem] text-white/80 break-keep leading-snug font-bold drop-shadow-md">${highlightText(content.subtitle, themeColor)}</p>
+          <p class="font-body text-[2.6rem] text-white/80 break-keep leading-snug font-bold drop-shadow-md">${highlightText(content.subtitle, themeColor)}</p>
         </main>
       </div>
     `;
@@ -54,9 +54,9 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
     
     const bulletsHtml = content.bullets
       .map((bullet, idx) => `
-        <li class="flex items-start gap-6 py-6">
-          <div class="mt-3 w-4 h-4 rounded-full shrink-0" style="background: ${themeColor}; box-shadow: 0 0 12px ${themeColor};"></div>
-          <p class="font-body text-[3.2rem] text-white/95 font-bold leading-[1.4] break-keep bullet-text drop-shadow-sm">${highlightText(bullet, themeColor)}</p>
+        <li class="flex items-start gap-5 py-4">
+          <div class="mt-4 w-3 h-3 rounded-full shrink-0" style="background: ${themeColor}; box-shadow: 0 0 12px ${themeColor};"></div>
+          <p class="font-body text-[2.4rem] text-white/95 font-medium leading-[1.65] break-keep bullet-text drop-shadow-sm">${highlightText(bullet, themeColor)}</p>
         </li>
       `).join('');
 
@@ -65,20 +65,20 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         
         <!-- Blurred Ambient Background for Inner Slides -->
         <div class="absolute inset-0 z-0">
-          <img class="w-full h-full object-cover filter blur-[40px] scale-110 opacity-70" src="data:image/png;base64,${imageBase64}" alt="ambient" />
-          <div class="absolute inset-0 bg-[#0B101A]/80"></div>
+          <img class="w-full h-full object-cover filter blur-[20px] scale-110 opacity-90" src="data:image/png;base64,${imageBase64}" alt="ambient" />
+          <div class="absolute inset-0 bg-[#0B101A]/60"></div>
         </div>
         
         <header class="w-full flex items-center justify-between z-20 mb-8">
-           <span class="inline-block px-7 py-3 rounded-full font-black text-3xl tracking-wider text-white" style="background: ${themeColor}D0; border: 1px solid ${themeColor}; box-shadow: 0 0 20px ${themeColor}60;">${badgeText}</span>
-           <span class="text-white/40 font-black text-3xl">@today.econ</span>
+           <span class="inline-block px-7 py-3 rounded-full font-black text-[2rem] tracking-wider text-white" style="background: ${themeColor}D0; border: 1px solid ${themeColor}; box-shadow: 0 0 20px ${themeColor}60;">${badgeText}</span>
+           <span class="text-white/60 font-black text-[2rem]">@today.econ</span>
         </header>
 
         <main class="flex-1 flex flex-col justify-center z-20 w-full relative">
           <!-- Glassmorphism Card -->
-          <div class="w-full rounded-[40px] p-14 bg-white/[0.04] backdrop-blur-[60px] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.6)]">
+          <div class="w-full rounded-[40px] p-12 bg-white/10 backdrop-blur-[40px] border border-white/20 shadow-[0_30px_80px_rgba(0,0,0,0.6)]">
             
-            <ul class="space-y-6 flex flex-col justify-center min-h-[400px]">
+            <ul class="space-y-4 flex flex-col justify-center min-h-[400px]">
               ${bulletsHtml}
             </ul>
 
@@ -103,10 +103,10 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
 
             <!-- Core Insight (Only show on Action Card to act as a punchline) -->
             ${(!isFact && coreInsight) ? `
-              <div class="mt-14 pt-10 border-t border-white/10">
-                <div class="relative rounded-3xl p-8 bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10">
-                  <div class="absolute -top-6 -left-4 text-7xl opacity-20" style="color: ${themeColor};">"</div>
-                  <p class="relative z-10 text-white/95 leading-[1.5] font-black text-[3rem] break-keep">${highlightText(coreInsight, themeColor)}</p>
+              <div class="mt-12 pt-8 border-t border-white/10">
+                <div class="relative rounded-3xl p-8 bg-black/30 backdrop-blur-md border border-white/10 shadow-inner">
+                  <div class="absolute -top-6 -left-2 text-7xl opacity-30 drop-shadow-md" style="color: ${themeColor};">"</div>
+                  <p class="relative z-10 text-white/95 leading-[1.6] font-bold text-[2.4rem] break-keep">${highlightText(coreInsight, themeColor)}</p>
                 </div>
               </div>
             ` : ''}
