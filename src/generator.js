@@ -174,8 +174,11 @@ function validateAndRepairContent(jsonData) {
       if (openCount > closeCount) clean += '</hl>';
     }
 
-    // --- 강제 '해요체' 변환 정규식 (LLM 할루시네이션 완벽 차단) ---
-    clean = clean.replace(/다\.$/g, '해요.');
+    // --- 지능형 '해요체' 변환 정규식 (LLM 할루시네이션 완벽 차단) ---
+    clean = clean.replace(/습니다\.$/g, '어요.');
+    clean = clean.replace(/합니다\.$/g, '해요.');
+    clean = clean.replace(/입니다\.$/g, '이에요.');
+    clean = clean.replace(/는다\.$/g, '는데요.');
     clean = clean.replace(/한다\.$/g, '해요.');
     clean = clean.replace(/했다\.$/g, '했어요.');
     clean = clean.replace(/있다\.$/g, '있어요.');
@@ -184,8 +187,16 @@ function validateAndRepairContent(jsonData) {
     clean = clean.replace(/된다\.$/g, '돼요.');
     clean = clean.replace(/것이다\.$/g, '것이에요.');
     clean = clean.replace(/수 있다\.$/g, '수 있어요.');
+    // 위 패턴에 안 걸린 마지막 '다.' 안전하게 치환
+    if (clean.endsWith('다.')) {
+      clean = clean.substring(0, clean.length - 2) + '요.';
+    }
+
     // 단어가 끝나는 지점('. ' 없이 바로 끝나는 경우)
-    clean = clean.replace(/다$/g, '해요');
+    clean = clean.replace(/습니다$/g, '어요');
+    clean = clean.replace(/합니다$/g, '해요');
+    clean = clean.replace(/입니다$/g, '이에요');
+    clean = clean.replace(/는다$/g, '는데요');
     clean = clean.replace(/한다$/g, '해요');
     clean = clean.replace(/했다$/g, '했어요');
     clean = clean.replace(/있다$/g, '있어요');
@@ -194,18 +205,21 @@ function validateAndRepairContent(jsonData) {
     clean = clean.replace(/된다$/g, '돼요');
     clean = clean.replace(/것이다$/g, '것이에요');
     clean = clean.replace(/수 있다$/g, '수 있어요');
+    if (clean.endsWith('다')) {
+      clean = clean.substring(0, clean.length - 1) + '요';
+    }
 
     return clean;
   }
 
   // Card 2
   if (result.card2 && Array.isArray(result.card2.bullets)) {
-    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 150));
+    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 85));
   }
 
   // Card 3
   if (result.card3 && Array.isArray(result.card3.bullets)) {
-    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 150));
+    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 85));
   }
 
   // Core Insight
@@ -315,6 +329,9 @@ async function generateCardContent(selectedNews) {
   const systemPromptCards = `당신은 20~30대 밀레니얼/Z세대를 위한 프리미엄 경제 매거진 "오늘경제(today.econ)"의 수석 에디터입니다.
 당신의 페르소나는 "날카롭지만 친근하게, 어려운 경제 이면의 인사이트를 쉽게 짚어주는 똑똑한 멘토"입니다.
 
+### 언어 통제 (CRITICAL):
+- **[절대 금지] 절대로 일본어(日本語), 중국어 등 한국어 이외의 언어를 섞어 쓰지 마세요.** 오직 100% 한국어(Korean)만 사용해야 합니다.
+
 ### 톤앤매너 (CRITICAL):
 - **캐주얼하지만 가볍지 않은 반존대(해요체)**를 반드시 사용하세요. (예: "~거든요", "~인데요", "~이래요", "~했어요", "~더라고요", "~죠", "~있어요")
 - **[절대 금지] 절대로 "~다.", "~한다.", "~음/함" 같은 딱딱한 문어체나 기사체를 쓰지 마세요. 문장 끝은 무조건 "해요", "있어요", "돼요" 등으로 끝나야 합니다.**
@@ -328,7 +345,7 @@ JSON 응답을 생성할 때, 반드시 "analysis" 객체를 먼저 작성하여
    - 기사의 표면적 팩트와 이면의 우려를 철저히 분석.
 
 2. **카드 작성 (cards)**:
-   - **image_prompt**: AI 배경 이미지를 만들기 위한 영문 프롬프트. 기사의 맥락을 담은 시네마틱하고 트렌디한 3D 아트, 글래스모피즘, 혹은 다크 무드 사진 프롬프트를 영어로 작성. (예: "A cinematic 3D abstract render of a golden vault cracking open, dark moody lighting, hyper-realistic")
+   - **image_prompt**: AI 배경 이미지를 만들기 위한 영문 프롬프트. 기괴한 사람이나 기계, 세탁기 같은 사실적인 묘사는 절대 금지합니다. 기사의 맥락을 은유적으로 담은 **"추상적이고 하이엔드 3D 아트 (예: A cinematic 3D abstract render of a crumbling golden coin in a dark abyss)"** 스타일로 프롬프트를 영어로 작성하세요.
    - **core_insight**: 카드 전체를 관통하는 정곡을 찌르는 팩트폭행 1~2문장 카피라이팅. 단순 기사 요약은 절대 금지하며, 독자에게 경고하거나 깨달음을 주는 도발적인 한마디를 던지세요. (예: "결국 대출 문턱만 높아져서 서민들만 피해를 보게 생겼어요.")
    - **card1 (표지)**: 스크롤을 멈추게 하는 날카로운 질문이나 역설적 상황.
    - **card2 (무슨 일이야?)**: 기사의 핵심 팩트 딱 3가지를 서술형으로 아주 상세하게 설명.
