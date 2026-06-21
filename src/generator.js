@@ -120,59 +120,10 @@ function validateAndRepairContent(jsonData) {
     clean = clean.replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s*/, '');
     clean = clean.replace(/^💡\s*/, '');
     clean = clean.replace(/^[-•*▶▷✓✅☑]\s*/, '');
-
-    // Strip [예측], [영향], [행동] or similar prefixes
-    clean = clean.replace(/^\[(?:예측|영향|행동)\]\s*/i, '');
-    clean = clean.replace(/^(예측|영향|행동):\s*/i, '');
-
-    // Stripping Korean subject fluff
-    clean = clean.replace(/^한국\s*(기업|정부|투자자)는?\s*/g, '');
-    clean = clean.replace(/^미국의?\s*/g, '');
-
-    // Remove double spaces
-    clean = clean.replace(/\s+/g, ' ').trim();
-
-    // If over limit, find a natural break point instead of cutting mid-sentence
-    const visibleText = clean.replace(/<\/?hl>/gi, '');
-    if (visibleText.length > maxLength) {
-      let visibleCount = 0;
-      let inTag = false;
-      let cutIndex = clean.length;
-      let lastSpaceIdx = -1;
-
-      for (let i = 0; i < clean.length; i++) {
-        if (clean[i] === '<' && (clean.substring(i).match(/^<\/?hl>/i))) {
-          inTag = true;
-        }
-        if (inTag) {
-          if (clean[i] === '>') inTag = false;
-          continue;
-        }
-        visibleCount++;
-        if (clean[i] === ' ') lastSpaceIdx = i;
-        if (visibleCount >= maxLength) {
-          cutIndex = i + 1;
-          break;
-        }
-      }
-
-      const minAcceptable = Math.floor(maxLength * 0.75);
-      let bestCut = cutIndex;
-      if (lastSpaceIdx > 0) {
-        let vc = 0; let it = false;
-        for (let j = 0; j < lastSpaceIdx; j++) {
-          if (clean[j] === '<' && clean.substring(j).match(/^<\/?hl>/i)) it = true;
-          if (it) { if (clean[j] === '>') it = false; continue; }
-          vc++;
-        }
-        if (vc >= minAcceptable) bestCut = lastSpaceIdx;
-      }
-
-      clean = clean.substring(0, bestCut).trim();
-      const openCount = (clean.match(/<hl>/gi) || []).length;
-      const closeCount = (clean.match(/<\/hl>/gi) || []).length;
-      if (openCount > closeCount) clean += '</hl>';
-    }
+    
+    clean = clean.replace(/<br\s*\/?>/gi, '\n');
+    clean = clean.replace(/\n{3,}/g, '\n\n');
+    clean = clean.replace(/['"]/g, "'");
 
     // --- 지능형 '해요체' 변환 정규식 (LLM 할루시네이션 완벽 차단) ---
     clean = clean.replace(/습니다\.$/g, '어요.');
@@ -352,18 +303,18 @@ JSON 응답을 생성할 때, 반드시 "analysis" 객체를 먼저 작성하여
 
 2. **카드 작성 (cards)**:
    - **image_prompt**: AI 배경 이미지를 만들기 위한 영문 프롬프트. 기괴한 사람이나 기계, 세탁기 같은 사실적인 묘사는 절대 금지합니다. 기사의 맥락을 은유적으로 담은 **"추상적이고 하이엔드 3D 아트 (예: A cinematic 3D abstract render of a crumbling golden coin in a dark abyss)"** 스타일로 프롬프트를 영어로 작성하세요.
-   - **core_insight**: 카드 전체를 관통하는 정곡을 찌르는 팩트폭행 1~2문장 카피라이팅. 단순 기사 요약은 절대 금지하며, 독자에게 경고하거나 깨달음을 주는 도발적인 한마디를 던지세요. **[CRITICAL: 마지막 카드(액션)의 불릿 포인트와 단어 하나라도 겹치면 안 됩니다. 완전히 다른 시각의 에디터 코멘트로 작성하세요]** (예: "결국 대출 문턱만 높아져서 서민들만 피해를 보게 생겼어요.")
+   - **core_insight**: 카드 전체를 관통하는 정곡을 찌르는 팩트폭행 1~2문장 카피라이팅. 기사 요약 절대 금지. **친구의 뼈를 때리는 수준의 매운맛 도발 1문장**으로 작성하세요. **[CRITICAL: 마지막 카드(액션)의 불릿 포인트와 단어 하나라도 겹치면 안 됩니다. 완전히 다른 시각의 에디터 코멘트로 작성하세요]**
    - **card1 (표지)**: 스크롤을 멈추게 하는 날카로운 질문이나 역설적 상황. **[반드시 25자 이내의 짧고 자극적인 1문장 훅으로 작성하세요]**
    - **card2, card3 (무슨 일이야?)**: 기사의 핵심 팩트를 서술형으로 상세하게 설명. 내용이 길면 card2와 card3로 나누어서 작성하세요. (내용이 짧으면 card3를 생략하고 바로 마지막 카드로 넘어가도 됩니다)
    - **card4 (그래서 어떻게 돼?)**: (만약 card3가 팩트라면 card4가 액션 카드가 됩니다. card3가 생략되었다면 card3가 액션 카드가 됩니다.)
      * 첫 번째 불릿: 내 지갑과 실생활에 미치는 진짜 영향을 **자연스러운 서술형**으로 작성하세요. (접두어 사용 금지)
-     * 두 번째 불릿: 당장 실천할 수 있는 구체적인 행동 지침이나 대비책을 "~해보세요" 형태로 작성하세요. **"알아보세요" 같은 뻔한 소리 금지. "대환대출 플랫폼에서 고정금리로 갈아타세요" 처럼 당장 앱을 켜고 할 수 있는 초구체적이고 실무적인 팁을 줄 것.** (접두어 사용 금지)
-   - **hard_terms (용어 해설)**: 각 팩트/액션 카드에서 어려운 용어를 뽑아 해설합니다. **사전적 정의 절대 금지. 반드시 실생활 사물이나 상황에 빗댄 비유("~에 비유할 수 있어요", "~같은 거예요")로만 설명하세요.**
+     * 두 번째 불릿: 당장 실천할 수 있는 구체적인 행동 지침이나 대비책을 "~해보세요" 형태로 작성하세요. **[금지어: 주의하세요, 파악하세요, 고려하세요, 대비하세요, 수립하세요]** 이런 뻔한 훈수 절대 금지. "보유 중인 동전주가 있다면 다음 달 1일 전에 매도 타이밍을 잡으세요" 처럼 당장 앱을 켜고 할 수 있는 초구체적이고 실무적인 팁을 줄 것. (접두어 사용 금지)
+   - **hard_terms (용어 해설)**: 각 팩트/액션 카드에서 어려운 용어를 뽑아 해설합니다. **사전적 정의 절대 금지. 반드시 실생활 사물이나 상황에 빗댄 비유로만 설명하세요. [예시: 시가총액 = 이 회사를 통째로 살 때 영수증에 찍히는 가격표 같은 거예요]**
 
 ### 불릿 포인트 작성 규칙:
-- 각 불릿은 **반드시 완전한 문장 구조(해요체 서술어 포함)로 40~80자 길이**로 작성하여 맥락을 충분히 전달하세요. 
-- 기계적인 키워드 나열 절대 금지.
-- **강조할 핵심 키워드는 반드시 <hl>강조텍스트</hl> 태그로 감싸주세요**
+- **1개의 불릿은 무조건 60자 이내**로 작성하세요. 내용이 길면 절대 한 줄에 욱여넣지 말고, 불릿의 개수를 늘려서 쪼개세요.
+- **모든 불릿에는 반드시 1개 이상의 '<hl>핵심 키워드</hl>' 태그가 포함되어야 합니다.** (예외 없음)
+- 기계적인 키워드 나열 절대 금지. 완전한 문장 구조(해요체 서술어 포함) 유지.
 
 반드시 마크다운 백틱 없이 순수한 JSON 포맷으로만 응답하세요.
 {
