@@ -113,7 +113,7 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
   
   try {
     const page = await browser.newPage();
-    await page.setViewportSize({ width: 1080, height: 1920 });
+    await page.setViewportSize({ width: 1080, height: 1350 });
 
     const cardTypes = ['title', 'fact', 'action'];
     const cardContents = [generatedJson.card1, generatedJson.card2, generatedJson.card3];

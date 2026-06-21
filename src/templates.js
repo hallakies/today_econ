@@ -38,13 +38,13 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
           </div>
         </header>
 
-        <!-- Bottom Typography Area -->
-        <main class="w-full z-20 pb-16 space-y-8 text-left">
-          <h1 class="font-display text-[4.2rem] font-black text-white leading-[1.3] break-keep drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
+        <!-- Centered Typography Area -->
+        <main class="w-full z-20 flex-1 flex flex-col justify-center items-center space-y-10 text-center">
+          <h1 class="font-display text-[4.8rem] font-black text-white leading-[1.3] break-keep drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
           
-          <div class="h-1 w-24 rounded-full" style="background: ${themeColor}; box-shadow: 0 0 15px ${themeColor};"></div>
+          <div class="h-1.5 w-32 rounded-full" style="background: ${themeColor}; box-shadow: 0 0 20px ${themeColor};"></div>
           
-          <p class="font-body text-[2.6rem] text-white/80 break-keep leading-snug font-bold drop-shadow-md">${highlightText(content.subtitle, themeColor)}</p>
+          <p class="font-body text-[2.8rem] text-white/90 break-keep leading-snug font-bold drop-shadow-md px-10">${highlightText(content.subtitle, themeColor)}</p>
         </main>
       </div>
     `;
@@ -61,12 +61,12 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
       `).join('');
 
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-20 px-16 select-none">
+      <div class="slide-container relative w-[1080px] h-[1350px] overflow-hidden flex flex-col justify-between py-16 px-16 select-none">
         
-        <!-- Blurred Ambient Background for Inner Slides -->
+        <!-- Ambient Background -->
         <div class="absolute inset-0 z-0">
-          <img class="w-full h-full object-cover filter blur-[20px] scale-110 opacity-90" src="data:image/png;base64,${imageBase64}" alt="ambient" />
-          <div class="absolute inset-0 bg-[#0B101A]/60"></div>
+          <img class="w-full h-full object-cover filter blur-[8px] scale-105 opacity-80" src="data:image/png;base64,${imageBase64}" alt="ambient" />
+          <div class="absolute inset-0 bg-[#0B101A]/50"></div>
         </div>
         
         <header class="w-full flex items-center justify-between z-20 mb-8">
@@ -76,9 +76,9 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
 
         <main class="flex-1 flex flex-col justify-center z-20 w-full relative">
           <!-- Glassmorphism Card -->
-          <div class="w-full rounded-[40px] p-12 bg-white/10 backdrop-blur-[40px] border border-white/20 shadow-[0_30px_80px_rgba(0,0,0,0.6)]">
+          <div class="w-full rounded-[40px] p-12 bg-[#0B101A]/40 backdrop-blur-[40px] border-[1.5px] border-white/20 shadow-[0_30px_80px_rgba(0,0,0,0.6)]">
             
-            <ul class="space-y-4 flex flex-col justify-center min-h-[400px]">
+            <ul class="space-y-4 flex flex-col justify-center min-h-[300px]">
               ${bulletsHtml}
             </ul>
 
@@ -103,10 +103,10 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
 
             <!-- Core Insight (Only show on Action Card to act as a punchline) -->
             ${(!isFact && coreInsight) ? `
-              <div class="mt-12 pt-8 border-t border-white/10">
-                <div class="relative rounded-3xl p-8 bg-black/30 backdrop-blur-md border border-white/10 shadow-inner">
-                  <div class="absolute -top-6 -left-2 text-7xl opacity-30 drop-shadow-md" style="color: ${themeColor};">"</div>
-                  <p class="relative z-10 text-white/95 leading-[1.6] font-bold text-[2.4rem] break-keep">${highlightText(coreInsight, themeColor)}</p>
+              <div class="mt-12 pt-10 border-t border-white/10">
+                <div class="relative rounded-3xl p-8 bg-[#0B101A]/80 backdrop-blur-xl border-l-[6px] shadow-2xl" style="border-left-color: ${themeColor};">
+                  <div class="absolute -top-7 -left-3 text-7xl opacity-40 drop-shadow-md" style="color: ${themeColor};">"</div>
+                  <p class="relative z-10 text-white/95 leading-[1.6] font-bold text-[2.6rem] break-keep">${highlightText(coreInsight, themeColor)}</p>
                 </div>
               </div>
             ` : ''}
