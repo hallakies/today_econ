@@ -57,22 +57,22 @@ async function run() {
     const fullText = await fetchArticleBody(selectedNews.link);
     selectedNews.fullText = fullText || selectedNews.summary; // Fallback to summary if fetch fails
 
-    // 3. Fetch og:image from the selected article
-    console.log('[Main] Fetching article thumbnail (og:image)...');
-    const ogImageUrl = await fetchOgImage(selectedNews.link);
-    if (ogImageUrl) {
-      console.log(`[Main] Found og:image: ${ogImageUrl.substring(0, 80)}...`);
-    } else {
-      console.log('[Main] No og:image found. Will use fallback background.');
-    }
-
     // Pausing 8 seconds to prevent Groq TPM rate limit issues
     console.log('[Main] Pausing for 8 seconds to reset Groq TPM window...');
     await new Promise(resolve => setTimeout(resolve, 8000));
 
-    // 4. Generate card content (Title, fact bullet points, action points, caption)
+    // 3. Generate card content (Title, fact bullet points, action points, caption, image_prompt)
     const cardContent = await generateCardContent(selectedNews);
     console.log('[Main] Content generated successfully.');
+
+    // 4. Generate AI Background Image URL
+    let aiImageUrl = null;
+    if (cardContent.image_prompt) {
+      aiImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cardContent.image_prompt)}?width=1080&height=1920&nologo=true`;
+      console.log(`[Main] Generated AI Image URL from prompt: ${aiImageUrl.substring(0, 80)}...`);
+    } else {
+      console.log('[Main] No image_prompt generated. Will use fallback background.');
+    }
 
     // --- Quality Gate: Validate generated content ---
     const qualityWarnings = [];
@@ -96,7 +96,7 @@ async function run() {
     }
 
     // 5. Render HTML slides to PNG files (using news og:image as background)
-    renderedFiles = await renderCardImages(cardContent, ogImageUrl);
+    renderedFiles = await renderCardImages(cardContent, aiImageUrl);
     console.log(`[Main] Successfully rendered ${renderedFiles.length} slides.`);
 
     // 6. Send images and Instagram caption to Slack

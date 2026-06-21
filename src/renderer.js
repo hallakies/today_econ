@@ -129,7 +129,8 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
         cardContents[i],
         newsImageBase64,
         generatedJson.news_date,
-        mascotBase64
+        mascotBase64,
+        generatedJson.core_insight
       );
 
       await page.setContent(htmlContent);

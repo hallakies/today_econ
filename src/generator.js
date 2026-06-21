@@ -178,23 +178,17 @@ function validateAndRepairContent(jsonData) {
 
   // Card 2
   if (result.card2 && Array.isArray(result.card2.bullets)) {
-    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 150));
-  }
-  if (result.card2 && result.card2.editors_insight) {
-    result.card2.editors_insight = cleanText(result.card2.editors_insight, 120);
+    result.card2.bullets = result.card2.bullets.map(b => cleanText(b, 80));
   }
 
   // Card 3
   if (result.card3 && Array.isArray(result.card3.bullets)) {
-    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 150));
-  }
-  if (result.card3 && result.card3.editors_insight) {
-    result.card3.editors_insight = cleanText(result.card3.editors_insight, 120);
+    result.card3.bullets = result.card3.bullets.map(b => cleanText(b, 80));
   }
 
-  // Card 1
-  if (result.card1 && result.card1.editors_insight) {
-    result.card1.editors_insight = cleanText(result.card1.editors_insight, 80);
+  // Core Insight
+  if (result.core_insight) {
+    result.core_insight = cleanText(result.core_insight, 120);
   }
 
   // De-duplicate: If card2 and card3 have identical bullets (model repetition glitch)
@@ -210,15 +204,6 @@ function validateAndRepairContent(jsonData) {
       '은행별 우대금리를 꼼꼼하게 비교해보세요',
       '주거래 은행의 숨은 혜택을 다 뒤져보는 건 어떨까요?'
     ];
-  }
-
-  // Dedup insights
-  if (
-    result.card2 &&
-    result.card3 &&
-    result.card2.editors_insight === result.card3.editors_insight
-  ) {
-    result.card3.editors_insight = '가계 지출 관리를 철저히 모니터링해야 해요.';
   }
 
   return result;
@@ -309,9 +294,8 @@ async function generateCardContent(selectedNews) {
 당신의 페르소나는 "날카롭지만 친근하게, 어려운 경제 이면의 인사이트를 쉽게 짚어주는 똑똑한 멘토"입니다.
 
 ### 톤앤매너 (CRITICAL):
-- **캐주얼하지만 가볍지 않은 반존대(해요체)**를 사용하세요. (예: "~거든요", "~인데요", "~이래요", "~했어요", "~더라고요", "~죠")
-- 단순 팩트 나열을 넘어, 기사 이면의 모순(Paradox)이나 실생활(내 지갑, 부동산, 세금)에 미치는 영향을 날카롭게 짚어주세요.
-- **[CRITICAL] 어미 반복 방지**: 동일한 카드 내에서 같은 종결어미를 연속해서 쓰지 마세요.
+- **글을 읽는게 아니라 '보게' 만드세요.** 절대 서술형으로 길게 늘어쓰지 마세요.
+- **[CRITICAL] 모든 불릿 포인트는 최대 20~30자 이내의 아주 짧고 강렬한 한 줄 요약이어야 합니다.**
 - "초등학생 수준"으로 유치하게 쓰지 마세요. 독자는 똑똑하지만 경제 용어만 낯선 2030 직장인입니다.
 
 ### 생성 과정 (Chain of Thought):
@@ -319,22 +303,21 @@ JSON 응답을 생성할 때, 반드시 "analysis" 객체를 먼저 작성하여
 그 다음 "cards" 객체를 작성하세요.
 
 1. **분석 (analysis)**:
-   - 기사의 표면적 팩트(예: 역대급 호황)와 이면의 우려(예: 민생 고통, 부동산 과세, 양도세)를 철저히 분석.
-   - 독자의 삶에 미치는 실질적 영향을 도출.
+   - 기사의 표면적 팩트와 이면의 우려를 철저히 분석.
 
 2. **카드 작성 (cards)**:
-   - **card1 (표지)**: 사람들의 스크롤을 멈추게 하는 날카로운 질문이나 역설적 상황 제시. 뉴스 헤드라인을 그대로 베끼지 마세요.
-   - **card2 (무슨 일이야?)**: 기사의 핵심 팩트 3가지를 서술형으로 설명. 기사에 나온 세부 디테일(세금, 부동산 등)을 밀도있게 담으세요.
+   - **image_prompt**: AI 배경 이미지를 만들기 위한 영문 프롬프트. 기사의 맥락을 담은 시네마틱하고 트렌디한 3D 아트, 글래스모피즘, 혹은 다크 무드 사진 프롬프트를 영어로 작성. (예: "A cinematic 3D abstract render of a golden vault cracking open, dark moody lighting, hyper-realistic")
+   - **core_insight**: 카드 전체를 관통하는 날카로운 에디터의 통찰 1문장.
+   - **card1 (표지)**: 스크롤을 멈추게 하는 날카로운 질문이나 역설적 상황.
+   - **card2 (무슨 일이야?)**: 기사의 핵심 팩트 딱 2~3가지를 아주 짧게 요약. (20자 내외)
    - **card3 (그래서 어떻게 돼?)**: 
-     * 첫 번째 불릿: 거시적 예측 및 동향
-     * 두 번째 불릿: 내 지갑(미시적)에 미치는 진짜 영향
-     * 세 번째 불릿: 당장 실천할 수 있는 가벼운 액션 아이템 ("~해보세요")
+     * 첫 번째 불릿: 내 지갑(미시적)에 미치는 진짜 영향 (20자 내외)
+     * 두 번째 불릿: 당장 실천할 수 있는 뾰족한 액션 아이템 ("~해보세요") (20자 내외)
    - **hard_terms (용어 해설)**: 각 카드(2, 3)에서 어려운 용어를 뽑아 친근한 비유로 설명 ("~같은 거예요").
 
 ### 불릿 포인트 작성 규칙:
-- 구체적 데이터와 맥락이 포함된 완전한 문장(30~60자)으로 작성. 명사형 종결 금지.
+- 구체적 데이터와 맥락이 포함되되, 군더더기를 다 빼고 **20~30자**로 압축하세요.
 - **강조할 핵심 키워드는 반드시 <hl>강조텍스트</hl> 태그로 감싸주세요**
-- [예측], [영향], [행동] 같은 말머리표는 절대로 출력하지 마세요.
 
 반드시 마크다운 백틱 없이 순수한 JSON 포맷으로만 응답하세요.
 {
@@ -343,22 +326,21 @@ JSON 응답을 생성할 때, 반드시 "analysis" 객체를 먼저 작성하여
     "real_impact": "독자에게 미치는 진짜 영향"
   },
   "cards": {
+    "image_prompt": "Cinematic dark 3D render of...",
+    "core_insight": "전체를 관통하는 에디터의 날카로운 한 문장 (<hl>태그</hl> 활용)",
     "card1": {
       "title": "스크롤을 멈추게 하는 훅 (강조: <hl>태그</hl>, 줄바꿈: \\n)",
-      "subtitle": "타이틀 보충 (1줄)",
-      "editors_insight": "20자 내외 날카로운 코멘트 (<hl>태그</hl>)"
+      "subtitle": "타이틀 보충 (1줄)"
     },
     "card2": {
       "section_title": "무슨 일이야?",
-      "bullets": [ "팩트 1", "팩트 2", "팩트 3" ],
-      "hard_terms": [ { "term": "용어", "explanation": "쉬운 비유" } ],
-      "editors_insight": "한 줄 에디터 평 (<hl>태그</hl>)"
+      "bullets": [ "아주 짧은 팩트 1", "아주 짧은 팩트 2", "아주 짧은 팩트 3" ],
+      "hard_terms": [ { "term": "용어", "explanation": "쉬운 비유" } ]
     },
     "card3": {
       "section_title": "그래서 어떻게 돼?",
-      "bullets": [ "예측 동향", "내 지갑 영향", "구체적 액션(~해보세요)" ],
-      "hard_terms": [],
-      "editors_insight": "행동 유도 평 (<hl>태그</hl>)"
+      "bullets": [ "내 지갑 영향 (매우 짧게)", "구체적 액션 (매우 짧게)" ],
+      "hard_terms": []
     }
   }
 }`;
