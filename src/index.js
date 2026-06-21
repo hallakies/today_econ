@@ -82,11 +82,14 @@ async function run() {
     if (!cardContent.card1 || !cardContent.card1.title) {
       qualityWarnings.push('card1.title is missing');
     }
-    if (!cardContent.card2 || !Array.isArray(cardContent.card2.bullets) || cardContent.card2.bullets.length < 3) {
-      qualityWarnings.push(`card2.bullets has only ${cardContent.card2?.bullets?.length || 0} items (expected 3)`);
+    if (!cardContent.card2 || !Array.isArray(cardContent.card2.bullets)) {
+      qualityWarnings.push('card2.bullets is missing or invalid');
     }
-    if (!cardContent.card3 || !Array.isArray(cardContent.card3.bullets) || cardContent.card3.bullets.length < 3) {
-      qualityWarnings.push(`card3.bullets has only ${cardContent.card3?.bullets?.length || 0} items (expected 3)`);
+    if (cardContent.card3 && (!Array.isArray(cardContent.card3.bullets) || cardContent.card3.bullets.length === 0)) {
+      qualityWarnings.push('card3.bullets is empty or invalid');
+    }
+    if (cardContent.card4 && (!Array.isArray(cardContent.card4.bullets) || cardContent.card4.bullets.length === 0)) {
+      qualityWarnings.push('card4.bullets is empty or invalid');
     }
     if (qualityWarnings.length > 0) {
       console.warn('[Main] ⚠️ Quality Gate warnings:');

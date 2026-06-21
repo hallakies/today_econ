@@ -115,10 +115,24 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
     const page = await browser.newPage();
     await page.setViewportSize({ width: 1080, height: 1350 });
 
-    const cardTypes = ['title', 'fact', 'action'];
-    const cardContents = [generatedJson.card1, generatedJson.card2, generatedJson.card3];
+    const cardTypes = ['title', 'fact'];
+    const cardContents = [generatedJson.card1, generatedJson.card2];
 
-    for (let i = 0; i < 3; i++) {
+    if (generatedJson.card4) {
+      // 4-card structure: title, fact, fact, action
+      cardTypes.push('fact');
+      cardContents.push(generatedJson.card3);
+      cardTypes.push('action');
+      cardContents.push(generatedJson.card4);
+    } else {
+      // 3-card structure: title, fact, action
+      cardTypes.push('action');
+      cardContents.push(generatedJson.card3);
+    }
+
+    const slideCount = cardTypes.length;
+
+    for (let i = 0; i < slideCount; i++) {
       const outputPath = `slide_${i + 1}.png`;
       console.log(`[Renderer] Rendering slide ${i + 1} (${cardTypes[i]}) -> ${outputPath}...`);
       
