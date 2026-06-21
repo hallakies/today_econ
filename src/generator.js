@@ -138,6 +138,7 @@ function validateAndRepairContent(jsonData) {
     clean = clean.replace(/된다\.$/g, '돼요.');
     clean = clean.replace(/것이다\.$/g, '것이에요.');
     clean = clean.replace(/수 있다\.$/g, '수 있어요.');
+    clean = clean.replace(/준다\.$/g, '줘요.');
     
     // 명사형 꼬리 변환 및 할루시네이션 오타 후처리
     clean = clean.replace(/원\.$/g, '원이에요.');
@@ -170,6 +171,7 @@ function validateAndRepairContent(jsonData) {
     clean = clean.replace(/된다$/g, '돼요');
     clean = clean.replace(/것이다$/g, '것이에요');
     clean = clean.replace(/수 있다$/g, '수 있어요');
+    clean = clean.replace(/준다$/g, '줘요');
     if (clean.endsWith('다')) {
       clean = clean.substring(0, clean.length - 1) + '요';
     }
@@ -193,9 +195,9 @@ function validateAndRepairContent(jsonData) {
 
   function censorAction(text) {
     if (!text || typeof text !== 'string') return text;
-    const banRegex = /(주의|유의|파악|고려|대비|수립|확인)/;
+    const banRegex = /(주의|유의|파악|고려|대비|수립|확인|모색|찾아보|알아보|재검토)/;
     if (banRegex.test(text)) {
-      return '지금 당장 HTS/MTS 앱을 켜서 내 계좌 상태부터 점검해보세요! <hl>머뭇거리다간 큰일나요!</hl>';
+      return '지금 당장 내 계좌를 열어 1원이라도 손해보고 있는지 점검해보세요! <hl>머뭇거리다간 큰일납니다!</hl>';
     }
     return text;
   }
@@ -344,6 +346,7 @@ async function generateCardContent(selectedNews) {
 
 ### 언어 통제 (CRITICAL):
 - **[절대 금지] 절대로 일본어(日本語), 중국어 등 한국어 이외의 언어를 섞어 쓰지 마세요.** 오직 100% 한국어(Korean)만 사용해야 합니다.
+- **[절대 금지] 법안명, 대출명, 상품명 등 고유명사를 절대 임의로 줄여 쓰지 마세요. (예: 불법사금융예방대출 -> 불사금예방대출 금지)**
 
 ### 톤앤매너 (CRITICAL):
 - **캐주얼하지만 가볍지 않은 반존대(해요체)**를 반드시 사용하세요. (예: "~거든요", "~인데요", "~이래요", "~했어요", "~더라고요", "~죠", "~있어요")

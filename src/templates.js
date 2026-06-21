@@ -6,7 +6,7 @@
 
 function highlightText(text, themeColor) {
   if (!text) return text;
-  return text.replace(/<hl>(.*?)<\/hl>/gi, `<span style="color: ${themeColor}; font-weight: 900; text-shadow: 0 0 20px ${themeColor}80;">$1</span>`);
+  return text.replace(/<hl>(.*?)<\/hl>/gi, `<span style="background-color: ${themeColor}25; border-bottom: 2px solid ${themeColor}; padding: 0 4px; border-radius: 4px; font-weight: 900; color: #ffffff;">$1</span>`);
 }
 
 function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'TODAY', mascotBase64 = '', coreInsight = '') {
