@@ -6,7 +6,7 @@
 
 function highlightText(text, themeColor) {
   if (!text) return text;
-  return text.replace(/<hl>(.*?)<\/hl>/gi, `<span style="background-color: ${themeColor}25; border-bottom: 2px solid ${themeColor}; padding: 0 4px; border-radius: 4px; font-weight: 900; color: #ffffff;">$1</span>`);
+  return text.replace(/<hl>(.*?)<\/hl>/gi, `<span style="background-color: ${themeColor}25; border-bottom: 2px solid ${themeColor}; padding: 0 4px; border-radius: 4px; font-weight: 900; color: #ffffff; -webkit-box-decoration-break: clone; box-decoration-break: clone; line-height: 1.4;">$1</span>`);
 }
 
 function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'TODAY', mascotBase64 = '', coreInsight = '') {
@@ -52,13 +52,16 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
     const isFact = cardType === 'fact';
     const badgeText = isFact ? content.section_title || '무슨 일이야?' : content.section_title || '그래서 어떻게 돼?';
     
+    const emojis = ['💡', '📊', '📈', '🔥', '👀', '📌', '🚀', '💰'];
     const bulletsHtml = content.bullets
-      .map((bullet, idx) => `
+      .map((bullet, idx) => {
+        const emoji = emojis[idx % emojis.length];
+        return `
         <li class="flex items-start gap-5 py-4">
-          <div class="mt-4 w-3 h-3 rounded-full shrink-0" style="background: ${themeColor}; box-shadow: 0 0 12px ${themeColor};"></div>
+          <div class="mt-2 text-3xl shrink-0" style="text-shadow: 0 0 12px ${themeColor}80;">${emoji}</div>
           <p class="font-body text-[2.4rem] text-white/95 font-medium leading-[1.65] break-keep bullet-text drop-shadow-sm">${highlightText(bullet, themeColor)}</p>
         </li>
-      `).join('');
+      `}).join('');
 
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1350px] overflow-hidden flex flex-col justify-between py-16 px-16 select-none">
@@ -156,6 +159,15 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
     </head>
     <body class="font-sans text-white antialiased flex items-center justify-center min-h-screen">
       ${innerHtml}
+      <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          document.querySelectorAll('.bullet-text').forEach(el => {
+            const textLen = el.innerText.length;
+            if(textLen > 65) el.style.fontSize = '2.1rem';
+            else if(textLen > 45) el.style.fontSize = '2.25rem';
+          });
+        });
+      </script>
     </body>
     </html>
   `;
