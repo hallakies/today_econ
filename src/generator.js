@@ -132,6 +132,10 @@ function validateAndRepairContent(jsonData) {
     clean = clean.replace(/는다\.$/g, '는데요.');
     clean = clean.replace(/한다\.$/g, '해요.');
     clean = clean.replace(/했다\.$/g, '했어요.');
+    clean = clean.replace(/어졌다\.$/g, '어졌어요.');
+    clean = clean.replace(/졌다\.$/g, '졌어요.');
+    clean = clean.replace(/났다\.$/g, '났어요.');
+    clean = clean.replace(/였다\.$/g, '였어요.');
     clean = clean.replace(/있다\.$/g, '있어요.');
     clean = clean.replace(/없다\.$/g, '없어요.');
     clean = clean.replace(/이다\.$/g, '이에요.');
@@ -165,6 +169,10 @@ function validateAndRepairContent(jsonData) {
     clean = clean.replace(/는다$/g, '는데요');
     clean = clean.replace(/한다$/g, '해요');
     clean = clean.replace(/했다$/g, '했어요');
+    clean = clean.replace(/어졌다$/g, '어졌어요');
+    clean = clean.replace(/졌다$/g, '졌어요');
+    clean = clean.replace(/났다$/g, '났어요');
+    clean = clean.replace(/였다$/g, '였어요');
     clean = clean.replace(/있다$/g, '있어요');
     clean = clean.replace(/없다$/g, '없어요');
     clean = clean.replace(/이다$/g, '이에요');
@@ -184,20 +192,20 @@ function validateAndRepairContent(jsonData) {
     if (!text || typeof text !== 'string') return text;
     if (text.includes('<hl>')) return text; // 이미 있으면 통과
     
-    // <hl>이 없으면 띄어쓰기 기준 가장 긴 단어(조사 제외, 2글자 이상)를 찾아 강제로 씌움
-    const words = text.split(' ').filter(w => w.length >= 2 && !w.endsWith('요') && !w.endsWith('요.'));
+    // <hl>이 없으면 띄어쓰기 기준 가장 긴 단어(조사 제외, 2~12글자 사이)를 찾아 강제로 씌움
+    const words = text.split(' ').filter(w => w.length >= 2 && w.length <= 12 && !w.endsWith('요') && !w.endsWith('요.'));
     if (words.length > 0) {
       const target = words.reduce((a, b) => a.length > b.length ? a : b);
       return text.replace(target, `<hl>${target}</hl>`);
     }
-    return `<hl>${text}</hl>`; // 정 안되면 통째로 씌움
+    return text; // 너무 길거나 마땅한 단어가 없으면 통째로 씌우지 않음 (디자인 파괴 방지)
   }
 
   function censorAction(text) {
     if (!text || typeof text !== 'string') return text;
     const banRegex = /(주의|유의|파악|고려|대비|수립|확인|모색|찾아보|알아보|재검토)/;
     if (banRegex.test(text)) {
-      return '지금 당장 내 계좌를 열어 1원이라도 손해보고 있는지 점검해보세요! <hl>머뭇거리다간 큰일납니다!</hl>';
+      return '지금 당장 쓰시는 증권사 앱을 켜서 보유 종목이 관리종목인지 확인부터 하세요! <hl>머뭇거리다간 큰일납니다!</hl>';
     }
     return text;
   }
@@ -235,9 +243,9 @@ function validateAndRepairContent(jsonData) {
   // Core Insight
   if (result.core_insight) {
     let insight = cleanText(result.core_insight, 120);
-    const banRegex = /(주의|유의|파악|고려|대비|수립|확인)/;
+    const banRegex = /(주의|유의|파악|고려|대비|수립|확인|모색|찾아보|알아보|재검토)/;
     if (banRegex.test(insight)) {
-      insight = '<hl>내 돈 아니라고 방관하다간 정말 깡통 찰 수 있어요!</hl> 지금 당장 행동하세요.';
+      insight = '내 돈 아니라고 방관하다간 정말 <hl>깡통 찰 수 있어요!</hl> 지금 당장 확인해보세요.';
     }
     result.core_insight = enforceHlTag(insight);
   }
@@ -295,7 +303,7 @@ async function executeLLMCall(systemPrompt, userPrompt, maxTokens) {
             { role: 'system', content: systemPrompt.normalize('NFC') },
             { role: 'user', content: userPrompt.normalize('NFC') }
           ],
-          temperature: 0.5,
+          temperature: 0.4,
           max_tokens: Math.min(maxTokens, 3000),
         }, 3, 3000);
         resultText = (response.choices[0]?.message?.content || '').trim();
@@ -345,14 +353,14 @@ async function generateCardContent(selectedNews) {
 당신의 페르소나는 "날카롭지만 친근하게, 어려운 경제 이면의 인사이트를 쉽게 짚어주는 똑똑한 멘토"입니다.
 
 ### 언어 통제 (CRITICAL):
-- **[절대 금지] 절대로 일본어(日本語), 중국어 등 한국어 이외의 언어를 섞어 쓰지 마세요.** 오직 100% 한국어(Korean)만 사용해야 합니다.
+- **[절대 금지 - 언어 오염 방지] 출력되는 모든 텍스트는 무조건 100% 한국어로만 작성하세요. 문장 중간에 'まだ' 같은 일본어나 한자, 중국어 병기가 한 글자라도 섞이면 절대로 안 됩니다.**
 - **[절대 금지] 법안명, 대출명, 상품명 등 고유명사를 절대 임의로 줄여 쓰지 마세요. (예: 불법사금융예방대출 -> 불사금예방대출 금지)**
 
 ### 톤앤매너 (CRITICAL):
 - **캐주얼하지만 가볍지 않은 반존대(해요체)**를 반드시 사용하세요. (예: "~거든요", "~인데요", "~이래요", "~했어요", "~더라고요", "~죠", "~있어요")
 - **[절대 금지] 절대로 "~다.", "~한다.", "~음/함" 같은 딱딱한 문어체나 기사체를 쓰지 마세요. 문장 끝은 무조건 "해요", "있어요", "돼요" 등으로 끝나야 합니다.**
 - "초등학생 수준"으로 유치하게 쓰지 마세요. 독자는 똑똑하지만 경제 용어만 낯선 2030 직장인입니다.
-- **피로도 감소 (대명사 활용)**: 매 슬라이드마다 "주택담보대출과 신용대출을 함께 이용하는 차주" 같은 긴 명사구를 앵무새처럼 반복하지 마세요. "이런 분들은", "이 경우" 등 대명사를 활용하여 세련되게 문맥을 이어가세요.
+- **피로도 감소 및 동어 반복 금지**: 한 슬라이드 내에서 같은 주어나 명사(예: '동전주'가)를 두 번 이상 반복하지 마세요. "이런 분들은", "이 경우" 등 대명사를 적극 활용하여 세련되게 문맥을 이어가세요.
 
 ### 생성 과정 (Chain of Thought):
 JSON 응답을 생성할 때, 반드시 "analysis" 객체를 먼저 작성하여 기사를 딥다이브 하세요.
@@ -368,8 +376,8 @@ JSON 응답을 생성할 때, 반드시 "analysis" 객체를 먼저 작성하여
    - **card2, card3 (무슨 일이야?)**: 기사의 핵심 팩트를 서술형으로 상세하게 설명. 내용이 길면 card2와 card3로 나누어서 작성하세요. (내용이 짧으면 card3를 생략하고 바로 마지막 카드로 넘어가도 됩니다)
    - **card4 (그래서 어떻게 돼?)**: (만약 card3가 팩트라면 card4가 액션 카드가 됩니다. card3가 생략되었다면 card3가 액션 카드가 됩니다.)
      * 첫 번째 불릿: 내 지갑과 실생활에 미치는 진짜 영향을 **자연스러운 서술형**으로 작성하세요. (접두어 사용 금지)
-     * 두 번째 불릿: 당장 실천할 수 있는 구체적인 행동 지침이나 대비책을 "~해보세요" 형태로 작성하세요. **[금지어: 주의하세요, 파악하세요, 고려하세요, 대비하세요, 수립하세요]** 이런 뻔한 훈수 절대 금지. "보유 중인 동전주가 있다면 다음 달 1일 전에 매도 타이밍을 잡으세요" 처럼 당장 앱을 켜고 할 수 있는 초구체적이고 실무적인 팁을 줄 것. (접두어 사용 금지)
-   - **hard_terms (용어 해설)**: 각 팩트/액션 카드에서 어려운 용어를 뽑아 해설합니다. **사전적 정의 절대 금지. 반드시 실생활 사물이나 상황에 빗댄 비유로만 설명하세요. [예시: 시가총액 = 이 회사를 통째로 살 때 영수증에 찍히는 가격표 같은 거예요]**
+     * 두 번째 불릿: **[절대 규칙] 절대로 기사 팩트를 요약하지 마세요. 무조건 독자가 지금 당장 실천할 수 있는 구체적인 행동 지침 1개만 "~해보세요" 형태로 작성하세요.** 억지스러운 행동 지침(예: "정책에 기여해보세요", "관심을 가져보세요")이나 뻔한 훈수(주의하세요, 대비하세요)는 절대 금지합니다. 거시경제 뉴스라 실천할 게 없다면 "앞으로의 경제 흐름에 어떤 영향을 미칠지 지켜봐야겠어요."처럼 자연스러운 생각거리로 마무리하세요.
+   - **hard_terms (용어 해설)**: 각 팩트/액션 카드에서 어려운 용어를 뽑아 해설합니다. **[CRITICAL] 용어의 뜻만 아주 짧고 명확하게 사전처럼 적되, 쉬운 비유를 한 스푼 추가하세요. 기사의 구체적 맥락이나 수치(예: 219곳, 8조원 등)를 섞어 쓰지 마세요.**
 
 ### 불릿 포인트 작성 규칙:
 - **1개의 불릿은 무조건 60자 이내**로 작성하세요. 내용이 길면 절대 한 줄에 욱여넣지 말고, 불릿의 개수를 늘려서 쪼개세요.
