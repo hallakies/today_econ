@@ -10,7 +10,7 @@ const web = new WebClient(config.slackBotToken);
  * @param {Array<string>} imagePaths File paths of the 3 rendered PNG slides.
  * @param {object} selectedNews The original news item object containing title and link.
  */
-async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}) {
+async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publication = null) {
   if (!config.slackBotToken || !config.slackChannelId) {
     throw new Error('[Slack] Missing SLACK_BOT_TOKEN or SLACK_CHANNEL_ID. Cannot send notification.');
   }
@@ -38,7 +38,10 @@ async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}) {
   }
 
   const newsRef = selectedNews.link ? `\n\n🔗 원본 기사:\n<${selectedNews.link}|${selectedNews.title}>` : '';
-  const captionMessage = `${captionBody}${newsRef}${hashtags}`;
+  const publishRef = publication?.permalink
+    ? `\n\n✅ Instagram 자동 게시 완료: <${publication.permalink}|게시물 열기>`
+    : '\n\nℹ️ Instagram 자동 게시는 비활성화된 실행입니다.';
+  const captionMessage = `${captionBody}${newsRef}${publishRef}${hashtags}`;
 
   try {
     // 1. Upload files first (without initial_comment to prevent duplicate posts in some slack APIs)
@@ -63,6 +66,28 @@ async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}) {
   }
 }
 
+async function sendAnalyticsReport(message) {
+  if (!config.slackBotToken || !config.slackChannelId) {
+    console.warn('[Slack] Analytics report skipped because Slack is not configured.');
+    return null;
+  }
+  return web.chat.postMessage({ channel: config.slackChannelId, text: message });
+}
+
+async function sendPipelineFailure(error, selectedNews = {}) {
+  if (!config.slackBotToken || !config.slackChannelId) return null;
+  const title = selectedNews.title ? `\n기사: ${selectedNews.title}` : '';
+  const quality = error.qualityReport
+    ? `\n품질 점수: ${error.qualityReport.score}/100\n${error.qualityReport.errors.join('\n')}`
+    : '';
+  return web.chat.postMessage({
+    channel: config.slackChannelId,
+    text: `❌ 오늘경제 파이프라인이 게시 전에 중단됐어요.${title}${quality}\n원인: ${error.message}`,
+  });
+}
+
 module.exports = {
+  sendAnalyticsReport,
+  sendPipelineFailure,
   sendToSlack,
 };

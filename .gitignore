@@ -11,6 +11,9 @@ node_modules/
 # OS files
 .DS_Store
 
+# Codex runtime state (local only)
+.omx/
+
 # Log files
 npm-debug.log*
 yarn-debug.log*

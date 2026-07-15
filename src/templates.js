@@ -1,7 +1,7 @@
 /**
  * Unified HTML/CSS template for today.econ card news.
  * Premium Fintech / Modern Editorial Theme
- * Optimized for Instagram 9:16 (1080x1920).
+ * Optimized for Instagram feed carousel 4:5 (1080x1350).
  */
 
 function highlightText(text, themeColor) {
@@ -18,7 +18,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
   
   if (cardType === 'title') {
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1920px] overflow-hidden flex flex-col justify-between py-20 px-16 select-none">
+      <div class="slide-container relative w-[1080px] h-[1350px] overflow-hidden flex flex-col justify-between py-16 px-16 select-none">
         
         <!-- Full Bleed AI Background Image -->
         <div class="absolute inset-0 z-0">
@@ -50,7 +50,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
     `;
   } else {
     const isFact = cardType === 'fact';
-    const badgeText = isFact ? content.section_title || '무슨 일이야?' : content.section_title || '그래서 어떻게 돼?';
+    const badgeText = isFact ? content.section_title || '핵심 사실' : content.section_title || '오늘 확인할 것';
     
     const emojis = ['💡', '📊', '📈', '🔥', '👀', '📌', '🚀', '💰'];
     const bulletsHtml = content.bullets
@@ -72,9 +72,9 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
           <div class="absolute inset-0 bg-[#0B101A]/50"></div>
         </div>
         
-        <header class="w-full flex items-center justify-between z-20 mb-8">
-           <span class="inline-block px-7 py-3 rounded-full font-black text-[2rem] tracking-wider text-white" style="background: ${themeColor}D0; border: 1px solid ${themeColor}; box-shadow: 0 0 20px ${themeColor}60;">${badgeText}</span>
-           <span class="text-white/60 font-black text-[2rem]">@today.econ</span>
+        <header class="w-full h-16 z-20 mb-8" style="position: relative;">
+           <span class="inline-block max-w-[68%] px-7 py-3 rounded-full font-black text-[2rem] tracking-wider text-white" style="background: ${themeColor}D0; border: 1px solid ${themeColor}; box-shadow: 0 0 20px ${themeColor}60;">${badgeText}</span>
+           <span style="position: absolute; right: 0; top: 12px; color: rgba(255,255,255,0.6); font-weight: 900; font-size: 2rem;">@today.econ</span>
         </header>
 
         <main class="flex-1 flex flex-col justify-center z-20 w-full relative">
@@ -109,7 +109,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
               <div class="mt-12 pt-10 border-t border-white/10">
                 <div class="relative rounded-3xl p-8 bg-[#0B101A]/80 backdrop-blur-xl border-l-[6px] shadow-2xl" style="border-left-color: ${themeColor};">
                   <div class="absolute -top-7 -left-3 text-7xl opacity-40 drop-shadow-md" style="color: ${themeColor};">"</div>
-                  <p class="relative z-10 text-white/95 leading-[1.6] font-bold text-[2.6rem] break-keep">${highlightText(coreInsight, themeColor)}</p>
+                  <p class="relative z-10 text-white/95 leading-[1.6] font-bold text-[2.6rem] break-keep core-insight-text">${highlightText(coreInsight, themeColor)}</p>
                 </div>
               </div>
             ` : ''}
@@ -165,6 +165,9 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
             const textLen = el.innerText.length;
             if(textLen > 65) el.style.fontSize = '2.1rem';
             else if(textLen > 45) el.style.fontSize = '2.25rem';
+          });
+          document.querySelectorAll('.core-insight-text').forEach(el => {
+            if(el.innerText.length > 30) el.style.fontSize = '2rem';
           });
         });
       </script>

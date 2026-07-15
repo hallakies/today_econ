@@ -2,203 +2,101 @@ const fs = require('fs');
 const Groq = require('groq-sdk');
 const config = require('../config');
 
-// Initialize Groq client
-const groq = new Groq({
-  apiKey: config.groqApiKey,
-});
-
-/**
- * Helper to call Groq API with retries on 429 rate limit errors.
- */
-async function callGroqWithRetry(params, retries = 5, delayMs = 8000) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await groq.chat.completions.create(params);
-    } catch (error) {
-      const is429 = error.status === 429 || (error.message && error.message.toLowerCase().includes('rate'));
-      if (is429 && i < retries - 1) {
-        console.warn(`[Groq API] Hit rate limit (429). Retrying in ${delayMs}ms... (Attempt ${i + 1}/${retries})`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        delayMs *= 2.0; // Exponential backoff
-      } else {
-        throw error;
-      }
-    }
-  }
-}
-
-
-/**
- * Loads history of published news.
- * @returns {Array<{date: string, title: string}>}
- */
 function loadHistory() {
   try {
     if (fs.existsSync(config.historyFile)) {
-      const data = fs.readFileSync(config.historyFile, 'utf8');
-      return JSON.parse(data);
+      return JSON.parse(fs.readFileSync(config.historyFile, 'utf8'));
     }
   } catch (error) {
-    console.error('[Selector] Failed to load history:', error);
+    console.error('[Selector] Failed to load history:', error.message);
   }
   return [];
 }
 
-/**
- * Saves a new entry to the history and cleans up old entries.
- * @param {string} title The title of the news that was just published.
- */
 function saveHistoryEntry(title) {
-  try {
-    let history = loadHistory();
-    
-    // Add new entry
-    history.push({
-      date: new Date().toISOString().split('T')[0],
-      title: title.trim(),
-    });
-
-    // Remove old entries (older than config.maxHistoryDays)
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - config.maxHistoryDays);
-    const cutoffStr = cutoffDate.toISOString().split('T')[0];
-
-    history = history.filter(entry => entry.date >= cutoffStr);
-
-    fs.writeFileSync(config.historyFile, JSON.stringify(history, null, 2), 'utf8');
-    console.log('[Selector] History updated successfully.');
-  } catch (error) {
-    console.error('[Selector] Failed to save history:', error);
-  }
-}
-
-/**
- * Selects the single most important, non-duplicate news item.
- * @param {Array<{title: string, link: string, pubDate: string, summary: string}>} newsList 
- * @returns {Promise<{title: string, link: string, pubDate: string, summary: string}>}
- */
-async function selectNews(newsList) {
-  if (!newsList || newsList.length === 0) {
-    throw new Error('[Selector] News list is empty. Nothing to select.');
-  }
-
   const history = loadHistory();
-  console.log(`[Selector] Loaded ${history.length} historical entries for duplicate checking.`);
-  
-  // Limit news selection to top 7 items to prevent rate limits (TPM)
-  const slicedNewsList = newsList.slice(0, 7);
+  history.push({ date: new Date().toISOString().slice(0, 10), title: title.trim().normalize('NFC') });
 
-  // If history is empty, we just let Llama pick the most important one without duplicate constraints.
-  const historyListText = history.length > 0 
-    ? history.map((h, i) => `${i + 1}. [${h.date}] ${h.title}`).join('\n')
-    : '최근 다룬 뉴스 없음';
-
-  const todayNewsText = slicedNewsList.map((item, index) => {
-    return `[기사 인덱스 ${index}]
-제목: ${item.title}
-요약: ${item.summary}
----`;
-  }).join('\n\n');
-
-  const systemPrompt = `당신은 대한민국 최고의 경제 뉴스 큐레이터이자 인스타그램 마케터입니다.
-오늘 수집된 뉴스 목록을 보고, 최근 다룬 뉴스들과 중복되거나 너무 유사한 주제(예: 매일 조금씩 변하는 코스피 수치, 환율의 미세한 변동 등 매일 반복되는 시황)는 철저히 배제하고, 독자들이 흥미를 가질 만한 '오늘 가장 중요하고 실생활에 파급력이 큰 경제 뉴스' 1개를 선정해야 합니다.
-
-다음 규칙을 준수하세요:
-1. 최근 다룬 뉴스 목록에 있는 주제와 겹치거나 매우 유사한 뉴스는 제외하세요.
-2. 기사의 파급성, 특히 **20~30대 직장인과 재테크 초보의 지갑(대출 금리 인하, 부동산 청약, 물가 상승, 세금 감면 등 실생활 직접 타격)**에 즉각적인 영향을 주는 뉴스를 최우선으로 선정하세요.
-3. **[CRITICAL] 우선순위 가중치**: 주식, 부동산, 코인, 예적금, ETF 등 **직접적인 '투자(Investment)' 및 '재테크 전략'과 관련된 기사**가 있다면 가장 먼저 우선적으로 검토하여 선정하십시오.
-4. 국가 간 무역 협정(CEPA), 거시적 외교, 단순 MOU 체결 등 개인의 지갑과 거리가 먼 뉴스는 철저히 배제하세요.
-5. **[CRITICAL] 특정 기업/기관 내부의 인사(HR), 조직 개편, 부고 등 임직원 전용 소식은 일반인의 재테크와 무관하므로 절대 선정하지 마십시오.**
-6. 결과를 정확히 JSON 포맷으로 응답해야 합니다.
-
-응답 JSON 형식:
-\`\`\`json
-{
-  "selected_index": <선정한 기사의 인덱스 숫자>,
-  "reason": "해당 기사를 선정한 이유 (한국어)"
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - config.maxHistoryDays);
+  const retained = history.filter(entry => entry.date >= cutoff.toISOString().slice(0, 10));
+  fs.writeFileSync(config.historyFile, `${JSON.stringify(retained, null, 2)}\n`, 'utf8');
 }
-\`\`\``;
 
-  const userPrompt = `### 최근 7일 동안 이미 인스타그램에 업로드한 뉴스 목록:
-${historyListText}
+async function requestSelection(systemPrompt, userPrompt, model, maxTokens = 1200) {
+  const groq = new Groq({ apiKey: config.groqApiKey });
+  const response = await groq.chat.completions.create({
+    model,
+    messages: [
+      { role: 'system', content: systemPrompt.normalize('NFC') },
+      { role: 'user', content: userPrompt.normalize('NFC') },
+    ],
+    temperature: 0.1,
+    max_tokens: maxTokens,
+    response_format: { type: 'json_object' },
+  });
+  return JSON.parse(response.choices[0]?.message?.content || '{}');
+}
 
-### 오늘 수집된 뉴스 목록:
-${todayNewsText}
+function buildFallbackRanking(newsList) {
+  const highIntent = /(주식|주가|금리|대출|주택|부동산|청약|세금|물가|환율|ETF|예금|적금|연금|소득|고용|코인)/i;
+  return newsList
+    .map((item, index) => ({
+      index,
+      score: (highIntent.test(item.title) ? 10 : 0) + Math.max(0, 5 - index * 0.25),
+    }))
+    .sort((a, b) => b.score - a.score)[0]?.index || 0;
+}
 
-위의 오늘 수집된 뉴스 목록 중에서 최근에 업로드한 주제와 겹치지 않고 가장 가치 있는 기사 1개를 선택하여 JSON 형식으로 알려주세요.`;
+async function selectNews(newsList) {
+  if (!Array.isArray(newsList) || newsList.length === 0) {
+    throw new Error('[Selector] News list is empty.');
+  }
+
+  const candidates = newsList.slice(0, 15);
+  const history = loadHistory();
+  const systemPrompt = `당신은 오늘경제(@today.econ)의 뉴스 편집자입니다.
+목표는 20~30대 직장인과 재테크 초보의 돈에 가장 큰 영향을 주는 기사 하나를 고르는 것입니다.
+평가 기준은 각각 0~5점으로 채점하세요:
+1. money_impact: 대출·주거·소득·세금·투자에 미치는 구체적 영향
+2. actionability: 독자가 지금 확인할 것이 있는지
+3. timeliness: 오늘 알아야 할 이유
+4. saveability: 저장할 만한 숫자·비교·체크리스트로 바꿀 수 있는지
+5. novelty: 최근 7일 주제와 다른지
+단순 주가 등락, 기관 인사, MOU, 광고성 기사는 제외하세요.
+투자 기사라도 종목 추천보다 독자의 의사결정을 돕는 기사를 우선하세요.
+JSON만 응답하세요: {"selected_index":0,"scores":{"money_impact":0,"actionability":0,"timeliness":0,"saveability":0,"novelty":0},"reason":"선정 이유"}`;
+
+  const historyText = history.length
+    ? history.map(item => `[${item.date}] ${item.title}`).join('\n')
+    : '최근 게시물 없음';
+  const candidateText = candidates
+    .map((item, index) => `[${index}] ${item.title}\n${item.summary}`)
+    .join('\n\n');
+  const userPrompt = `최근 7일 게시물:\n${historyText}\n\n후보 기사:\n${candidateText}`;
 
   try {
-    console.log('[Selector] Invoking Groq Llama to select news...');
-    let resultText = '';
-    
+    let result;
     try {
-      const response = await callGroqWithRetry({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt.normalize('NFC') },
-          { role: 'user', content: userPrompt.normalize('NFC') }
-        ],
-        temperature: 0.1,
-        max_tokens: 1000,
-      });
-      resultText = (response.choices[0]?.message?.content || '').trim();
-      console.log('[Selector] Main model response length:', resultText.length);
-      if (!resultText) throw new Error("Main model returned empty content");
-    } catch (apiError) {
-      console.warn('[Selector] 70B/120B failed or returned empty. Error:', apiError.message || apiError);
-      console.warn('[Selector] Falling back to llama-3.1-8b-instant...');
-      const response = await callGroqWithRetry({
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          { role: 'system', content: systemPrompt.normalize('NFC') },
-          { role: 'user', content: userPrompt.normalize('NFC') }
-        ],
-        temperature: 0.1,
-        max_tokens: 1000,
-      }, 3, 3000);
-      resultText = (response.choices[0]?.message?.content || '').trim();
-      console.log('[Selector] Fallback model response length:', resultText.length);
-      if (!resultText) {
-         console.warn('[Selector] Fallback model also returned empty content.');
-      }
+      result = await requestSelection(systemPrompt, userPrompt, 'llama-3.3-70b-versatile');
+    } catch (error) {
+      console.warn(`[Selector] Main model failed: ${error.message}`);
+      result = await requestSelection(systemPrompt, userPrompt, 'llama-3.1-8b-instant', 1000);
     }
-
-    // Strip markdown code block wrapper if present
-    let jsonText = resultText;
-    const jsonBlockMatch = jsonText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-    if (jsonBlockMatch) {
-      jsonText = jsonBlockMatch[1].trim();
-    }
-    // Extract json object explicitly
-    if (!jsonText.startsWith('{')) {
-      const firstBrace = jsonText.indexOf('{');
-      if (firstBrace >= 0) jsonText = jsonText.substring(firstBrace);
-    }
-    
-    let resultJson;
-    try {
-      resultJson = JSON.parse(jsonText);
-    } catch (parseError) {
-      console.error('[Selector] JSON parse failed, returning fallback. Text was:', resultText);
-      return newsList[0];
-    }
-    const selectedIndex = parseInt(resultJson.selected_index, 10);
-    
-    if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= slicedNewsList.length) {
-      console.warn('[Selector] Selected index is out of bounds or invalid. Defaulting to index 0.');
-      return slicedNewsList[0];
-    }
-
-    const selectedNews = slicedNewsList[selectedIndex];
-    console.log(`[Selector] Selected: "${selectedNews.title}" (Reason: ${resultJson.reason})`);
-    return selectedNews;
+    const selectedIndex = Number(result.selected_index);
+    if (!Number.isInteger(selectedIndex) || !candidates[selectedIndex]) throw new Error('invalid selected_index');
+    console.log(`[Selector] Selected "${candidates[selectedIndex].title}": ${result.reason}`);
+    return candidates[selectedIndex];
   } catch (error) {
-    console.error('[Selector] Error during news selection. Falling back to the first news item.', error);
-    return slicedNewsList[0];
+    const fallbackIndex = buildFallbackRanking(candidates);
+    console.warn(`[Selector] Using deterministic fallback ${fallbackIndex}: ${error.message}`);
+    return candidates[fallbackIndex];
   }
 }
 
 module.exports = {
-  selectNews,
+  buildFallbackRanking,
+  loadHistory,
   saveHistoryEntry,
+  selectNews,
 };

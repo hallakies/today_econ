@@ -1,0 +1,168 @@
+const DEFAULT_METRICS = ['views', 'reach', 'likes', 'comments', 'saved', 'shares', 'total_interactions'];
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function instagramRequest({
+  path,
+  token,
+  version = 'v23.0',
+  method = 'GET',
+  params = {},
+  fetchImpl = fetch,
+  retries = 3,
+}) {
+  const base = `https://graph.instagram.com/${version}/${String(path).replace(/^\//, '')}`;
+  const body = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) body.set(key, String(value));
+  });
+  const url = method === 'GET' && body.size ? `${base}?${body}` : base;
+
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    const response = await fetchImpl(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(method === 'GET' ? {} : { 'Content-Type': 'application/x-www-form-urlencoded' }),
+      },
+      ...(method === 'GET' ? {} : { body }),
+    });
+    const text = await response.text();
+    let payload;
+    try {
+      payload = text ? JSON.parse(text) : {};
+    } catch {
+      payload = { raw: text };
+    }
+    if (response.ok) return payload;
+
+    const message = payload.error?.message || payload.raw || response.statusText;
+    const retryable = response.status === 429 || response.status >= 500;
+    if (!retryable || attempt === retries) {
+      const error = new Error(`[Instagram] ${response.status}: ${message}`);
+      error.status = response.status;
+      error.payload = payload;
+      throw error;
+    }
+    await sleep(1000 * 2 ** (attempt - 1));
+  }
+  throw new Error('[Instagram] request retry loop ended unexpectedly');
+}
+
+async function waitForContainer({ id, token, version, fetchImpl = fetch, attempts = 20, delayMs = 3000 }) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const status = await instagramRequest({
+      path: id,
+      token,
+      version,
+      params: { fields: 'status_code,status' },
+      fetchImpl,
+    });
+    if (!status.status_code || status.status_code === 'FINISHED' || status.status_code === 'PUBLISHED') return status;
+    if (status.status_code === 'ERROR' || status.status_code === 'EXPIRED') {
+      throw new Error(`[Instagram] Container ${id} failed: ${status.status || status.status_code}`);
+    }
+    await sleep(delayMs);
+  }
+  throw new Error(`[Instagram] Container ${id} was not ready before timeout.`);
+}
+
+async function publishCarousel({ imageUrls, caption, userId, token, version = 'v23.0', fetchImpl = fetch }) {
+  if (!token || !userId) throw new Error('[Instagram] Missing access token or user ID.');
+  if (!Array.isArray(imageUrls) || imageUrls.length < 2 || imageUrls.length > 10) {
+    throw new Error('[Instagram] A carousel requires 2-10 public image URLs.');
+  }
+  if (!caption || caption.length > 2200) throw new Error('[Instagram] Caption must be 1-2200 characters.');
+
+  const childIds = [];
+  for (const imageUrl of imageUrls) {
+    const child = await instagramRequest({
+      path: `${userId}/media`,
+      token,
+      version,
+      method: 'POST',
+      params: { image_url: imageUrl, is_carousel_item: true },
+      fetchImpl,
+    });
+    await waitForContainer({ id: child.id, token, version, fetchImpl });
+    childIds.push(child.id);
+  }
+
+  const carousel = await instagramRequest({
+    path: `${userId}/media`,
+    token,
+    version,
+    method: 'POST',
+    params: {
+      media_type: 'CAROUSEL',
+      children: childIds.join(','),
+      caption,
+    },
+    fetchImpl,
+  });
+  await waitForContainer({ id: carousel.id, token, version, fetchImpl });
+
+  const published = await instagramRequest({
+    path: `${userId}/media_publish`,
+    token,
+    version,
+    method: 'POST',
+    params: { creation_id: carousel.id },
+    fetchImpl,
+  });
+  const media = await instagramRequest({
+    path: published.id,
+    token,
+    version,
+    params: { fields: 'id,permalink,timestamp,media_type,media_product_type,username' },
+    fetchImpl,
+  });
+  return { ...media, id: published.id, containerId: carousel.id, childIds };
+}
+
+function insightValue(item) {
+  const first = Array.isArray(item.values) ? item.values[0]?.value : item.value;
+  return typeof first === 'number' ? first : Number(first || 0);
+}
+
+async function getMediaInsights({ mediaId, token, version = 'v23.0', metrics = DEFAULT_METRICS, fetchImpl = fetch }) {
+  const toObject = data => Object.fromEntries((data || []).map(item => [item.name, insightValue(item)]));
+  try {
+    const response = await instagramRequest({
+      path: `${mediaId}/insights`,
+      token,
+      version,
+      params: { metric: metrics.join(',') },
+      fetchImpl,
+    });
+    return toObject(response.data);
+  } catch (bulkError) {
+    const collected = {};
+    for (const metric of metrics) {
+      try {
+        const response = await instagramRequest({
+          path: `${mediaId}/insights`,
+          token,
+          version,
+          params: { metric },
+          fetchImpl,
+        });
+        Object.assign(collected, toObject(response.data));
+      } catch (error) {
+        console.warn(`[Instagram] Insight metric unavailable (${metric}): ${error.message}`);
+      }
+    }
+    if (Object.keys(collected).length === 0) throw bulkError;
+    return collected;
+  }
+}
+
+module.exports = {
+  DEFAULT_METRICS,
+  getMediaInsights,
+  instagramRequest,
+  publishCarousel,
+  waitForContainer,
+};

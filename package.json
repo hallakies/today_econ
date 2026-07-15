@@ -4,7 +4,12 @@
   "description": "Automated Korean Economic News Summarizer and Instagram Card News Creator",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "insights": "node src/collect-insights.js",
+    "cleanup:assets": "node src/cleanup-assets.js",
+    "check:instagram": "node src/check-instagram.js",
+    "refresh:instagram": "node src/refresh-instagram-token.js",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "@slack/web-api": "^7.8.0",

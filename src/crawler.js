@@ -163,7 +163,7 @@ async function fetchArticleBody(articleUrl) {
 
     // Extract text and clean up excess whitespace
     let fullText = contentNode.text();
-    fullText = fullText.replace(/\\s+/g, ' ').trim();
+    fullText = fullText.replace(/\s+/g, ' ').trim();
     
     // Normalize to NFC to avoid tokenizer issues as instructed in AGENTS.md
     if (fullText) {

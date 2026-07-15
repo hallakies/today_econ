@@ -7,35 +7,37 @@ const mockData = {
   template_theme: 'unified',
   theme_color: '#3B82F6',
   card1: {
-    title: "월급의 7%가\n이자로 날아간다고요?",
-    subtitle: "주담대 금리 7% 돌파, 내 대출은 괜찮을까",
-    editors_insight: "<hl>가계부채</hl> 위험 신호가 켜졌어요",
+    title: "대출 한도가\n내 집을 먼저 결정해요",
+    subtitle: "실수요자라면 집값보다 먼저 볼 숫자",
   },
   card2: {
-    section_title: "무슨 일이야?",
+    section_title: "숫자로 보는 핵심",
     bullets: [
-      "주택담보대출 <hl>최고 금리가 7%</hl>를 넘어섰어요",
-      "고환율과 고물가가 겹치면서 <hl>이자 부담</hl>이 눈덩이처럼 커지고 있거든요",
-      "은행들이 <hl>가산금리</hl>를 올리면서 신규 대출자들이 직격탄을 맞고 있어요"
+      "은행권은 <hl>주택담보대출 한도</hl>를 줄이는 방안을 검토하고 있어요.",
+      "무주택 실수요자의 <hl>자금 조달 부담</hl>이 이전보다 커질 수 있어요."
     ],
     hard_terms: [
-      { "term": "가산금리", "explanation": "은행이 기준금리 위에 얹는 수수료예요" },
-      { "term": "주담대", "explanation": "집을 담보로 빌리는 대출이에요" }
+      { "term": "대출 총량제", "explanation": "은행별로 내줄 수 있는 대출 총량을 정해두는 방식이에요" }
     ],
-    editors_insight: "<hl>금리 인하</hl> 기대와 달리 실질 부담은 증가세",
   },
   card3: {
-    section_title: "그래서 어떻게 돼?",
+    section_title: "내 돈에는 이렇게",
     bullets: [
-      "<hl>변동금리</hl> 대출자의 월 상환액이 10~20만원 더 늘어날 전망이에요",
-      "전세 대출 이자까지 합치면 <hl>월 소득의 30%</hl> 이상이 이자로 빠질 수 있어요",
-      "주거래 은행 앱에서 <hl>금리 갈아타기</hl> 시뮬레이션 한번 돌려보세요!"
+      "대출을 준비 중이라면 <hl>내 한도와 월 상환액</hl>을 다시 계산해야 해요.",
+      "현금 비중이 높다면 <hl>매수 시점보다 조건</hl>을 먼저 비교하는 편이 나아요."
     ],
-    hard_terms: [
-      { "term": "변동금리", "explanation": "시장 상황에 따라 이자가 오르내려요" }
-    ],
-    editors_insight: "<hl>고정금리</hl> 전환 타이밍을 놓치지 마세요",
+    hard_terms: [],
   },
+  card4: {
+    section_title: "오늘 확인할 것",
+    bullets: [
+      "실수요자 보완책이 나오는지가 <hl>대출 수요의 변수</hl>가 될 전망이에요.",
+      "은행별 운영 기준에 따라 <hl>현장 한도 차이</hl>는 남을 수 있어요.",
+      "은행 앱에서 <hl>내 대출 조건</hl>과 월 상환액을 직접 비교해보세요."
+    ],
+    hard_terms: [],
+  },
+  core_insight: "집값만 보면 놓치기 쉬운 것은 <hl>내가 빌릴 수 있는 돈</hl>이에요.",
   news_date: "2026.6.14",
   instagram_caption: "오늘 뉴스 보다가 깜짝 놀랐는데요~ 주담대 금리가 7%를 넘었대요..."
 };
@@ -63,7 +65,7 @@ async function runTest() {
       }
     }
     
-    console.log(`\n[Test] --- Test Complete! Check unified_1.png, unified_2.png, unified_3.png ---`);
+    console.log(`\n[Test] --- Test Complete! Check unified_1.png through unified_4.png ---`);
   } catch (error) {
     console.error('[Test] Failed:', error);
   }

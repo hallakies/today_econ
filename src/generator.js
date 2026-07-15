@@ -1,517 +1,199 @@
 const Groq = require('groq-sdk');
 const config = require('../config');
+const { assertContentQuality } = require('./quality');
 
-// Initialize Groq client
-const groq = new Groq({
-  apiKey: config.groqApiKey,
-});
+const MAIN_MODEL = 'llama-3.3-70b-versatile';
+const FALLBACK_MODEL = 'llama-3.1-8b-instant';
+const STANDARD_HASHTAGS = '#경제공부 #경제뉴스 #오늘의경제 #재테크 #today.econ';
 
-/**
- * Helper to call Groq API with retries on 429 rate limit errors.
- */
+function getGroqClient() {
+  return new Groq({ apiKey: config.groqApiKey });
+}
+
 async function callGroqWithRetry(params, retries = 5, delayMs = 8000) {
-  for (let i = 0; i < retries; i++) {
+  const groq = getGroqClient();
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
     try {
       return await groq.chat.completions.create(params);
     } catch (error) {
-      const is429 = error.status === 429 || (error.message && error.message.toLowerCase().includes('rate'));
-      if (is429 && i < retries - 1) {
-        console.warn(`[Groq API] Hit rate limit (429). Retrying in ${delayMs}ms... (Attempt ${i + 1}/${retries})`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        delayMs *= 2.0; // Exponential backoff
-      } else {
-        throw error;
-      }
+      const retryable = error.status === 429 || error.status >= 500 || /rate|timeout/i.test(error.message || '');
+      if (!retryable || attempt === retries) throw error;
+      console.warn(`[Generator] API retry ${attempt}/${retries} in ${delayMs}ms: ${error.message}`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      delayMs *= 2;
     }
   }
+  throw new Error('[Generator] retry loop ended unexpectedly');
 }
 
+function parseJsonResponse(text) {
+  let jsonText = String(text || '').trim();
+  const fenced = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) jsonText = fenced[1].trim();
+  const firstBrace = jsonText.indexOf('{');
+  const lastBrace = jsonText.lastIndexOf('}');
+  if (firstBrace >= 0 && lastBrace > firstBrace) jsonText = jsonText.slice(firstBrace, lastBrace + 1);
+  return JSON.parse(jsonText);
+}
 
-/**
- * Sanitizes a single text string by replacing Slack emoji codes and removing multilingual leaks.
- */
-function sanitizeText(text) {
-  if (typeof text !== 'string') return text;
-  
-  let clean = text;
-  // Clean up any multilingual / translation leaks (like Chinese/Russian leaks)
-  const translationMap = {
-    '們': '들',
-    '들들': '들',
-    '智慧': '지혜',
-    '圍': '위',
-    'Это意味着': '이는',
-    '这意味着': '이는',
-    '意味着': '의미합니다',
-    '机构': '기관',
-    '金融': '금융',
-    '政策': '정책',
-    '韩国': '한국',
-    '银行': '은행',
-    '保险': '보험',
-    '企业': '기업',
-    '政府': '정부',
-    '率': '율',
-    '金融机构': '금융기관'
+async function executeLLMCall(systemPrompt, userPrompt, maxTokens) {
+  const request = async (model, temperature, tokens) => {
+    const response = await callGroqWithRetry({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt.normalize('NFC') },
+        { role: 'user', content: userPrompt.normalize('NFC') },
+      ],
+      temperature,
+      max_tokens: tokens,
+      response_format: { type: 'json_object' },
+    });
+    return parseJsonResponse(response.choices[0]?.message?.content);
   };
 
-  for (const [chinese, korean] of Object.entries(translationMap)) {
-    clean = clean.replace(new RegExp(chinese, 'g'), korean);
+  try {
+    return await request(MAIN_MODEL, 0.45, maxTokens);
+  } catch (error) {
+    console.warn(`[Generator] ${MAIN_MODEL} failed, using fallback: ${error.message}`);
+    return request(FALLBACK_MODEL, 0.25, Math.min(maxTokens, 3000));
   }
-
-  // Strip any remaining Chinese characters (Kanji/Hanja range) as absolute safety net
-  clean = clean.replace(/[\u4e00-\u9fa5]/g, '');
-
-  return clean;
 }
 
-/**
- * Recursively sanitizes all text properties in a generated JSON object.
- */
-function sanitizeJsonRecursively(obj) {
-  if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeJsonRecursively(item));
-  } else if (obj !== null && typeof obj === 'object') {
-    const sanitized = {};
-    for (const [key, value] of Object.entries(obj)) {
-      sanitized[key] = sanitizeJsonRecursively(value);
-    }
-    return sanitized;
-  } else if (typeof obj === 'string') {
-    return sanitizeText(obj);
-  }
-  return obj;
+function sanitizeText(text) {
+  if (typeof text !== 'string') return text;
+  return text
+    .normalize('NFC')
+    .replace(/:[a-zA-Z0-9_]+:/g, '')
+    .replace(/[\u4e00-\u9fa5]/g, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
-/**
- * Sanitizes the Instagram caption specifically (removing generated hashtags and appending curated ones).
- */
+function sanitizeRecursively(value) {
+  if (Array.isArray(value)) return value.map(sanitizeRecursively);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, sanitizeRecursively(child)]));
+  }
+  return typeof value === 'string' ? sanitizeText(value) : value;
+}
+
 function finalizeCaption(caption) {
   let clean = sanitizeText(caption || '');
-
-  // Strip any generated hashtags to avoid gibberish (like #재발, #영화드림)
   const hashtagIndex = clean.indexOf('#');
-  if (hashtagIndex !== -1) {
-    clean = clean.substring(0, hashtagIndex).trim();
-  }
-  
-  // Explicitly strip Slack shortcodes like :eyes: to avoid broken text formatting
-  clean = clean.replace(/:[a-zA-Z0-9_]+:/g, '');
-  clean = clean.replace(/\s+/g, ' ').trim();
-  
-  // Append highly-curated professional Korean financial hashtags
-  const standardHashtags = '\n\n#경제공부 #경제뉴스 #오늘의경제 #10초경제 #today.econ';
-  clean += standardHashtags;
-  
-  return clean;
+  if (hashtagIndex >= 0) clean = clean.slice(0, hashtagIndex).trim();
+  return `${clean}\n\n${STANDARD_HASHTAGS}`;
 }
 
-/**
- * Validates and repairs the card JSON content to prevent repetition errors.
- */
-function validateAndRepairContent(jsonData) {
-  const result = { ...jsonData };
-
-  function cleanText(text, maxLength) {
-    if (typeof text !== 'string') return text;
-    let clean = text.trim().normalize('NFC');
-    
-    // Remove common emojis at the beginning
-    clean = clean.replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s*/, '');
-    clean = clean.replace(/^💡\s*/, '');
-    clean = clean.replace(/^[-•*▶▷✓✅☑]\s*/, '');
-    
-    clean = clean.replace(/<br\s*\/?>/gi, '\n');
-    clean = clean.replace(/\n{3,}/g, '\n\n');
-    clean = clean.replace(/['"]/g, "'");
-
-    // --- 지능형 '해요체' 변환 정규식 (LLM 할루시네이션 완벽 차단) ---
-    clean = clean.replace(/습니다\.$/g, '어요.');
-    clean = clean.replace(/합니다\.$/g, '해요.');
-    clean = clean.replace(/입니다\.$/g, '이에요.');
-    clean = clean.replace(/는다\.$/g, '는데요.');
-    clean = clean.replace(/한다\.$/g, '해요.');
-    clean = clean.replace(/했다\.$/g, '했어요.');
-    clean = clean.replace(/어졌다\.$/g, '어졌어요.');
-    clean = clean.replace(/졌다\.$/g, '졌어요.');
-    clean = clean.replace(/났다\.$/g, '났어요.');
-    clean = clean.replace(/였다\.$/g, '였어요.');
-    clean = clean.replace(/있다\.$/g, '있어요.');
-    clean = clean.replace(/없다\.$/g, '없어요.');
-    clean = clean.replace(/이다\.$/g, '이에요.');
-    clean = clean.replace(/된다\.$/g, '돼요.');
-    clean = clean.replace(/것이다\.$/g, '것이에요.');
-    clean = clean.replace(/수 있다\.$/g, '수 있어요.');
-    clean = clean.replace(/준다\.$/g, '줘요.');
-    
-    // 명사형 꼬리 변환 및 할루시네이션 오타 후처리
-    clean = clean.replace(/원\.$/g, '원이에요.');
-    clean = clean.replace(/개\.$/g, '개예요.');
-    clean = clean.replace(/명\.$/g, '명이에요.');
-    clean = clean.replace(/지정\.$/g, '지정됐어요.');
-    clean = clean.replace(/원$/g, '원이에요');
-    clean = clean.replace(/개$/g, '개예요');
-    clean = clean.replace(/명$/g, '명이에요');
-    clean = clean.replace(/지정$/g, '지정됐어요');
-    clean = clean.replace(/하요\.$/g, '해요.');
-    clean = clean.replace(/하요$/g, '해요');
-    clean = clean.replace(/필요하요/g, '필요해요');
-
-    // 위 패턴에 안 걸린 마지막 '다.' 안전하게 치환
-    if (clean.endsWith('다.')) {
-      clean = clean.substring(0, clean.length - 2) + '요.';
-    }
-
-    // 단어가 끝나는 지점('. ' 없이 바로 끝나는 경우)
-    clean = clean.replace(/습니다$/g, '어요');
-    clean = clean.replace(/합니다$/g, '해요');
-    clean = clean.replace(/입니다$/g, '이에요');
-    clean = clean.replace(/는다$/g, '는데요');
-    clean = clean.replace(/한다$/g, '해요');
-    clean = clean.replace(/했다$/g, '했어요');
-    clean = clean.replace(/어졌다$/g, '어졌어요');
-    clean = clean.replace(/졌다$/g, '졌어요');
-    clean = clean.replace(/났다$/g, '났어요');
-    clean = clean.replace(/였다$/g, '였어요');
-    clean = clean.replace(/있다$/g, '있어요');
-    clean = clean.replace(/없다$/g, '없어요');
-    clean = clean.replace(/이다$/g, '이에요');
-    clean = clean.replace(/된다$/g, '돼요');
-    clean = clean.replace(/것이다$/g, '것이에요');
-    clean = clean.replace(/수 있다$/g, '수 있어요');
-    clean = clean.replace(/준다$/g, '줘요');
-    if (clean.endsWith('다')) {
-      clean = clean.substring(0, clean.length - 1) + '요';
-    }
-
-    return clean;
-  }
-
-  // --- 2. <hl> 태그 강제 이식 및 금지어 덮어쓰기 로직 ---
-  function enforceHlTag(text) {
-    if (!text || typeof text !== 'string') return text;
-    if (text.includes('<hl>')) return text; // 이미 있으면 통과
-    
-    // <hl>이 없으면 띄어쓰기 기준 가장 긴 단어(조사 제외, 2~12글자 사이)를 찾아 강제로 씌움
-    const words = text.split(' ').filter(w => w.length >= 2 && w.length <= 12 && !w.endsWith('요') && !w.endsWith('요.'));
-    if (words.length > 0) {
-      const target = words.reduce((a, b) => a.length > b.length ? a : b);
-      return text.replace(target, `<hl>${target}</hl>`);
-    }
-    return text; // 너무 길거나 마땅한 단어가 없으면 통째로 씌우지 않음 (디자인 파괴 방지)
-  }
-
-  function censorAction(text) {
-    if (!text || typeof text !== 'string') return text;
-    const banRegex = /(주의|유의|파악|고려|대비|수립|확인|모색|찾아보|알아보|재검토)/;
-    if (banRegex.test(text)) {
-      return '지금 당장 쓰시는 증권사 앱을 켜서 보유 종목이 관리종목인지 확인부터 하세요! <hl>머뭇거리다간 큰일납니다!</hl>';
-    }
-    return text;
-  }
-
-  // Card 2
-  if (result.card2 && Array.isArray(result.card2.bullets)) {
-    result.card2.bullets = result.card2.bullets.map(b => enforceHlTag(cleanText(b, 130)));
-  }
-
-  // Card 3
-  if (result.card3 && Array.isArray(result.card3.bullets)) {
-    result.card3.bullets = result.card3.bullets.map(b => enforceHlTag(cleanText(b, 130)));
-  }
-
-  // Card 4 (Optional) - Action Card
-  if (result.card4 && Array.isArray(result.card4.bullets)) {
-    result.card4.bullets = result.card4.bullets.map((b, idx) => {
-      let cleaned = cleanText(b, 130);
-      if (idx === 1) cleaned = censorAction(cleaned); // 두 번째 불릿(액션) 금지어 덮어쓰기
-      return enforceHlTag(cleaned);
-    });
-  } else if (result.card3 && Array.isArray(result.card3.bullets)) {
-    // 만약 Card4가 없고 Card3가 마지막(액션) 카드라면?
-    // 이건 프롬프트에서 제어하므로 일단 Card3는 위에서 처리함.
-    // 확실하게 Card3의 두 번째 불릿도 액션일 수 있으니 필터링.
-    if (result.card3.section_title === "그래서 어떻게 돼?") {
-       result.card3.bullets = result.card3.bullets.map((b, idx) => {
-         let cleaned = b;
-         if (idx === 1) cleaned = censorAction(cleaned);
-         return enforceHlTag(cleaned);
-       });
-    }
-  }
-
-  // Core Insight
-  if (result.core_insight) {
-    let insight = cleanText(result.core_insight, 120);
-    const banRegex = /(주의|유의|파악|고려|대비|수립|확인|모색|찾아보|알아보|재검토)/;
-    if (banRegex.test(insight)) {
-      insight = '내 돈 아니라고 방관하다간 정말 <hl>깡통 찰 수 있어요!</hl> 지금 당장 확인해보세요.';
-    }
-    result.core_insight = enforceHlTag(insight);
-  }
-
-  // De-duplicate: If card2 and card3 have identical bullets (model repetition glitch)
-  if (
-    result.card2 &&
-    result.card3 &&
-    JSON.stringify(result.card2.bullets) === JSON.stringify(result.card3.bullets)
-  ) {
-    console.warn('[Generator] Validation warning: card2 and card3 bullets are identical. Performing auto-repair...');
-    result.card3.section_title = '그래서 어떻게 돼?';
-    result.card3.bullets = [
-      '내 지출 내역부터 당장 점검해보는 게 중요해요',
-      '은행별 우대금리를 꼼꼼하게 비교해보세요',
-      '주거래 은행의 숨은 혜택을 다 뒤져보는 건 어떨까요?'
-    ];
-  }
-
-  return result;
+function normalizeGeneratedContent(rawCards, caption, selectedNews) {
+  const content = sanitizeRecursively({ ...rawCards, instagram_caption: caption });
+  content.instagram_caption = finalizeCaption(content.instagram_caption);
+  content.template_theme = 'unified';
+  content.theme_color = '#3B82F6';
+  const date = selectedNews.pubDate ? new Date(selectedNews.pubDate) : new Date();
+  content.news_date = Number.isNaN(date.getTime())
+    ? new Date().toISOString().slice(0, 10).replace(/-/g, '.')
+    : `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
+  return content;
 }
 
+function buildCardPrompt() {
+  return `당신은 20~30대 직장인과 재테크 초보를 위한 경제 미디어 "오늘경제(@today.econ)"의 수석 에디터입니다.
 
-/**
- * Helper function to execute LLM call and parse JSON safely
- */
-async function executeLLMCall(systemPrompt, userPrompt, maxTokens) {
-  let attempt = 0;
-  const maxAttempts = 3;
-  let lastError = null;
+브랜드 약속: "오늘 가장 중요한 경제 뉴스 하나를, 내 돈에 미치는 영향과 지금 확인할 것까지 1분 안에 설명한다."
 
-  while (attempt < maxAttempts) {
-    attempt++;
-    try {
-      console.log(`[Generator] Requesting LLM generation... (Attempt ${attempt}/${maxAttempts})`);
-      let resultText = '';
-      try {
-        const response = await callGroqWithRetry({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            { role: 'system', content: systemPrompt.normalize('NFC') },
-            { role: 'user', content: userPrompt.normalize('NFC') }
-          ],
-          temperature: 0.6,
-          max_tokens: maxTokens,
-        });
-        resultText = (response.choices[0]?.message?.content || '').trim();
-        if (!resultText) throw new Error("Main model returned empty content");
-      } catch (apiError) {
-        console.warn('[Generator] Main model failed. Error:', apiError.message || apiError);
-        console.warn('[Generator] Falling back to llama-3.1-8b-instant...');
-        const response = await callGroqWithRetry({
-          model: 'llama-3.1-8b-instant',
-          messages: [
-            { role: 'system', content: systemPrompt.normalize('NFC') },
-            { role: 'user', content: userPrompt.normalize('NFC') }
-          ],
-          temperature: 0.4,
-          max_tokens: Math.min(maxTokens, 3000),
-        }, 3, 3000);
-        resultText = (response.choices[0]?.message?.content || '').trim();
-        if (!resultText) throw new Error("Fallback model returned empty content");
-      }
+작성 원칙:
+- 모든 노출 문구는 자연스러운 한국어 해요체로 작성하세요.
+- 기사에 없는 수치·정책·인과관계를 만들지 마세요. 불확실한 내용은 "가능성"으로 표시하세요.
+- 자극적인 공포 조장, 투자 종목 추천, 정책 찬반 선동을 하지 마세요.
+- 각 불릿은 15~90자의 완전한 문장이며, 가장 중요한 구절 하나만 <hl>...</hl>로 표시하세요.
+- 한 카드 안에서 같은 단어나 의미를 반복하지 마세요.
+- card2~card4를 생략하지 마세요.
 
-      // Strip markdown code block wrapper if present
-      let jsonText = resultText;
-      const jsonBlockMatch = jsonText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-      if (jsonBlockMatch) {
-        jsonText = jsonBlockMatch[1].trim();
-      }
-      if (!jsonText.startsWith('{')) {
-        const firstBrace = jsonText.indexOf('{');
-        if (firstBrace >= 0) jsonText = jsonText.substring(firstBrace);
-      }
+카드 구조:
+1. card1: 독자의 돈과 연결된 8~32자 표지 훅. "혹시 이거 아세요?"는 금지합니다.
+2. card2 "숫자로 보는 핵심": 기사에 명시된 검증 가능한 핵심 사실 2개.
+3. card3 "내 돈에는 이렇게": 다른 독자 유형 2개에게 미치는 영향 2개. 예: 대출자/무대출자, 유주택자/무주택자.
+4. card4 "오늘 확인할 것": 앞의 2개는 합리적인 전망·변수, 마지막 1개는 오늘 실행 가능한 구체적 확인 행동으로 작성하세요.
 
-      let resultJson;
-      try {
-        resultJson = JSON.parse(jsonText);
-      } catch (parseError) {
-        console.error('[Generator] JSON parse failed. Attempting repair...');
-        let repaired = jsonText.trim();
-        const openBraces = (repaired.match(/\{/g) || []).length;
-        const closeBraces = (repaired.match(/\}/g) || []).length;
-        if (openBraces > closeBraces) {
-          repaired += '}'.repeat(openBraces - closeBraces);
-        }
-        resultJson = JSON.parse(repaired);
-      }
-      return resultJson;
-    } catch (error) {
-      lastError = error;
-      console.warn(`[Generator] Attempt ${attempt} failed with error: ${error.message}`);
-    }
-  }
-  throw lastError;
-}
+용어 해설은 카드당 최대 1개만 제공하고, 사전적 정의와 짧은 비유만 쓰세요.
 
-/**
- * Generates the contents for the 3 Instagram slides and the Instagram post caption.
- * @param {{title: string, link: string, pubDate: string, summary: string, fullText: string, imageUrl: string|null}} selectedNews 
- * @returns {Promise<object>}
- */
-async function generateCardContent(selectedNews) {
-  const systemPromptCards = `당신은 20~30대 밀레니얼/Z세대를 위한 프리미엄 경제 매거진 "오늘경제(today.econ)"의 수석 에디터입니다.
-당신의 페르소나는 "날카롭지만 친근하게, 어려운 경제 이면의 인사이트를 쉽게 짚어주는 똑똑한 멘토"입니다.
-
-### 언어 통제 (CRITICAL):
-- **[절대 금지 - 언어 오염 방지] 출력되는 모든 텍스트는 무조건 100% 한국어로만 작성하세요. 문장 중간에 'まだ' 같은 일본어나 한자, 중국어 병기가 한 글자라도 섞이면 절대로 안 됩니다.**
-- **[절대 금지] 법안명, 대출명, 상품명 등 고유명사를 절대 임의로 줄여 쓰지 마세요. (예: 불법사금융예방대출 -> 불사금예방대출 금지)**
-
-### 톤앤매너 (CRITICAL):
-- **캐주얼하지만 가볍지 않은 반존대(해요체)**를 반드시 사용하세요. (예: "~거든요", "~인데요", "~이래요", "~했어요", "~더라고요", "~죠", "~있어요")
-- **[절대 금지] 절대로 "~다.", "~한다.", "~음/함" 같은 딱딱한 문어체나 기사체를 쓰지 마세요. 문장 끝은 무조건 "해요", "있어요", "돼요" 등으로 끝나야 합니다.**
-- "초등학생 수준"으로 유치하게 쓰지 마세요. 독자는 똑똑하지만 경제 용어만 낯선 2030 직장인입니다.
-- **피로도 감소 및 동어 반복 금지**: 한 슬라이드 내에서 같은 주어나 명사(예: '동전주'가)를 두 번 이상 반복하지 마세요. "이런 분들은", "이 경우" 등 대명사를 적극 활용하여 세련되게 문맥을 이어가세요.
-
-### 생성 과정 (Chain of Thought):
-JSON 응답을 생성할 때, 반드시 "analysis" 객체를 먼저 작성하여 기사를 딥다이브 하세요.
-그 다음 "cards" 객체를 작성하세요.
-
-1. **분석 (analysis)**:
-   - 기사의 표면적 팩트와 이면의 우려를 철저히 분석.
-
-2. **카드 작성 (cards)**:
-   - **image_prompt**: AI 배경 이미지를 만들기 위한 영문 프롬프트. 기괴한 사람이나 기계, 세탁기 같은 사실적인 묘사는 절대 금지합니다. 기사의 맥락을 은유적으로 담은 **"추상적이고 하이엔드 3D 아트 (예: A cinematic 3D abstract render of a crumbling golden coin in a dark abyss)"** 스타일로 프롬프트를 영어로 작성하세요.
-   - **core_insight**: 카드 전체를 관통하는 정곡을 찌르는 팩트폭행 1~2문장 카피라이팅. 기사 요약 절대 금지. **친구의 뼈를 때리는 수준의 매운맛 도발 1문장**으로 작성하세요. **[CRITICAL: 마지막 카드(액션)의 불릿 포인트와 단어 하나라도 겹치면 안 됩니다. 완전히 다른 시각의 에디터 코멘트로 작성하세요]**
-   - **card1 (표지)**: 스크롤을 멈추게 하는 날카로운 질문이나 역설적 상황. **[반드시 25자 이내의 짧고 자극적인 1문장 훅으로 작성하세요]**
-   - **card2, card3 (무슨 일이야?)**: 기사의 핵심 팩트를 서술형으로 상세하게 설명. 내용이 길면 card2와 card3로 나누어서 작성하세요. (내용이 짧으면 card3를 생략하고 바로 마지막 카드로 넘어가도 됩니다)
-   - **card4 (그래서 어떻게 돼?)**: (만약 card3가 팩트라면 card4가 액션 카드가 됩니다. card3가 생략되었다면 card3가 액션 카드가 됩니다.)
-     * 첫 번째 불릿: 내 지갑과 실생활에 미치는 진짜 영향을 **자연스러운 서술형**으로 작성하세요. (접두어 사용 금지)
-     * 두 번째 불릿: **[절대 규칙] 절대로 기사 팩트를 요약하지 마세요. 무조건 독자가 지금 당장 실천할 수 있는 구체적인 행동 지침 1개만 "~해보세요" 형태로 작성하세요.** 억지스러운 행동 지침(예: "정책에 기여해보세요", "관심을 가져보세요")이나 뻔한 훈수(주의하세요, 대비하세요)는 절대 금지합니다. 거시경제 뉴스라 실천할 게 없다면 "앞으로의 경제 흐름에 어떤 영향을 미칠지 지켜봐야겠어요."처럼 자연스러운 생각거리로 마무리하세요.
-   - **hard_terms (용어 해설)**: 각 팩트/액션 카드에서 어려운 용어를 뽑아 해설합니다. **[CRITICAL] 용어의 뜻만 아주 짧고 명확하게 사전처럼 적되, 쉬운 비유를 한 스푼 추가하세요. 기사의 구체적 맥락이나 수치(예: 219곳, 8조원 등)를 섞어 쓰지 마세요.**
-
-### 불릿 포인트 작성 규칙:
-- **1개의 불릿은 무조건 60자 이내**로 작성하세요. 내용이 길면 절대 한 줄에 욱여넣지 말고, 불릿의 개수를 늘려서 쪼개세요.
-- **모든 불릿에는 반드시 1개 이상의 '<hl>핵심 키워드</hl>' 태그가 포함되어야 합니다.** (예외 없음)
-- 기계적인 키워드 나열 절대 금지. 완전한 문장 구조(해요체 서술어 포함) 유지.
-
-반드시 마크다운 백틱 없이 순수한 JSON 포맷으로만 응답하세요.
+JSON만 응답하세요:
 {
   "analysis": {
-    "paradox": "기사 내용 중 겉과 속이 다른 모순점",
-    "real_impact": "독자에게 미치는 진짜 영향"
+    "topic": "성과 비교용 주제 분류",
+    "audience": "가장 영향을 받는 독자",
+    "hook_type": "숫자|손실회피|반전|시의성 중 하나",
+    "verified_facts": ["기사에서 확인한 사실 1", "사실 2"],
+    "uncertainty": "기사만으로 단정할 수 없는 부분"
   },
   "cards": {
-    "image_prompt": "Cinematic dark 3D render of...",
-    "core_insight": "전체를 관통하는 에디터의 날카로운 한 문장 (<hl>태그</hl> 활용)",
-    "card1": {
-      "title": "25자 이내의 짧고 강렬한 훅 (강조: <hl>태그</hl>, 줄바꿈: \\n)",
-      "subtitle": "타이틀 보충 (1줄)"
-    },
-    "card2": {
-      "section_title": "무슨 일이야?",
-      "bullets": [ "상세한 서술형 팩트 1", "상세한 서술형 팩트 2" ],
-      "hard_terms": [ { "term": "용어", "explanation": "쉬운 비유" } ]
-    },
-    "card3": {
-      "section_title": "무슨 일이야?",
-      "bullets": [ "상세한 서술형 팩트 3", "상세한 서술형 팩트 4" ],
-      "hard_terms": [ { "term": "용어", "explanation": "쉬운 비유" } ]
-    },
-    "card4": {
-      "section_title": "그래서 어떻게 돼?",
-      "bullets": [ "내 지갑에 미치는 영향 상세 설명", "구체적인 대비책이나 액션 아이템" ],
-      "hard_terms": []
-    }
+    "image_prompt": "English high-end editorial 3D visual prompt without text or logos",
+    "core_insight": "요약이 아닌 절제된 에디터 결론",
+    "card1": { "title": "내 돈과 연결된 훅", "subtitle": "지금 읽어야 하는 이유" },
+    "card2": { "section_title": "숫자로 보는 핵심", "bullets": ["사실 1", "사실 2"], "hard_terms": [{"term":"용어","explanation":"짧은 풀이"}] },
+    "card3": { "section_title": "내 돈에는 이렇게", "bullets": ["독자 유형별 영향 1", "독자 유형별 영향 2"], "hard_terms": [] },
+    "card4": { "section_title": "오늘 확인할 것", "bullets": ["전망 1", "변수 1", "구체적 행동 1"], "hard_terms": [] }
   }
 }`;
+}
 
-  const userPromptCards = `### 뉴스 기사 본문:
-제목: ${selectedNews.title}
-기사 내용: ${selectedNews.fullText || selectedNews.summary}
+function buildCaptionPrompt() {
+  return `당신은 경제 미디어 "오늘경제"의 피드 에디터입니다.
+카드를 보지 않아도 가치가 있는 4~6개의 짧은 문단을 작성하세요.
+- 1문단: 훅. "혹시 이거 아세요?"는 금지.
+- 2~3문단: 핵심 사실과 독자의 돈에 미치는 의미.
+- 마지막: 독자가 자신의 상황을 댓글로 말하게 하는 구체적 질문.
+- 이모지는 최대 2개, 해시태그와 <hl> 태그는 사용하지 마세요.
+- 과장·정책 선동·투자 추천을 하지 마세요.
+JSON만 응답하세요: {"instagram_caption":"여러 문단의 캡션"}`;
+}
 
-위 기사를 깊이 있게 분석하여, 표면적인 현상 이면의 진짜 의미를 살려 카드뉴스 원고를 생성해 주세요.`;
+async function generateCardContent(selectedNews) {
+  const sourceText = `${selectedNews.title}\n${selectedNews.fullText || selectedNews.summary || ''}`
+    .normalize('NFC')
+    .slice(0, 12000);
 
-  console.log('[Generator] Step 1: Generating Deep Analysis and Cards...');
-  let cardsResult = await executeLLMCall(systemPromptCards, userPromptCards, 6000);
-  
-  if (!cardsResult.cards) {
-    throw new Error("Validation Failed: LLM did not return 'cards' object.");
-  }
+  console.log('[Generator] Generating evidence-led four-card editorial...');
+  const cardResult = await executeLLMCall(
+    buildCardPrompt(),
+    `기사 제목: ${selectedNews.title}\n기사 본문:\n${sourceText}`,
+    5000
+  );
+  if (!cardResult.cards) throw new Error("Validation Failed: missing 'cards' object");
 
-  let resultJson = cardsResult.cards;
-  resultJson.analysis = cardsResult.analysis;
+  await new Promise(resolve => setTimeout(resolve, 4000));
+  const captionResult = await executeLLMCall(
+    buildCaptionPrompt(),
+    `기사 제목: ${selectedNews.title}\n카드 원고:\n${JSON.stringify(cardResult.cards, null, 2)}`,
+    1800
+  );
 
-  console.log('[Generator] Pausing 4s before generating caption to avoid rate limits...');
-  await new Promise(r => setTimeout(r, 4000));
+  const content = normalizeGeneratedContent(
+    { ...cardResult.cards, analysis: cardResult.analysis || {} },
+    captionResult.instagram_caption || '',
+    selectedNews
+  );
 
-  const systemPromptCaption = `당신은 경제 매거진 "오늘경제"의 수석 에디터입니다.
-작성된 카드뉴스 원고를 바탕으로, 인스타그램 피드에 올릴 본문 캡션을 작성해주세요.
-
-### 캡션 작성 규칙 (CRITICAL):
-- **[CRITICAL] 반드시 유효한 순수 JSON 객체 포맷으로만 응답하세요.** 마크다운 백틱(\`\`\`)이나 추가적인 설명을 덧붙이면 절대 안 됩니다.
-- **날카롭지만 친근하게**: "혹시 이거 아셨어요?", "다들 호황이라는데 내 지갑은 왜 이럴까요?" 처럼 독자의 공감을 이끌어내는 오프닝.
-- 원고에 담긴 핵심 모순점과 진짜 인사이트를 2~3문장으로 짚어주세요.
-- 지나친 스팸성/광고성 멘트 절대 금지.
-- 이모지를 적절히 사용하되, <hl> 태그는 쓰지 마세요.
-- 해시태그는 넣지 마세요 (자동 추가됨).
-- **응답 포맷 예시**: 
-{
-  "instagram_caption": "혹시 이거 아셨어요? 다들 대출받기 바쁜데 금리는 오른다고 하니 한숨만 나오죠 😥..."
-}`;
-
-  const userPromptCaption = `### 카드뉴스 원고:
-${JSON.stringify(resultJson, null, 2)}
-
-이 원고를 바탕으로 독자가 댓글을 달고 싶어지는 매력적이고 인사이트 넘치는 인스타그램 캡션을 작성해주세요.`;
-
-  console.log('[Generator] Step 2: Generating Instagram Caption...');
-  let captionResult = await executeLLMCall(systemPromptCaption, userPromptCaption, 2000);
-  resultJson.instagram_caption = captionResult.instagram_caption || '';
-
-  // --- STRICT VALIDATION LAYER ---
-  if (!resultJson.card2 || !resultJson.card3) {
-    throw new Error("Validation Failed: Missing card2 or card3.");
-  }
-  
-  const c2Str = (resultJson.card2.bullets || []).map(b => b.replace(/<\/?hl>/g, '').trim()).join('');
-  const c3Str = (resultJson.card3.bullets || []).map(b => b.replace(/<\/?hl>/g, '').trim()).join('');
-  
-  if (c2Str.length > 10 && c2Str === c3Str) {
-    throw new Error("Validation Failed: Card 2 and Card 3 are perfectly identical (LLM Hallucination).");
-  }
-
-  const caption = resultJson.instagram_caption || '';
-  const suItDaCount = (caption.match(/수 있습니다/g) || []).length;
-  if (suItDaCount >= 3) {
-    throw new Error("Validation Failed: Repetitive verb endings ('수 있습니다' > 3 times).");
-  }
-  
-  const sentences = caption.split(/(?<=[.!?])\s+/);
-  if (sentences.length > 2) {
-    for (let i = 0; i < sentences.length - 1; i++) {
-      for (let j = i + 1; j < sentences.length; j++) {
-        if (sentences[i].length > 15 && sentences[i] === sentences[j]) {
-          throw new Error("Validation Failed: instagram_caption contains exact duplicate sentences.");
-        }
-      }
-    }
-  }
-  // -------------------------------
-
-  // Force unified theme
-  resultJson.template_theme = 'unified';
-  resultJson.theme_color = '#3B82F6';
-
-  // 1. Validate & repair length truncations
-  resultJson = validateAndRepairContent(resultJson);
-
-  // 2. Recursively sanitize
-  resultJson = sanitizeJsonRecursively(resultJson);
-
-  // 3. Finalize caption
-  resultJson.instagram_caption = finalizeCaption(resultJson.instagram_caption);
-
-  if (selectedNews && selectedNews.date) {
-    resultJson.news_date = selectedNews.date;
-  } else {
-    const today = new Date();
-    resultJson.news_date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
-  }
-
-  console.log('[Generator] Successfully finalized and cleaned card content.');
-  return resultJson;
+  const qualityReport = assertContentQuality(content, sourceText);
+  content.quality_score = qualityReport.score;
+  content.content_metadata = {
+    topic: content.analysis?.topic || '미분류',
+    audience: content.analysis?.audience || '재테크 초보',
+    hook_type: content.analysis?.hook_type || '미분류',
+  };
+  console.log(`[Generator] Quality gate passed: ${qualityReport.score}/100`);
+  return content;
 }
 
 module.exports = {
+  buildCaptionPrompt,
+  buildCardPrompt,
+  finalizeCaption,
   generateCardContent,
+  normalizeGeneratedContent,
+  parseJsonResponse,
+  sanitizeText,
 };
