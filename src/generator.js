@@ -115,12 +115,14 @@ function buildCanonicalCaption(content) {
   const title = plainBulletText(content.card1?.title || '오늘의 경제 신호');
   const subtitle = plainBulletText(content.card1?.subtitle || '내 돈에 어떤 변화가 생기는지 확인해요').replace(/[.!?]+$/, '');
   const insight = plainBulletText(content.core_insight || '기사의 숫자와 시행 조건을 함께 확인해야 해요').replace(/[.!?]+$/, '');
+  const uncertainty = plainBulletText(content.analysis?.uncertainty || '').replace(/[.!?]+$/, '');
   const factText = facts.length ? `기사에서 확인된 핵심은 ${facts.join(' 또한 ')}.` : '기사에 적힌 시행 조건과 한도를 먼저 확인해야 해요.';
   const impactText = impacts.length ? `${impacts[0]} ${impacts[1] || ''}`.trim() : '상품을 이미 이용 중인 사람과 신규 검토자의 확인 순서가 달라요.';
   return [
     `${title}. ${subtitle}.`,
     factText,
     `오늘경제의 한 줄 해석: ${insight}`,
+    ...(uncertainty && !/단정할 수 없|없습니다|없어요/.test(uncertainty) ? [`참고로 ${uncertainty}.`] : []),
     impactText,
     `저장해둘 확인 순서\n① ${steps[0]}\n② ${steps[1]}\n③ ${steps[2]}`,
     '현재 상태를 이용 중/검토 중/관심 없음 중 하나로 댓글에 남겨주세요. 저장해두고 필요한 분께 공유하세요!',
@@ -227,7 +229,7 @@ function buildCardPrompt() {
 카드 구조:
 1. card1: 독자의 돈과 연결된 8~32자 표지 훅. 숫자·시행일·결정 포인트 중 하나를 포함하고 "혹시 이거 아세요?"는 금지합니다. kicker에는 "오늘의 쟁점"을 쓰세요.
 2. card2 "무슨 일이 바뀌나": 기사에 명시된 검증 가능한 핵심 사실 2개와 stats 2개. stats는 {"value":"큰 숫자", "label":"무엇의 수치인지", "comparison":"기간·증감 기준", "baseline":"이전 기준 또는 적용 시점"} 형식입니다. 현재값·이전값·배수 중 기사에 실제로 있는 값만 사용하세요.
-3. card3 "누가 먼저 체감하나": 실제 독자 상황 2개를 나눠 영향과 이유를 설명하세요. 예: "이미 스톡론을 이용 중인 사람", "신규로 P2P 대출을 알아보는 사람".
+3. card3 "누가 먼저 체감하나": 실제 독자 상황 2개를 나눠 영향과 이유를 설명하세요. 예: "이미 스톡론을 이용 중인 사람", "신규로 P2P 대출을 알아보는 사람". 기사에 P2P·연계대출·스톡론의 연결 구조가 나오면 한 불릿에서 투자자→플랫폼→차입자 흐름을 생활 언어로 설명하세요.
 4. card4 "오늘 확인할 것": 앞의 2개는 예측·변수, 마지막 1개는 앱·계약서·약관에서 바로 할 수 있는 행동으로 작성하세요. policy_points에는 기사에 명시된 제한을 최대 3개, action_steps에는 "앱에서 현재 한도와 잔액 확인", "약관에서 시행일·적용 기준 확인", "추가 이용 전 금리·수수료·담보 조건 비교"처럼 목적어가 분명한 실제 확인 순서를 최대 3개로 적으세요.
 
 용어 해설은 카드당 최대 2개만 제공하고, "용어 = 생활 언어 풀이"와 짧은 비유를 쓰세요. 어려운 용어가 없으면 빈 배열입니다.
