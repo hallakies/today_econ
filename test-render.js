@@ -5,13 +5,15 @@ const { renderCardImages } = require('./src/renderer');
 // Mock data representing the new casual tone output
 const mockData = {
   template_theme: 'unified',
-  theme_color: '#3B82F6',
+  theme_color: '#D7A84B',
+  series_label: '오늘의 돈 신호',
   card1: {
-    title: "대출 한도가\n내 집을 먼저 결정해요",
-    subtitle: "실수요자라면 집값보다 먼저 볼 숫자",
+    kicker: '오늘의 쟁점',
+    title: "집값보다 먼저\n확인할 대출 한도",
+    subtitle: "계약 전, 내가 빌릴 수 있는 돈부터 확인해요",
   },
   card2: {
-    section_title: "숫자로 보는 핵심",
+    section_title: "무슨 일이 바뀌나",
     bullets: [
       "은행권은 <hl>주택담보대출 한도</hl>를 줄이는 방안을 검토하고 있어요.",
       "무주택 실수요자의 <hl>자금 조달 부담</hl>이 이전보다 커질 수 있어요."
@@ -19,9 +21,10 @@ const mockData = {
     hard_terms: [
       { "term": "대출 총량제", "explanation": "은행별로 내줄 수 있는 대출 총량을 정해두는 방식이에요" }
     ],
+    stats: [{ value: '1조 7억원', label: '기타담보대출 잔액', comparison: '지난해 4018억원 대비 2.5배' }],
   },
   card3: {
-    section_title: "내 돈에는 이렇게",
+    section_title: "누가 먼저 체감하나",
     bullets: [
       "대출을 준비 중이라면 <hl>내 한도와 월 상환액</hl>을 다시 계산해야 해요.",
       "현금 비중이 높다면 <hl>매수 시점보다 조건</hl>을 먼저 비교하는 편이 나아요."
@@ -36,6 +39,8 @@ const mockData = {
       "은행 앱에서 <hl>내 대출 조건</hl>과 월 상환액을 직접 비교해보세요."
     ],
     hard_terms: [],
+    policy_points: ['1인 한도 10억원', '월 신규 취급액 30% 이내'],
+    action_steps: ['앱에서 현재 한도 확인', '약관에서 시행일 확인', '추가 대출 전 비용 비교'],
   },
   core_insight: "집값만 보면 놓치기 쉬운 것은 <hl>내가 빌릴 수 있는 돈</hl>이에요.",
   news_date: "2026.6.14",

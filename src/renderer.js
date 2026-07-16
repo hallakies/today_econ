@@ -97,12 +97,12 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
   const slides = [];
   const themeColor = generatedJson.theme_color || '#3B82F6';
 
-  console.log(`[Renderer] Theme: unified (${themeColor})`);
+  console.log(`[Renderer] Theme: editorial (${themeColor})`);
 
   // Load mascot
   const mascotBase64 = loadMascotBase64();
 
-  // Download the single news image (used for all 3 cards with different treatments)
+  // Download one semantic editorial image and reuse it with different treatments.
   console.log('[Renderer] Downloading news article image...');
   const newsImageBuffer = await downloadNewsImage(newsImageUrl, 0);
   const newsImageBase64 = newsImageBuffer.toString('base64');
@@ -119,8 +119,8 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
     const cardContents = [generatedJson.card1, generatedJson.card2];
 
     if (generatedJson.card4) {
-      // 4-card structure: title, fact, fact, action
-      cardTypes.push('fact');
+      // 4-card structure: title, fact, audience, action
+      cardTypes.push('audience');
       cardContents.push(generatedJson.card3);
       cardTypes.push('action');
       cardContents.push(generatedJson.card4);
@@ -144,7 +144,10 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
         newsImageBase64,
         generatedJson.news_date,
         mascotBase64,
-        generatedJson.core_insight
+        generatedJson.core_insight,
+        i + 1,
+        slideCount,
+        generatedJson.series_label
       );
 
       await page.setContent(htmlContent);

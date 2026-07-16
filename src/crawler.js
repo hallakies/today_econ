@@ -154,7 +154,7 @@ async function fetchArticleBody(articleUrl) {
     $('script, style, noscript, iframe, header, footer, nav, aside').remove();
 
     // Most news sites put their main content in article, .article, #article, #content, etc.
-    let contentNode = $('article, .article, #article, .news_content, #news_body, #art_body, #dic_area');
+    let contentNode = $('article, .article, #article, .news_content, #news_body, #art_body, #dic_area').first();
     
     if (contentNode.length === 0) {
       // Fallback: Just grab body and let text extraction handle the rest
@@ -163,7 +163,7 @@ async function fetchArticleBody(articleUrl) {
 
     // Extract text and clean up excess whitespace
     let fullText = contentNode.text();
-    fullText = fullText.replace(/\s+/g, ' ').trim();
+    fullText = fullText.replace(/\s+/g, ' ').trim().slice(0, 16000);
     
     // Normalize to NFC to avoid tokenizer issues as instructed in AGENTS.md
     if (fullText) {

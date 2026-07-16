@@ -69,6 +69,8 @@ function sanitizeText(text) {
     .replace(/[ \t]+/g, ' ')
     .replace(/\n[ \t]+/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
+    .replace(/빚투족/g, '레버리지 투자자')
+    .replace(/무대출자/g, '일반 투자자')
     .trim();
 }
 
@@ -117,8 +119,8 @@ function ensureSingleHighlight(value) {
 
 function normalizeBulletFormatting(content) {
   const expectedSections = {
-    card2: '숫자로 보는 핵심',
-    card3: '내 돈에는 이렇게',
+    card2: '무슨 일이 바뀌나',
+    card3: '누가 먼저 체감하나',
     card4: '오늘 확인할 것',
   };
   for (const [key, sectionTitle] of Object.entries(expectedSections)) {
@@ -133,8 +135,23 @@ function normalizeBulletFormatting(content) {
 function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   const content = normalizeBulletFormatting(sanitizeRecursively({ ...rawCards, instagram_caption: caption }));
   content.instagram_caption = finalizeCaption(content.instagram_caption);
+  content.series_label = content.series_label || '오늘의 돈 신호';
+  content.card1 = content.card1 || {};
+  content.card1.kicker = content.card1.kicker || '1분 경제 브리핑';
+  content.card2 = content.card2 || {};
+  content.card3 = content.card3 || {};
+  content.card4 = content.card4 || {};
+  content.card2.stats = Array.isArray(content.card2.stats) ? content.card2.stats.slice(0, 2) : [];
+  content.card4.policy_points = Array.isArray(content.card4.policy_points) ? content.card4.policy_points.slice(0, 3) : [];
+  content.card4.action_steps = Array.isArray(content.card4.action_steps) ? content.card4.action_steps.slice(0, 3) : [];
+  content.card2.hard_terms = Array.isArray(content.card2.hard_terms) ? content.card2.hard_terms.slice(0, 2) : [];
+  content.card3.hard_terms = Array.isArray(content.card3.hard_terms) ? content.card3.hard_terms.slice(0, 2) : [];
+  content.card4.hard_terms = Array.isArray(content.card4.hard_terms) ? content.card4.hard_terms.slice(0, 2) : [];
   content.template_theme = 'unified';
-  content.theme_color = '#3B82F6';
+  const topicText = `${content.analysis?.topic || ''} ${selectedNews.title || ''}`;
+  content.theme_color = /반도체|AI|빅테크|코인|가상자산|플랫폼/i.test(topicText) ? '#B883FF'
+    : /부동산|주택|대출|금리|채권|예금|보험/i.test(topicText) ? '#D7A84B'
+      : '#5C8DFF';
   const date = selectedNews.pubDate ? new Date(selectedNews.pubDate) : new Date();
   content.news_date = Number.isNaN(date.getTime())
     ? new Date().toISOString().slice(0, 10).replace(/-/g, '.')
@@ -147,21 +164,26 @@ function buildCardPrompt() {
 
 브랜드 약속: "오늘 가장 중요한 경제 뉴스 하나를, 내 돈에 미치는 영향과 지금 확인할 것까지 1분 안에 설명한다."
 
+편집 포맷: 매 게시물은 오늘의 돈 신호 시리즈로 발행합니다. 사건 → 작동 원리 → 독자별 영향 → 확인 체크리스트의 흐름을 지키세요.
+
 작성 원칙:
 - 모든 노출 문구는 자연스러운 한국어 해요체로 작성하세요.
 - 기사에 없는 수치·정책·인과관계를 만들지 마세요. 불확실한 내용은 "가능성"으로 표시하세요.
 - 자극적인 공포 조장, 투자 종목 추천, 정책 찬반 선동을 하지 마세요.
+- "빚투족", "무대출자", "거리 나앉을 판"처럼 독자를 낙인찍거나 겁주는 표현은 사용하지 마세요.
 - 각 불릿은 15~90자의 완전한 문장이며, 가장 중요한 구절 하나만 <hl>...</hl>로 표시하세요.
 - 한 카드 안에서 같은 단어나 의미를 반복하지 마세요.
 - card2~card4를 생략하지 마세요.
+- 숫자는 기사 표기와 단위를 그대로 보존하고, 숫자 카드에는 숫자·기간·비교 기준을 함께 적으세요.
+- 사실(기사에 적힌 내용), 해석(오늘경제의 판단), 행동(독자가 지금 할 일)을 문장 역할로 구분하세요.
 
 카드 구조:
-1. card1: 독자의 돈과 연결된 8~32자 표지 훅. "혹시 이거 아세요?"는 금지합니다.
-2. card2 "숫자로 보는 핵심": 기사에 명시된 검증 가능한 핵심 사실 2개.
-3. card3 "내 돈에는 이렇게": 다른 독자 유형 2개에게 미치는 영향 2개. 예: 대출자/무대출자, 유주택자/무주택자.
-4. card4 "오늘 확인할 것": 앞의 2개는 합리적인 전망·변수, 마지막 1개는 오늘 실행 가능한 구체적 확인 행동으로 작성하세요.
+1. card1: 독자의 돈과 연결된 8~32자 표지 훅. 숫자·시행일·결정 포인트 중 하나를 포함하고 "혹시 이거 아세요?"는 금지합니다. kicker에는 "오늘의 쟁점"을 쓰세요.
+2. card2 "무슨 일이 바뀌나": 기사에 명시된 검증 가능한 핵심 사실 2개와 stats 1~2개. stats는 {"value":"큰 숫자", "label":"무엇의 수치인지", "comparison":"기간·증감 기준"} 형식입니다.
+3. card3 "누가 먼저 체감하나": 실제 독자 상황 2개를 나눠 영향과 이유를 설명하세요. 예: "이미 스톡론을 이용 중인 사람", "신규로 P2P 대출을 알아보는 사람".
+4. card4 "오늘 확인할 것": 앞의 2개는 예측·변수, 마지막 1개는 앱·계약서·약관에서 바로 할 수 있는 행동으로 작성하세요. policy_points에는 기사에 명시된 제한을 최대 3개, action_steps에는 실제 확인 순서를 최대 3개로 적으세요.
 
-용어 해설은 카드당 최대 1개만 제공하고, 사전적 정의와 짧은 비유만 쓰세요.
+용어 해설은 카드당 최대 2개만 제공하고, "용어 = 생활 언어 풀이"와 짧은 비유를 쓰세요. 어려운 용어가 없으면 빈 배열입니다.
 
 JSON만 응답하세요:
 {
@@ -173,23 +195,28 @@ JSON만 응답하세요:
     "uncertainty": "기사만으로 단정할 수 없는 부분"
   },
   "cards": {
-    "image_prompt": "English high-end editorial 3D visual prompt without text or logos",
-    "core_insight": "요약이 아닌 절제된 에디터 결론",
-    "card1": { "title": "내 돈과 연결된 훅", "subtitle": "지금 읽어야 하는 이유" },
-    "card2": { "section_title": "숫자로 보는 핵심", "bullets": ["사실 1", "사실 2"], "hard_terms": [{"term":"용어","explanation":"짧은 풀이"}] },
-    "card3": { "section_title": "내 돈에는 이렇게", "bullets": ["독자 유형별 영향 1", "독자 유형별 영향 2"], "hard_terms": [] },
-    "card4": { "section_title": "오늘 확인할 것", "bullets": ["전망 1", "변수 1", "구체적 행동 1"], "hard_terms": [] }
+    "image_prompt": "English high-end editorial financial visual prompt: show the article's actual mechanism (for example a stock-collateral loan document, broker app interface, limit gauge, or regulation signal), premium magazine photography or restrained 3D collage, dark navy and warm gold palette, clear subject, generous negative space for Korean overlay, no text, no logos, no coins, no generic office still-life",
+    "series_label": "오늘의 돈 신호",
+    "core_insight": "오늘경제의 한 줄 해석",
+    "card1": { "kicker": "오늘의 쟁점", "title": "내 돈과 연결된 훅", "subtitle": "시행일·숫자·독자 영향" },
+    "card2": { "section_title": "무슨 일이 바뀌나", "bullets": ["사실 1", "사실 2"], "stats": [{"value":"큰 숫자","label":"무엇의 수치인지","comparison":"비교 기준"}], "hard_terms": [{"term":"용어","explanation":"생활 언어 풀이"}] },
+    "card3": { "section_title": "누가 먼저 체감하나", "bullets": ["상황 1의 영향과 이유", "상황 2의 영향과 이유"], "hard_terms": [] },
+    "card4": { "section_title": "오늘 확인할 것", "bullets": ["전망 1", "변수 1", "구체적 행동 1"], "policy_points": ["기사에 명시된 제한"], "action_steps": ["앱·계약서·약관에서 확인할 순서"], "hard_terms": [] }
   }
 }`;
 }
 
 function buildCaptionPrompt() {
   return `당신은 경제 미디어 "오늘경제"의 피드 에디터입니다.
-카드를 보지 않아도 가치가 있는 4~6개의 짧은 문단을 작성하세요.
-- 1문단: 훅. "혹시 이거 아세요?"는 금지.
-- 2~3문단: 핵심 사실과 독자의 돈에 미치는 의미.
-- 마지막: 독자가 자신의 상황을 댓글로 말하게 하는 구체적 질문.
+카드를 보지 않아도 저장할 가치가 있는 5~7개의 짧은 문단을 작성하세요.
+- 1문단: 숫자·시행일·독자 영향이 들어간 편집 훅. "혹시 이거 아세요?"는 금지.
+- 2문단: 기사 기준으로 확인된 사실 2개를 설명하고, 출처와 불확실성을 구분하세요.
+- 3문단: "오늘경제의 한 줄 해석:"으로 시작하는 독창적인 판단을 한 문장으로 쓰세요.
+- 4문단: 이미 이용 중인 사람/신규 검토자 등 독자 상황별 영향을 설명하세요.
+- 5문단: 저장할 수 있는 3단계 확인 체크리스트를 ① ② ③ 형식으로 쓰세요.
+- 마지막: "이용 중/검토 중/관심 없음"처럼 답하기 쉬운 선택형 질문 하나와 저장·공유 CTA를 넣으세요.
 - 이모지는 최대 2개, 해시태그와 <hl> 태그는 사용하지 마세요.
+- "빚투족", "무대출자", "당신의 금융 상황에 어떤 영향을" 같은 낙인·일반론 표현은 금지합니다.
 - 과장·정책 선동·투자 추천을 하지 마세요.
 JSON만 응답하세요: {"instagram_caption":"여러 문단의 캡션"}`;
 }

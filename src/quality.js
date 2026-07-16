@@ -59,7 +59,7 @@ function evaluateContentQuality(content, sourceText = '') {
   if (title.length < 8 || title.length > 32) fail('cover title must be 8-32 characters');
   if (/^(?:혹시|아세요|Did you know)/i.test(title)) warn('cover uses a generic opening');
 
-  const expectedSections = ['숫자로 보는 핵심', '내 돈에는 이렇게', '오늘 확인할 것'];
+  const expectedSections = ['무슨 일이 바뀌나', '누가 먼저 체감하나', '오늘 확인할 것'];
   [content.card2, content.card3, content.card4].forEach((card, index) => {
     if (!card) return;
     if (card.section_title !== expectedSections[index]) {
@@ -97,12 +97,26 @@ function evaluateContentQuality(content, sourceText = '') {
     }
   });
 
+  if (!Array.isArray(content.card2?.stats) || content.card2.stats.length === 0) {
+    warn('card2 should expose at least one verified statistic as a visual comparison', 6);
+  } else {
+    content.card2.stats.forEach((stat, index) => {
+      if (!stat || !stat.value || !stat.label) warn(`card2 stat ${index + 1} needs value and label`, 3);
+    });
+  }
+
+  if (!Array.isArray(content.card4?.action_steps) || content.card4.action_steps.length === 0) {
+    warn('card4 should include a concrete checklist', 6);
+  }
+
   if (content.card4?.bullets?.[2] && !/(확인|비교|계산|설정|적어|저장|물어|찾아|보세요)/.test(stripMarkup(content.card4.bullets[2]))) {
     warn('the final bullet may not be a concrete action');
   }
 
   const allCardText = [content.card1?.title, content.card1?.subtitle]
     .concat(content.card2?.bullets || [], content.card3?.bullets || [], content.card4?.bullets || [])
+    .concat((content.card2?.stats || []).flatMap(stat => [stat.value, stat.label, stat.comparison]))
+    .concat(content.card4?.policy_points || [], content.card4?.action_steps || [])
     .join(' ');
   const normalizedSource = String(sourceText).replace(/[,\s]/g, '').toLowerCase();
   for (const number of extractMaterialNumbers(allCardText)) {
@@ -115,6 +129,12 @@ function evaluateContentQuality(content, sourceText = '') {
   if (caption.length < 100 || caption.length > 1000) fail('caption must be 100-1000 characters', 10);
   if (!caption.includes('?')) warn('caption has no reader question');
   if (!caption.includes('\n')) warn('caption needs readable paragraph breaks');
+  if (/빚투족|무대출자|당신의 금융 상황에 어떤 영향을/i.test(caption)) {
+    fail('caption contains stigmatizing or generic audience wording', 10);
+  }
+  if (!caption.includes('오늘경제의 한 줄 해석')) warn('caption is missing the editorial point of view', 5);
+  if (!/[①②③]/.test(caption)) warn('caption is missing a saveable three-step checklist', 5);
+  if (!/저장|공유/.test(caption)) warn('caption is missing a save/share CTA', 4);
 
   return {
     score: Math.max(0, score),

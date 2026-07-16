@@ -25,8 +25,8 @@ test('normalizes generated card sections and bullet markup', () => {
     card3: { section_title: '그래서?', bullets: ['내 한도를 확인해요'] },
     card4: { section_title: '결론', bullets: ['은행 조건을 비교해요'] },
   }, '캡션입니다. 질문이 있나요?', { pubDate: '2026-07-16T00:00:00Z' });
-  assert.equal(content.card2.section_title, '숫자로 보는 핵심');
-  assert.equal(content.card3.section_title, '내 돈에는 이렇게');
+  assert.equal(content.card2.section_title, '무슨 일이 바뀌나');
+  assert.equal(content.card3.section_title, '누가 먼저 체감하나');
   assert.equal(content.card4.section_title, '오늘 확인할 것');
   assert.match(content.card2.bullets[0], /<hl>.*<\/hl>/);
 });
