@@ -21,7 +21,10 @@ const mockData = {
     hard_terms: [
       { "term": "대출 총량제", "explanation": "은행별로 내줄 수 있는 대출 총량을 정해두는 방식이에요" }
     ],
-    stats: [{ value: '1조 7억원', label: '기타담보대출 잔액', comparison: '지난해 4018억원 대비 2.5배' }],
+    stats: [
+      { value: '1조 7억원', label: '기타담보대출 잔액', comparison: '지난해 4018억원 대비 2.5배', baseline: '지난해 6월 말' },
+      { value: '30%', label: '월 신규 취급액 기준', comparison: '전월 연계대출 기준', baseline: '7월 16일 시행' },
+    ],
   },
   card3: {
     section_title: "누가 먼저 체감하나",

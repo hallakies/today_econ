@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ensureSingleHighlight, finalizeCaption, normalizeGeneratedContent, parseJsonResponse } = require('../src/generator');
+const { ensureSingleHighlight, finalizeCaption, normalizeActionStep, normalizeGeneratedContent, parseJsonResponse } = require('../src/generator');
 
 test('preserves useful caption paragraphs and replaces generated hashtags', () => {
   const caption = finalizeCaption('훅입니다.\n\n핵심 설명입니다.\n\n어떻게 보세요?\n\n#임시태그');
@@ -29,4 +29,18 @@ test('normalizes generated card sections and bullet markup', () => {
   assert.equal(content.card3.section_title, '누가 먼저 체감하나');
   assert.equal(content.card4.section_title, '오늘 확인할 것');
   assert.match(content.card2.bullets[0], /<hl>.*<\/hl>/);
+});
+
+test('repairs incomplete action steps and builds a usable caption', () => {
+  assert.equal(normalizeActionStep('대출 문턱과 을 비교한다.', 1), '약관에서 시행일과 적용 기준을 확인하세요.');
+  const content = normalizeGeneratedContent({
+    card1: { title: '스톡론 한도 변화', subtitle: '내 대출 조건부터 확인해요' },
+    core_insight: '한도 숫자와 적용 시점을 함께 봐야 해요.',
+    card2: { bullets: ['신규 취급액은 <hl>30%</hl> 기준으로 관리돼요.', '1인 한도는 <hl>10억원</hl>으로 제한돼요.'] },
+    card3: { bullets: ['이미 이용 중인 사람은 추가 한도를 확인해야 해요.', '신규 검토자는 금리와 조건을 비교해야 해요.'] },
+    card4: { bullets: ['정책 적용 시점이 변수가 될 수 있어요.', '상품별 조건 차이는 남을 수 있어요.', '앱에서 한도를 확인하세요.'], action_steps: ['현재 이용 현황 확인', '대출 문턱과 을 비교한다.', '계약서와 약관을 확인한다'] },
+  }, '', { pubDate: '2026-07-16T00:00:00Z', title: '스톡론 규제' });
+  assert.match(content.instagram_caption, /①/);
+  assert.doesNotMatch(content.instagram_caption, /문턱과\s*을/);
+  assert.match(content.instagram_caption, /저장해두고 필요한 분께 공유/);
 });

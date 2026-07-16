@@ -1,4 +1,5 @@
 const fs = require('fs');
+const crypto = require('crypto');
 const path = require('path');
 const { chromium } = require('playwright');
 const config = require('../config');
@@ -113,6 +114,7 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
   
   try {
     const page = await browser.newPage();
+    const renderedHashes = new Set();
     await page.setViewportSize({ width: 1080, height: 1350 });
 
     const cardTypes = ['title', 'fact'];
@@ -161,6 +163,12 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
         type: 'png',
         omitBackground: false,
       });
+
+      const imageHash = crypto.createHash('sha256').update(fs.readFileSync(outputPath)).digest('hex');
+      if (renderedHashes.has(imageHash)) {
+        throw new Error(`[Renderer] Duplicate slide image detected at ${outputPath}; refusing to publish a repeated card.`);
+      }
+      renderedHashes.add(imageHash);
 
       slides.push(outputPath);
       console.log(`[Renderer] Saved slide ${i + 1} successfully.`);

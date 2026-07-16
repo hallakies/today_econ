@@ -106,7 +106,14 @@ function evaluateContentQuality(content, sourceText = '') {
   }
 
   if (!Array.isArray(content.card4?.action_steps) || content.card4.action_steps.length === 0) {
-    warn('card4 should include a concrete checklist', 6);
+    fail('card4 should include a concrete checklist', 8);
+  } else {
+    content.card4.action_steps.forEach((step, index) => {
+      const plain = stripMarkup(step);
+      if (/문턱과\s*을|과\s*을/.test(plain) || !/(앱|약관|한도|잔액|시행|금리|수수료|담보|조건|비교|확인)/.test(plain)) {
+        fail(`card4 action step ${index + 1} is incomplete or lacks a target`, 8);
+      }
+    });
   }
 
   if (content.card4?.bullets?.[2] && !/(확인|비교|계산|설정|적어|저장|물어|찾아|보세요)/.test(stripMarkup(content.card4.bullets[2]))) {
@@ -115,9 +122,24 @@ function evaluateContentQuality(content, sourceText = '') {
 
   const allCardText = [content.card1?.title, content.card1?.subtitle]
     .concat(content.card2?.bullets || [], content.card3?.bullets || [], content.card4?.bullets || [])
-    .concat((content.card2?.stats || []).flatMap(stat => [stat.value, stat.label, stat.comparison]))
+    .concat((content.card2?.stats || []).flatMap(stat => [stat?.value, stat?.label, stat?.comparison, stat?.baseline]))
     .concat(content.card4?.policy_points || [], content.card4?.action_steps || [])
     .join(' ');
+
+  const cardsForDuplicateCheck = [content.card2, content.card3, content.card4];
+  for (let i = 0; i < cardsForDuplicateCheck.length; i += 1) {
+    for (let j = i + 1; j < cardsForDuplicateCheck.length; j += 1) {
+      const left = cardsForDuplicateCheck[i]?.bullets || [];
+      const right = cardsForDuplicateCheck[j]?.bullets || [];
+      for (const leftBullet of left) {
+        for (const rightBullet of right) {
+          if (jaccardSimilarity(leftBullet, rightBullet) >= 0.92) {
+            fail(`card${i + 2} and card${j + 2} contain duplicate bullet copy`, 12);
+          }
+        }
+      }
+    }
+  }
   const normalizedSource = String(sourceText).replace(/[,\s]/g, '').toLowerCase();
   for (const number of extractMaterialNumbers(allCardText)) {
     if (!normalizedSource.includes(number)) {

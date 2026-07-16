@@ -68,6 +68,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
           <div class="rounded-2xl p-5 border border-white/15" style="background: linear-gradient(135deg, ${themeColor}25, rgba(8,13,24,.45));">
             <div class="text-white/60 font-bold text-xl">${stat.label || ''}</div>
             <div class="font-black text-[3.3rem] leading-tight mt-1" style="color: ${themeColor};">${stat.value || ''}</div>
+            ${stat.baseline ? `<div class="text-white/55 font-semibold text-lg mt-1 break-keep">기준: ${stat.baseline}</div>` : ''}
             ${stat.comparison ? `<div class="text-white/75 font-semibold text-xl mt-1 break-keep">${stat.comparison}</div>` : ''}
           </div>
         `).join('')}
