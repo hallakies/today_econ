@@ -8,6 +8,7 @@
 - **디자인**: Instagram 피드 캐러셀 권장 비율인 4:5(1080×1350), Pretendard, 주제별 골드·블루·퍼플 에디토리얼 색상과 카드 진행 번호를 사용합니다.
 - **자동화**: 임시 GitHub prerelease에 이미지를 올려 Instagram이 읽은 뒤 72시간 후 삭제합니다. 이미지 바이너리는 저장소 커밋에 남기지 않습니다.
 - **성장 측정**: 게시 후 24시간·72시간·7일에 도달, 조회, 좋아요, 댓글, 저장, 공유, 참여율을 수집하고 Slack 주간 리포트로 다음 실험을 제안합니다.
+- **대원칙**: 중요한 경제 소식을 놓치지 않게 하고, 읽는 즉시 이해되게 합니다. 세부 편집 규칙은 [`docs/today-econ-editorial-principles.md`](docs/today-econ-editorial-principles.md)에 고정해 두었습니다.
 
 ---
 
@@ -100,7 +101,7 @@ npm run insights
    - `POLLINATIONS_API_KEY`: 선택값
    - `INSTAGRAM_ACCESS_TOKEN`: Meta Instagram API setup에서 발급한 토큰
    - `INSTAGRAM_TOKEN_ENCRYPTION_KEY`: 32바이트 base64 키(토큰 회전용)
-   - Actions Variable `INSTAGRAM_USER_ID`: Instagram API setup에 표시된 사용자 ID
+   - `INSTAGRAM_USER_ID`: Instagram API setup에 표시된 사용자 ID (Actions **Secret** 또는 Variable)
 3. **동작 확인**:
    - GitHub 저장소의 **Actions** 탭으로 이동합니다.
    - 왼쪽 메뉴에서 **Daily Economic Card News Creator** 워크플로우를 선택합니다.

@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
-const { getMediaInsights } = require('./instagram');
-const { calculateEngagementRate, loadPosts, savePosts } = require('./post-store');
+const { getAccountInsights, getMediaInsights } = require('./instagram');
+const { calculateEngagementRate, loadPosts, metricNumber, metricRecord, savePosts } = require('./post-store');
 const { sendAnalyticsReport } = require('./slack');
 const { resolveInstagramToken } = require('./token-vault');
 
@@ -11,6 +11,7 @@ const WINDOWS = [
   { label: '72h', hours: 72 },
   { label: '7d', hours: 168 },
 ];
+const ACCOUNT_METRICS = ['reach', 'profile_views', 'follows'];
 const STATE_FILE = path.join(__dirname, '..', 'data', 'analytics-state.json');
 
 function loadState() {
@@ -36,6 +37,16 @@ function latestMetrics(post) {
   return post.metrics?.['7d'] || post.metrics?.['72h'] || post.metrics?.['24h'] || null;
 }
 
+function displayMetric(metrics, key) {
+  const record = metricRecord(metrics?.[key]);
+  return record.status === 'ok' ? record.value : '집계 불가';
+}
+
+function displayRate(value) {
+  const record = metricRecord(value);
+  return record.status === 'ok' ? `${record.value}%` : '집계 불가';
+}
+
 function buildWeeklyReport(posts, now = new Date()) {
   const since = now.getTime() - 7 * 24 * 3600000;
   const recent = posts.filter(post => new Date(post.publishedAt).getTime() >= since && latestMetrics(post));
@@ -43,22 +54,25 @@ function buildWeeklyReport(posts, now = new Date()) {
 
   const ranked = recent
     .map(post => ({ post, metrics: latestMetrics(post) }))
-    .sort((a, b) => (b.metrics.engagementRate || 0) - (a.metrics.engagementRate || 0));
+    .sort((a, b) => (metricNumber(b.metrics.engagementRate) ?? -1) - (metricNumber(a.metrics.engagementRate) ?? -1));
   const totals = ranked.reduce((sum, item) => ({
-    reach: sum.reach + Number(item.metrics.reach || 0),
-    saved: sum.saved + Number(item.metrics.saved || 0),
-    shares: sum.shares + Number(item.metrics.shares || 0),
-    interactions: sum.interactions + Number(item.metrics.total_interactions || 0),
-  }), { reach: 0, saved: 0, shares: 0, interactions: 0 });
+    reach: sum.reach + (metricNumber(item.metrics.reach) ?? 0),
+    saved: sum.saved + (metricNumber(item.metrics.saved) ?? 0),
+    shares: sum.shares + (metricNumber(item.metrics.shares) ?? 0),
+    interactions: sum.interactions + (metricNumber(item.metrics.total_interactions) ?? 0),
+    reachUnavailable: sum.reachUnavailable || metricNumber(item.metrics.reach) === null,
+    savedUnavailable: sum.savedUnavailable || metricNumber(item.metrics.saved) === null,
+    sharesUnavailable: sum.sharesUnavailable || metricNumber(item.metrics.shares) === null,
+  }), { reach: 0, saved: 0, shares: 0, interactions: 0, reachUnavailable: false, savedUnavailable: false, sharesUnavailable: false });
   const top = ranked[0];
   const topMeta = top.post.contentMetadata || {};
 
   return [
     '📊 *오늘경제 주간 성장 리포트*',
-    `게시물 ${ranked.length}개 · 누적 도달 ${totals.reach.toLocaleString()} · 저장 ${totals.saved.toLocaleString()} · 공유 ${totals.shares.toLocaleString()}`,
+    `게시물 ${ranked.length}개 · 누적 도달 ${totals.reachUnavailable ? '집계 불가' : totals.reach.toLocaleString()} · 저장 ${totals.savedUnavailable ? '집계 불가' : totals.saved.toLocaleString()} · 공유 ${totals.sharesUnavailable ? '집계 불가' : totals.shares.toLocaleString()}`,
     '',
     `🏆 *반응 1위*: <${top.post.permalink}|${top.post.articleTitle}>`,
-    `참여율 ${top.metrics.engagementRate || 0}% · 주제 ${topMeta.topic || '미분류'} · 훅 ${topMeta.hook_type || '미분류'}`,
+    `참여율 ${displayRate(top.metrics.engagementRate)} · 주제 ${topMeta.topic || '미분류'} · 채널 ${topMeta.money_channel || '미분류'} · 훅 ${topMeta.hook_type || '미분류'}`,
     '',
     '다음 주 운영: 1위 게시물의 주제·훅 조합을 한 번 더 실험하고, 저장과 공유가 낮은 조합은 줄입니다.',
   ].join('\n');
@@ -76,6 +90,7 @@ async function collectInsights({ now = new Date(), fetchImpl = fetch } = {}) {
   const instagramToken = resolveInstagramToken();
   const posts = loadPosts();
   const collected = [];
+  let accountMetrics;
 
   for (const post of posts) {
     for (const window of dueWindows(post, now)) {
@@ -85,9 +100,24 @@ async function collectInsights({ now = new Date(), fetchImpl = fetch } = {}) {
         version: config.instagramApiVersion,
         fetchImpl,
       });
+      if (!accountMetrics) {
+        accountMetrics = await getAccountInsights({
+          userId: config.instagramUserId,
+          token: instagramToken,
+          version: config.instagramApiVersion,
+          metrics: ACCOUNT_METRICS,
+          fetchImpl,
+        });
+      }
       post.metrics ||= {};
       post.metrics[window.label] = {
         ...metrics,
+        // Keep post-level media metrics flat for compatibility, but make the
+        // account scope explicit so profile growth is never mistaken for a
+        // single-post result. Unsupported/unauthorized account metrics stay
+        // visible as { status: 'unavailable' } rather than disappearing.
+        media: metrics,
+        account: accountMetrics,
         engagementRate: calculateEngagementRate(metrics),
         collectedAt: now.toISOString(),
       };
@@ -98,7 +128,7 @@ async function collectInsights({ now = new Date(), fetchImpl = fetch } = {}) {
   if (collected.length > 0) {
     savePosts(posts);
     const lines = collected.map(({ post, window, metrics }) =>
-      `• ${window} · <${post.permalink}|${post.articleTitle}> · 도달 ${metrics.reach || 0} · 저장 ${metrics.saved || 0} · 공유 ${metrics.shares || 0} · 참여율 ${metrics.engagementRate}%`
+      `• ${window} · <${post.permalink}|${post.articleTitle}> · 도달 ${displayMetric(metrics, 'reach')} · 저장 ${displayMetric(metrics, 'saved')} · 공유 ${displayMetric(metrics, 'shares')} · 참여율 ${displayRate(metrics.engagementRate)}`
     );
     await sendAnalyticsReport(`📈 *Instagram 성과 스냅샷*\n${lines.join('\n')}`);
   }

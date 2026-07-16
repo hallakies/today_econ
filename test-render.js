@@ -13,7 +13,7 @@ const mockData = {
     subtitle: "계약 전, 내가 빌릴 수 있는 돈부터 확인해요",
   },
   card2: {
-    section_title: "무슨 일이 바뀌나",
+    section_title: "무슨 일이야?",
     bullets: [
       "은행권은 <hl>주택담보대출 한도</hl>를 줄이는 방안을 검토하고 있어요.",
       "무주택 실수요자의 <hl>자금 조달 부담</hl>이 이전보다 커질 수 있어요."
@@ -27,7 +27,7 @@ const mockData = {
     ],
   },
   card3: {
-    section_title: "누가 먼저 체감하나",
+    section_title: "그래서 내 돈은?",
     bullets: [
       "대출을 준비 중이라면 <hl>내 한도와 월 상환액</hl>을 다시 계산해야 해요.",
       "현금 비중이 높다면 <hl>매수 시점보다 조건</hl>을 먼저 비교하는 편이 나아요."
@@ -35,7 +35,7 @@ const mockData = {
     hard_terms: [],
   },
   card4: {
-    section_title: "오늘 확인할 것",
+    section_title: "앞으로 이렇게 될 수도",
     bullets: [
       "실수요자 보완책이 나오는지가 <hl>대출 수요의 변수</hl>가 될 전망이에요.",
       "은행별 운영 기준에 따라 <hl>현장 한도 차이</hl>는 남을 수 있어요.",
@@ -43,7 +43,7 @@ const mockData = {
     ],
     hard_terms: [],
     policy_points: ['1인 한도 10억원', '월 신규 취급액 30% 이내'],
-    action_steps: ['앱에서 현재 한도 확인', '약관에서 시행일 확인', '추가 대출 전 비용 비교'],
+    action_steps: ['앱에서 현재 한도와 잔액을 확인하세요.', '약관에서 시행일과 적용 기준을 확인하세요.', '추가 대출 전 금리와 수수료를 비교하세요.'],
   },
   core_insight: "집값만 보면 놓치기 쉬운 것은 <hl>내가 빌릴 수 있는 돈</hl>이에요.",
   news_date: "2026.6.14",

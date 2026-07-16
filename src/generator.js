@@ -5,6 +5,12 @@ const { assertContentQuality } = require('./quality');
 const MAIN_MODEL = 'llama-3.3-70b-versatile';
 const FALLBACK_MODEL = 'llama-3.1-8b-instant';
 const STANDARD_HASHTAGS = '#경제공부 #경제뉴스 #오늘의경제 #재테크 #today.econ';
+const FRIENDLY_SECTIONS = Object.freeze({
+  card2: '무슨 일이야?',
+  card3: '그래서 내 돈은?',
+  card4: '앞으로 이렇게 될 수도',
+});
+const MONEY_CHANNELS = Object.freeze(['stocks', 'housing', 'living_cost', 'credit', 'tax', 'mixed']);
 
 function getGroqClient() {
   return new Groq({ apiKey: config.groqApiKey });
@@ -89,44 +95,39 @@ function finalizeCaption(caption) {
   return `${clean}\n\n${STANDARD_HASHTAGS}`;
 }
 
-const DEFAULT_ACTION_STEPS = [
-  '앱에서 현재 이용 한도와 잔액을 확인하세요.',
-  '약관에서 시행일과 적용 기준을 확인하세요.',
-  '추가 이용 전 금리·수수료·담보 조건을 비교하세요.',
-];
-
 function normalizeActionStep(step, index) {
   const clean = plainBulletText(step)
     .replace(/^[①②③④⑤\d.)\s-]+/, '')
     .replace(/\s+/g, ' ')
     .trim();
-  if (!clean || /대출 문턱과\s*을|문턱과\s*을/.test(clean) || clean.length < 12) {
-    return DEFAULT_ACTION_STEPS[index] || DEFAULT_ACTION_STEPS[0];
-  }
+  if (!clean) return '';
+  if (/대출 문턱과\s*을|문턱과\s*을/.test(clean)) return '대출 문턱과 조건을 비교하세요.';
+  if (clean.length < 12) return '';
   if (/한다[.!]?$/.test(clean)) return `${clean.replace(/한다[.!]?$/, '')}하세요.`;
   if (!/[.!요다세요]$/.test(clean)) return `${clean}하세요.`;
   return clean;
 }
 
-function buildCanonicalCaption(content) {
+function buildCanonicalCaption(content, sourceLink = '') {
   const facts = (content.card2?.bullets || []).map(plainBulletText).filter(Boolean).slice(0, 2).map(text => text.replace(/[.!?]+$/, ''));
   const impacts = (content.card3?.bullets || []).map(plainBulletText).filter(Boolean).slice(0, 2).map(text => text.replace(/[.!?]+$/, ''));
-  const steps = (content.card4?.action_steps || DEFAULT_ACTION_STEPS).map(normalizeActionStep);
-  const title = plainBulletText(content.card1?.title || '오늘의 경제 신호');
-  const subtitle = plainBulletText(content.card1?.subtitle || '내 돈에 어떤 변화가 생기는지 확인해요').replace(/[.!?]+$/, '');
-  const insight = plainBulletText(content.core_insight || '기사의 숫자와 시행 조건을 함께 확인해야 해요').replace(/[.!?]+$/, '');
+  const steps = (content.card4?.action_steps || []).map(normalizeActionStep).filter(Boolean).slice(0, 3);
+  const forecasts = (content.card4?.bullets || []).slice(0, 2).map(plainBulletText).filter(Boolean);
+  const title = plainBulletText(content.card1?.title || '');
+  const subtitle = plainBulletText(content.card1?.subtitle || '').replace(/[.!?]+$/, '');
+  const insight = plainBulletText(content.core_insight || '').replace(/[.!?]+$/, '');
   const uncertainty = plainBulletText(content.analysis?.uncertainty || '').replace(/[.!?]+$/, '');
-  const factText = facts.length ? `기사에서 확인된 핵심은 ${facts.join(' 또한 ')}.` : '기사에 적힌 시행 조건과 한도를 먼저 확인해야 해요.';
-  const impactText = impacts.length ? `${impacts[0]} ${impacts[1] || ''}`.trim() : '상품을 이미 이용 중인 사람과 신규 검토자의 확인 순서가 달라요.';
-  return [
-    `${title}. ${subtitle}.`,
-    factText,
-    `오늘경제의 한 줄 해석: ${insight}`,
-    ...(uncertainty && !/단정할 수 없|없습니다|없어요/.test(uncertainty) ? [`참고로 ${uncertainty}.`] : []),
-    impactText,
-    `저장해둘 확인 순서\n① ${steps[0]}\n② ${steps[1]}\n③ ${steps[2]}`,
-    '현재 상태를 이용 중/검토 중/관심 없음 중 하나로 댓글에 남겨주세요. 저장해두고 필요한 분께 공유하세요!',
-  ].join('\n\n');
+  const paragraphs = [];
+  if (title || subtitle) paragraphs.push(`${title}${title && subtitle ? ` — ${subtitle}` : subtitle}`.trim());
+  if (facts.length) paragraphs.push(`${FRIENDLY_SECTIONS.card2}\n${facts.map((fact, index) => `${index + 1}. ${fact}.`).join('\n')}`);
+  if (impacts.length) paragraphs.push(`${FRIENDLY_SECTIONS.card3}\n${impacts.map((impact, index) => `${index + 1}. ${impact}${/[.!?]$/.test(impact) ? '' : '.'}`).join('\n')}`);
+  if (insight) paragraphs.push(`오늘경제 한 줄 생각\n${insight}.`);
+  if (forecasts.length) paragraphs.push(`앞으로 이렇게 될 수도\n${forecasts.map((forecast, index) => `${index + 1}. ${forecast}${/[.!?]$/.test(forecast) ? '' : '.'}`).join('\n')}`);
+  if (uncertainty && !/단정할 수 없|없습니다|없어요/.test(uncertainty)) paragraphs.push(`참고로\n${uncertainty}.`);
+  if (steps.length) paragraphs.push(`저장해둘 확인 순서\n${steps.map((step, index) => `${['①', '②', '③'][index]} ${step}`).join('\n')}`);
+  paragraphs.push('이 내용이 필요한 분께 저장하고 공유해 주세요. 지금 이용 중·검토 중·관심 없음 중 어디에 가까운지도 알려주세요.');
+  if (sourceLink) paragraphs.push(`🔗 원문 기사\n${sourceLink}`);
+  return paragraphs.join('\n\n');
 }
 
 const HIGHLIGHT_TAG = /<hl>([\s\S]*?)<\/hl>/gi;
@@ -158,12 +159,7 @@ function ensureSingleHighlight(value) {
 }
 
 function normalizeBulletFormatting(content) {
-  const expectedSections = {
-    card2: '무슨 일이 바뀌나',
-    card3: '누가 먼저 체감하나',
-    card4: '오늘 확인할 것',
-  };
-  for (const [key, sectionTitle] of Object.entries(expectedSections)) {
+  for (const [key, sectionTitle] of Object.entries(FRIENDLY_SECTIONS)) {
     const card = content[key];
     if (!card || !Array.isArray(card.bullets)) continue;
     card.section_title = sectionTitle;
@@ -181,21 +177,19 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   content.card3 = content.card3 || {};
   content.card4 = content.card4 || {};
   content.card2.stats = Array.isArray(content.card2.stats) ? content.card2.stats.slice(0, 2) : [];
-  const card2Numbers = (content.card2.bullets || []).flatMap(bullet => plainBulletText(bullet).match(/\d[\d,.]*(?:%|원|조|억|만|배)/g) || []);
-  for (const number of card2Numbers) {
-    if (content.card2.stats.length >= 2) break;
-    if (!content.card2.stats.some(stat => String(stat?.value || '').replace(/\s/g, '') === number.replace(/\s/g, ''))) {
-      content.card2.stats.push({ value: number, label: '기사에 명시된 핵심 수치', comparison: '원문 기준' });
-    }
-  }
   content.card4.policy_points = Array.isArray(content.card4.policy_points) ? content.card4.policy_points.slice(0, 3) : [];
-  content.card4.action_steps = (Array.isArray(content.card4.action_steps) && content.card4.action_steps.length
-    ? content.card4.action_steps
-    : DEFAULT_ACTION_STEPS).slice(0, 3).map(normalizeActionStep);
+  content.card4.action_steps = Array.isArray(content.card4.action_steps)
+    ? content.card4.action_steps.slice(0, 3).map(normalizeActionStep).filter(Boolean)
+    : [];
   content.card2.hard_terms = Array.isArray(content.card2.hard_terms) ? content.card2.hard_terms.slice(0, 2) : [];
   content.card3.hard_terms = Array.isArray(content.card3.hard_terms) ? content.card3.hard_terms.slice(0, 2) : [];
   content.card4.hard_terms = Array.isArray(content.card4.hard_terms) ? content.card4.hard_terms.slice(0, 2) : [];
-  content.instagram_caption = finalizeCaption(buildCanonicalCaption(content));
+  content.instagram_caption = finalizeCaption(buildCanonicalCaption(content, selectedNews.link));
+  const source = `${selectedNews.title || ''} ${selectedNews.fullText || selectedNews.summary || ''}`;
+  content.analysis ||= {};
+  content.analysis.money_channel = MONEY_CHANNELS.includes(content.analysis.money_channel)
+    ? content.analysis.money_channel
+    : inferMoneyChannel(source);
   content.template_theme = 'unified';
   const topicText = `${content.analysis?.topic || ''} ${selectedNews.title || ''}`;
   content.theme_color = /반도체|AI|빅테크|코인|가상자산|플랫폼/i.test(topicText) ? '#B883FF'
@@ -206,6 +200,17 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
     ? new Date().toISOString().slice(0, 10).replace(/-/g, '.')
     : `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
   return content;
+}
+
+function inferMoneyChannel(sourceText = '') {
+  const text = String(sourceText);
+  const has = pattern => pattern.test(text);
+  if (has(/주식|증시|종목|스톡론|증권/)) return 'stocks';
+  if (has(/주택|부동산|집값|전세|분양/)) return 'housing';
+  if (has(/물가|소비자|생활비|가격/)) return 'living_cost';
+  if (has(/대출|금리|담보|한도|신용/)) return 'credit';
+  if (has(/세금|소득세|보유세|취득세/)) return 'tax';
+  return 'mixed';
 }
 
 function buildCardPrompt() {
@@ -228,9 +233,9 @@ function buildCardPrompt() {
 
 카드 구조:
 1. card1: 독자의 돈과 연결된 8~32자 표지 훅. 숫자·시행일·결정 포인트 중 하나를 포함하고 "혹시 이거 아세요?"는 금지합니다. kicker에는 "오늘의 쟁점"을 쓰세요.
-2. card2 "무슨 일이 바뀌나": 기사에 명시된 검증 가능한 핵심 사실 2개와 stats 2개. stats는 {"value":"큰 숫자", "label":"무엇의 수치인지", "comparison":"기간·증감 기준", "baseline":"이전 기준 또는 적용 시점"} 형식입니다. 현재값·이전값·배수 중 기사에 실제로 있는 값만 사용하세요.
-3. card3 "누가 먼저 체감하나": 실제 독자 상황 2개를 나눠 영향과 이유를 설명하세요. 예: "이미 스톡론을 이용 중인 사람", "신규로 P2P 대출을 알아보는 사람". 기사에 P2P·연계대출·스톡론의 연결 구조가 나오면 한 불릿에서 투자자→플랫폼→차입자 흐름을 생활 언어로 설명하세요.
-4. card4 "오늘 확인할 것": 앞의 2개는 예측·변수, 마지막 1개는 앱·계약서·약관에서 바로 할 수 있는 행동으로 작성하세요. policy_points에는 기사에 명시된 제한을 최대 3개, action_steps에는 "앱에서 현재 한도와 잔액 확인", "약관에서 시행일·적용 기준 확인", "추가 이용 전 금리·수수료·담보 조건 비교"처럼 목적어가 분명한 실제 확인 순서를 최대 3개로 적으세요.
+2. card2 "무슨 일이야?": 기사에 명시된 검증 가능한 핵심 사실 2개와 선택 가능한 stats 0~2개.
+3. card3 "그래서 내 돈은?": 실제 독자 상황 2개를 나눠 영향과 이유를 설명하세요.
+4. card4: core_insight는 "오늘경제 한 줄 생각"으로 쓰고, bullets 1~2는 "앞으로 이렇게 될 수도"에 해당하는 가능성·변수, bullet 3은 앱·계약서·약관에서 바로 할 수 있는 행동으로 작성하세요. action_steps에는 목적어가 분명한 실제 확인 순서를 최대 3개로 적으세요.
 
 용어 해설은 카드당 최대 2개만 제공하고, "용어 = 생활 언어 풀이"와 짧은 비유를 쓰세요. 어려운 용어가 없으면 빈 배열입니다.
 
@@ -241,16 +246,20 @@ JSON만 응답하세요:
     "audience": "가장 영향을 받는 독자",
     "hook_type": "숫자|손실회피|반전|시의성 중 하나",
     "verified_facts": ["기사에서 확인한 사실 1", "사실 2"],
+    "money_channel": "stocks|housing|living_cost|credit|tax|mixed 중 하나",
+    "money_effect": "주식·집값·대출·세금·생활물가 중 무엇이 어떻게 달라질 수 있는지 근거와 함께",
+    "publication_date": "기사 게시일이 보이면 기록하고, 없으면 빈 문자열",
+    "effective_date": "정책·규제가 실제 적용되는 날짜가 기사에 명시된 경우에만 기록하고, 없으면 빈 문자열",
     "uncertainty": "기사만으로 단정할 수 없는 부분"
   },
   "cards": {
     "image_prompt": "English high-end editorial financial visual prompt: show the article's actual mechanism (for example a stock-collateral loan document, broker app interface, limit gauge, or regulation signal), premium magazine photography or restrained 3D collage, dark navy and warm gold palette, clear subject, generous negative space for Korean overlay, no text, no logos, no coins, no generic office still-life",
     "series_label": "오늘의 돈 신호",
-    "core_insight": "오늘경제의 한 줄 해석",
+  "core_insight": "오늘경제 한 줄 생각",
     "card1": { "kicker": "오늘의 쟁점", "title": "내 돈과 연결된 훅", "subtitle": "시행일·숫자·독자 영향" },
-    "card2": { "section_title": "무슨 일이 바뀌나", "bullets": ["사실 1", "사실 2"], "stats": [{"value":"큰 숫자","label":"무엇의 수치인지","comparison":"비교 기준","baseline":"적용 시점"},{"value":"두 번째 숫자","label":"무엇의 제한인지","comparison":"기사 기준","baseline":"시행일"}], "hard_terms": [{"term":"용어","explanation":"생활 언어 풀이"}] },
-    "card3": { "section_title": "누가 먼저 체감하나", "bullets": ["상황 1의 영향과 이유", "상황 2의 영향과 이유"], "hard_terms": [] },
-    "card4": { "section_title": "오늘 확인할 것", "bullets": ["전망 1", "변수 1", "구체적 행동 1"], "policy_points": ["기사에 명시된 제한"], "action_steps": ["앱·계약서·약관에서 확인할 순서"], "hard_terms": [] }
+    "card2": { "section_title": "무슨 일이야?", "bullets": ["사실 1", "사실 2"], "stats": [], "hard_terms": [] },
+    "card3": { "section_title": "그래서 내 돈은?", "bullets": ["상황 1의 영향과 이유", "상황 2의 영향과 이유"], "hard_terms": [] },
+    "card4": { "section_title": "앞으로 이렇게 될 수도", "bullets": ["가능성 1", "가능성 2", "확인 행동 1"], "action_steps": ["앱·계약서·약관에서 확인할 순서"], "hard_terms": [] }
   }
 }`;
 }
@@ -260,7 +269,7 @@ function buildCaptionPrompt() {
 카드를 보지 않아도 저장할 가치가 있는 5~7개의 짧은 문단을 작성하세요.
 - 1문단: 숫자·시행일·독자 영향이 들어간 편집 훅. "혹시 이거 아세요?"는 금지.
 - 2문단: 기사 기준으로 확인된 사실 2개를 설명하고, 출처와 불확실성을 구분하세요.
-- 3문단: "오늘경제의 한 줄 해석:"으로 시작하는 독창적인 판단을 한 문장으로 쓰세요.
+- 3문단: "오늘경제 한 줄 생각"으로 시작하는 독창적인 판단을 한 문장으로 쓰세요.
 - 4문단: 이미 이용 중인 사람/신규 검토자 등 독자 상황별 영향을 설명하세요.
 - 5문단: 저장할 수 있는 3단계 확인 체크리스트를 ① ② ③ 형식으로 쓰세요.
 - 마지막: "이용 중/검토 중/관심 없음"처럼 답하기 쉬운 선택형 질문 하나와 저장·공유 CTA를 넣으세요.
@@ -283,21 +292,28 @@ async function generateCardContent(selectedNews) {
   );
   if (!cardResult.cards) throw new Error("Validation Failed: missing 'cards' object");
 
-  const content = normalizeGeneratedContent(
-    { ...cardResult.cards, analysis: cardResult.analysis || {} },
-    '',
-    selectedNews
-  );
-
-  const qualityReport = assertContentQuality(content, sourceText);
-  content.quality_score = qualityReport.score;
-  content.content_metadata = {
-    topic: content.analysis?.topic || '미분류',
-    audience: content.analysis?.audience || '재테크 초보',
-    hook_type: content.analysis?.hook_type || '미분류',
-  };
-  console.log(`[Generator] Quality gate passed: ${qualityReport.score}/100`);
-  return content;
+  let content;
+  try {
+    content = normalizeGeneratedContent(
+      { ...cardResult.cards, analysis: cardResult.analysis || {} },
+      '',
+      selectedNews
+    );
+    const qualityReport = assertContentQuality(content, sourceText);
+    content.quality_score = qualityReport.score;
+    content.content_metadata = {
+      topic: content.analysis?.topic || '미분류',
+      audience: content.analysis?.audience || '재테크 초보',
+      hook_type: content.analysis?.hook_type || '미분류',
+      money_channel: content.analysis?.money_channel || 'mixed',
+      editorial_format: 'money-change-brief',
+    };
+    console.log(`[Generator] Quality gate passed: ${qualityReport.score}/100`);
+    return content;
+  } catch (error) {
+    error.draft = content || { cards: cardResult.cards, analysis: cardResult.analysis || {}, instagram_caption: '' };
+    throw error;
+  }
 }
 
 module.exports = {
@@ -309,6 +325,7 @@ module.exports = {
   ensureSingleHighlight,
   normalizeGeneratedContent,
   normalizeActionStep,
+  inferMoneyChannel,
   parseJsonResponse,
   sanitizeText,
 };

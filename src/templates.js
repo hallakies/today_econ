@@ -18,7 +18,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
   
   if (cardType === 'title') {
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1350px] overflow-hidden flex flex-col justify-between py-16 px-16 select-none">
+      <div class="slide-container relative w-[1080px] h-[1350px] overflow-hidden flex flex-col justify-between py-12 px-14 select-none">
         
         <!-- Full Bleed AI Background Image -->
         <div class="absolute inset-0 z-0">
@@ -39,20 +39,20 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         </header>
 
         <!-- Centered Typography Area -->
-        <main class="w-full z-20 flex-1 flex flex-col justify-center items-center space-y-10 text-center">
+        <main class="w-full z-20 flex-1 flex flex-col justify-center items-center space-y-6 text-center">
           <div class="text-white/80 font-black text-2xl tracking-[0.16em] uppercase">${content.kicker || '오늘의 쟁점'}</div>
-          <h1 class="font-display text-[4.3rem] font-black text-white leading-[1.18] break-keep drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
+          <h1 class="font-display text-[3.8rem] font-black text-white leading-[1.16] break-keep max-w-[940px] drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
           
           <div class="h-1.5 w-32 rounded-full" style="background: ${themeColor}; box-shadow: 0 0 20px ${themeColor};"></div>
           
-          <p class="font-body text-[2.35rem] text-white/90 break-keep leading-snug font-bold drop-shadow-md px-10 max-w-[920px]">${highlightText(content.subtitle, themeColor)}</p>
+          <p class="font-body text-[2rem] text-white/90 break-keep leading-snug font-bold drop-shadow-md px-10 max-w-[920px]">${highlightText(content.subtitle, themeColor)}</p>
         </main>
       </div>
     `;
   } else {
     const isFact = cardType === 'fact';
     const isAudience = cardType === 'audience';
-    const badgeText = content.section_title || (isFact ? '무슨 일이 바뀌나' : isAudience ? '누가 먼저 체감하나' : '오늘 확인할 것');
+    const badgeText = content.section_title || (isFact ? '무슨 일이야?' : isAudience ? '그래서 내 돈은?' : '앞으로 이렇게 될 수도');
     const bulletsHtml = content.bullets
       .map((bullet, idx) => {
         return `
@@ -74,17 +74,15 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         `).join('')}
       </div>` : '';
 
-    const policyHtml = !isFact && Array.isArray(content.policy_points) && content.policy_points.length > 0 ? `
+    const policyHtml = isFact && Array.isArray(content.policy_points) && content.policy_points.length > 0 ? `
       <div class="mt-8 pt-7 border-t border-white/10">
         <div class="text-white/55 font-black text-xl tracking-wider mb-3">기사에 적힌 제한</div>
         <div class="flex flex-wrap gap-3">${content.policy_points.map(point => `<span class="px-4 py-3 rounded-xl text-white/90 font-bold text-xl border" style="border-color:${themeColor}70;background:${themeColor}18;">${point}</span>`).join('')}</div>
       </div>` : '';
 
-    const stepsHtml = !isFact && Array.isArray(content.action_steps) && content.action_steps.length > 0 ? `
-      <div class="mt-8 pt-7 border-t border-white/10">
-        <div class="text-white/55 font-black text-xl tracking-wider mb-3">저장할 확인 순서</div>
-        <ol class="space-y-2">${content.action_steps.map((step, idx) => `<li class="flex items-start gap-3 text-white/85 font-semibold text-xl break-keep"><span style="color:${themeColor};font-weight:900;">${idx + 1}.</span><span>${step}</span></li>`).join('')}</ol>
-      </div>` : '';
+    // The saveable checklist belongs in the caption. Rendering it again here
+    // made the action card dense and duplicated the reader's next step.
+    const stepsHtml = '';
 
     innerHtml = `
       <div class="slide-container relative w-[1080px] h-[1350px] overflow-hidden flex flex-col justify-between py-16 px-16 select-none">
@@ -107,6 +105,13 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
           <!-- Glassmorphism Card -->
           <div class="w-full rounded-[30px] p-11 bg-[#0B101A]/58 backdrop-blur-[22px] border border-white/18 shadow-[0_24px_70px_rgba(0,0,0,0.58)]">
             
+            ${(cardType === 'action' && coreInsight) ? `
+              <div class="mb-8 rounded-2xl p-6 bg-[#0B101A]/80 border-l-[5px]" style="border-left-color:${themeColor};">
+                <div class="text-white/55 font-black text-xl tracking-wider mb-2">오늘경제 한 줄 생각</div>
+                <p class="relative z-10 text-white/95 leading-[1.45] font-bold text-[2.35rem] break-keep core-insight-text">${highlightText(coreInsight, themeColor)}</p>
+              </div>
+            ` : ''}
+
             <ul class="space-y-4 flex flex-col justify-center min-h-[300px]">
               ${bulletsHtml}
             </ul>
@@ -114,7 +119,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
             <!-- Hard Terms (Only if exist) -->
             ${statsHtml}
 
-            ${content.hard_terms && content.hard_terms.length > 0 ? `
+            ${cardType !== 'action' && content.hard_terms && content.hard_terms.length > 0 ? `
               <div class="mt-14 pt-10 border-t border-white/10">
                 <div class="flex items-center gap-4 mb-6">
                   <span class="text-white/60 font-black text-xl tracking-[0.18em]">용어를 풀면</span>
@@ -133,16 +138,6 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
 
             ${policyHtml}
             ${stepsHtml}
-
-            <!-- Core Insight (Only show on Action Card to act as a punchline) -->
-            ${(cardType === 'action' && coreInsight) ? `
-              <div class="mt-12 pt-10 border-t border-white/10">
-                <div class="relative rounded-3xl p-8 bg-[#0B101A]/80 backdrop-blur-xl border-l-[6px] shadow-2xl" style="border-left-color: ${themeColor};">
-                  <div class="absolute -top-7 -left-3 text-7xl opacity-40 drop-shadow-md" style="color: ${themeColor};">"</div>
-                  <p class="relative z-10 text-white/95 leading-[1.6] font-bold text-[2.6rem] break-keep core-insight-text">${highlightText(coreInsight, themeColor)}</p>
-                </div>
-              </div>
-            ` : ''}
 
           </div>
         </main>
@@ -183,7 +178,9 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         }
       </script>
       <style>
+        *, *::before, *::after { box-sizing: border-box; }
         body { background-color: #0B101A; overflow: hidden; margin: 0; padding: 0; }
+        .slide-container { box-sizing: border-box; }
       </style>
     </head>
     <body class="font-sans text-white antialiased flex items-center justify-center min-h-screen">

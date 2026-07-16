@@ -124,11 +124,18 @@ async function publishCarousel({ imageUrls, caption, userId, token, version = 'v
 
 function insightValue(item) {
   const first = Array.isArray(item.values) ? item.values[0]?.value : item.value;
-  return typeof first === 'number' ? first : Number(first || 0);
+  const value = typeof first === 'number' ? first : Number(first);
+  return Number.isFinite(value)
+    ? { value, status: 'ok' }
+    : { value: null, status: 'unavailable', reason: 'metric returned no numeric value' };
 }
 
 async function getMediaInsights({ mediaId, token, version = 'v23.0', metrics = DEFAULT_METRICS, fetchImpl = fetch }) {
-  const toObject = data => Object.fromEntries((data || []).map(item => [item.name, insightValue(item)]));
+  const toObject = (data, requested = metrics) => {
+    const result = Object.fromEntries(requested.map(metric => [metric, { value: null, status: 'unavailable', reason: 'metric not returned by Instagram' }]));
+    for (const item of data || []) result[item.name] = insightValue(item);
+    return result;
+  };
   try {
     const response = await instagramRequest({
       path: `${mediaId}/insights`,
@@ -139,7 +146,7 @@ async function getMediaInsights({ mediaId, token, version = 'v23.0', metrics = D
     });
     return toObject(response.data);
   } catch (bulkError) {
-    const collected = {};
+    const collected = toObject([], metrics);
     for (const metric of metrics) {
       try {
         const response = await instagramRequest({
@@ -149,18 +156,40 @@ async function getMediaInsights({ mediaId, token, version = 'v23.0', metrics = D
           params: { metric },
           fetchImpl,
         });
-        Object.assign(collected, toObject(response.data));
+        Object.assign(collected, toObject(response.data, [metric]));
       } catch (error) {
         console.warn(`[Instagram] Insight metric unavailable (${metric}): ${error.message}`);
+        collected[metric] = { value: null, status: 'unavailable', reason: error.message };
       }
     }
-    if (Object.keys(collected).length === 0) throw bulkError;
     return collected;
+  }
+}
+
+async function getAccountInsights({ userId, token, version = 'v23.0', metrics = [], fetchImpl = fetch }) {
+  const unavailable = Object.fromEntries(metrics.map(metric => [metric, {
+    value: null,
+    status: 'unavailable',
+    reason: 'account-level metric requires a separate Instagram permission/endpoint',
+  }]));
+  if (!userId || metrics.length === 0) return unavailable;
+  try {
+    const response = await instagramRequest({
+      path: `${userId}/insights`,
+      token,
+      version,
+      params: { metric: metrics.join(',') },
+      fetchImpl,
+    });
+    return Object.assign(unavailable, Object.fromEntries((response.data || []).map(item => [item.name, insightValue(item)])));
+  } catch (error) {
+    return Object.fromEntries(metrics.map(metric => [metric, { ...unavailable[metric], reason: error.message }]));
   }
 }
 
 module.exports = {
   DEFAULT_METRICS,
+  getAccountInsights,
   getMediaInsights,
   instagramRequest,
   publishCarousel,

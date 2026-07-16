@@ -158,6 +158,29 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(500);
 
+      const layout = await page.evaluate(() => {
+        const root = document.querySelector('.slide-container');
+        if (!root) return { missing: true };
+        const rootRect = root.getBoundingClientRect();
+        const layoutNodes = [...root.querySelectorAll('main, main > div, .bullet-text, .core-insight-text')];
+        const boxOverflow = layoutNodes.some(node => node.scrollHeight > node.clientHeight + 2 || node.scrollWidth > node.clientWidth + 2);
+        const rectOverflow = [...root.children].some(child => {
+          const rect = child.getBoundingClientRect();
+          return rect.left < rootRect.left - 1 || rect.top < rootRect.top - 1 || rect.right > rootRect.right + 1 || rect.bottom > rootRect.bottom + 1;
+        });
+        return {
+          missing: false,
+          boxOverflow,
+          rectOverflow,
+          visibleInvalidText: /undefined|null/i.test(document.body.innerText),
+        };
+      });
+      if (layout.missing) throw new Error(`[Renderer] Missing slide container on slide ${i + 1}.`);
+      if (layout.boxOverflow || layout.rectOverflow) {
+        throw new Error(`[Renderer] Slide ${i + 1} overflows its content bounds.`);
+      }
+      if (layout.visibleInvalidText) throw new Error(`[Renderer] Slide ${i + 1} contains invalid placeholder text.`);
+
       await page.screenshot({
         path: outputPath,
         type: 'png',

@@ -80,9 +80,12 @@ async function sendPipelineFailure(error, selectedNews = {}) {
   const quality = error.qualityReport
     ? `\n품질 점수: ${error.qualityReport.score}/100\n${error.qualityReport.errors.join('\n')}`
     : '';
+  const draft = error.draft
+    ? `\n\n📝 수정 가능한 초안:\n${String(error.draft.instagram_caption || '').slice(0, 2200)}`
+    : '';
   return web.chat.postMessage({
     channel: config.slackChannelId,
-    text: `❌ 오늘경제 파이프라인이 게시 전에 중단됐어요.${title}${quality}\n원인: ${error.message}`,
+    text: `❌ 오늘경제 파이프라인이 게시 전에 중단됐어요.${title}${quality}\n원인: ${error.message}${draft}`,
   });
 }
 

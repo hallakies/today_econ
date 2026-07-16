@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { publishCarousel, getMediaInsights } = require('../src/instagram');
+const { getAccountInsights, publishCarousel, getMediaInsights } = require('../src/instagram');
 
 function jsonResponse(payload, status = 200) {
   return new Response(JSON.stringify(payload), { status, headers: { 'Content-Type': 'application/json' } });
@@ -49,5 +49,19 @@ test('collects supported metrics individually if the bulk request fails', async 
     return jsonResponse({ error: { message: 'unsupported' } }, 400);
   };
   const metrics = await getMediaInsights({ mediaId: 'post-1', token: 'secret', metrics: ['reach', 'views'], fetchImpl });
-  assert.deepEqual(metrics, { reach: 120 });
+  assert.equal(metrics.reach.value, 120);
+  assert.equal(metrics.reach.status, 'ok');
+  assert.equal(metrics.views.status, 'unavailable');
+});
+
+test('keeps account-level metrics explicit when Instagram does not return them', async () => {
+  const metrics = await getAccountInsights({
+    userId: '1784',
+    token: 'secret',
+    metrics: ['reach', 'profile_views'],
+    fetchImpl: async () => jsonResponse({ error: { message: 'permission denied' } }, 403),
+  });
+  assert.equal(metrics.reach.status, 'unavailable');
+  assert.equal(metrics.profile_views.status, 'unavailable');
+  assert.match(metrics.reach.reason, /permission denied/);
 });

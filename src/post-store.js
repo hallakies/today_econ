@@ -32,18 +32,37 @@ function addPublishedPost(post, filePath = config.postsFile) {
   return posts;
 }
 
+function metricRecord(value) {
+  if (value && typeof value === 'object' && 'status' in value) return value;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? { value: numeric, status: 'ok' } : { value: null, status: 'unavailable', reason: 'missing metric' };
+}
+
+function metricNumber(value) {
+  const record = metricRecord(value);
+  return record.status === 'ok' ? Number(record.value) : null;
+}
+
 function calculateEngagementRate(metrics) {
-  const reach = Number(metrics.reach || 0);
-  const interactions = Number(
-    metrics.total_interactions ??
-    (Number(metrics.likes || 0) + Number(metrics.comments || 0) + Number(metrics.saved || 0) + Number(metrics.shares || 0))
-  );
-  return reach > 0 ? Number(((interactions / reach) * 100).toFixed(2)) : 0;
+  const reach = metricNumber(metrics.reach);
+  const interactionRecord = metrics.total_interactions !== undefined
+    ? metricRecord(metrics.total_interactions)
+    : null;
+  const componentValues = ['likes', 'comments', 'saved', 'shares'].map(key => metricNumber(metrics[key]));
+  const interactions = interactionRecord || (componentValues.every(value => value !== null)
+    ? { value: componentValues.reduce((sum, value) => sum + value, 0), status: 'ok' }
+    : { value: null, status: 'unavailable', reason: 'interaction metrics unavailable' });
+  if (reach === null || interactions.status !== 'ok' || reach <= 0) {
+    return { value: null, status: 'unavailable', reason: reach === null ? 'reach unavailable' : 'interaction metrics unavailable' };
+  }
+  return { value: Number(((interactions.value / reach) * 100).toFixed(2)), status: 'ok' };
 }
 
 module.exports = {
   addPublishedPost,
   calculateEngagementRate,
+  metricNumber,
+  metricRecord,
   ensureStore,
   loadPosts,
   savePosts,
