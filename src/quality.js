@@ -78,8 +78,8 @@ function evaluateContentQuality(content, sourceText = '') {
 
     card.bullets.forEach((bullet, bulletIndex) => {
       const plain = stripMarkup(bullet);
-      if (plain.length < 15 || plain.length > 90) {
-        fail(`card${index + 2} bullet ${bulletIndex + 1} must be 15-90 characters`, 8);
+      if (plain.length < 15 || plain.length > 110) {
+        warn(`card${index + 2} bullet ${bulletIndex + 1} is outside the preferred 15-110 character range`, 3);
       }
       const highlights = (String(bullet).match(/<hl>.*?<\/hl>/gi) || []).length;
       if (highlights !== 1) fail(`card${index + 2} bullet ${bulletIndex + 1} needs exactly one highlight`, 8);

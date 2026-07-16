@@ -87,8 +87,51 @@ function finalizeCaption(caption) {
   return `${clean}\n\n${STANDARD_HASHTAGS}`;
 }
 
+const HIGHLIGHT_TAG = /<hl>([\s\S]*?)<\/hl>/gi;
+const HIGHLIGHT_STOPWORDS = new Set(['그리고', '하지만', '그래서', '때문에', '관련해', '대해', '대한', '있는', '있어요', '할', '수', '더']);
+
+function plainBulletText(value) {
+  return sanitizeText(String(value || '').replace(HIGHLIGHT_TAG, '$1'))
+    .replace(/[<>]/g, '')
+    .trim();
+}
+
+function chooseHighlight(text) {
+  const numeric = text.match(/(?<![A-Za-z])\d[\d,.]*(?:(?:조|억|만)(?:원)?|원|명|개|배|%|퍼센트)?/);
+  if (numeric) return numeric[0];
+
+  const words = text.split(/\s+/).filter(Boolean);
+  const meaningful = words.filter(word => !HIGHLIGHT_STOPWORDS.has(word.replace(/[.,!?]/g, '')));
+  const candidate = meaningful.slice(0, 2).join(' ') || words.slice(0, 2).join(' ');
+  return candidate.slice(0, 18).trim() || text.slice(0, 8);
+}
+
+function ensureSingleHighlight(value) {
+  const text = plainBulletText(value);
+  if (!text) return text;
+  const highlighted = chooseHighlight(text);
+  const start = text.indexOf(highlighted);
+  if (start < 0) return `<hl>${text.slice(0, Math.min(12, text.length))}</hl>${text.slice(Math.min(12, text.length))}`;
+  return `${text.slice(0, start)}<hl>${highlighted}</hl>${text.slice(start + highlighted.length)}`;
+}
+
+function normalizeBulletFormatting(content) {
+  const expectedSections = {
+    card2: '숫자로 보는 핵심',
+    card3: '내 돈에는 이렇게',
+    card4: '오늘 확인할 것',
+  };
+  for (const [key, sectionTitle] of Object.entries(expectedSections)) {
+    const card = content[key];
+    if (!card || !Array.isArray(card.bullets)) continue;
+    card.section_title = sectionTitle;
+    card.bullets = card.bullets.map(ensureSingleHighlight);
+  }
+  return content;
+}
+
 function normalizeGeneratedContent(rawCards, caption, selectedNews) {
-  const content = sanitizeRecursively({ ...rawCards, instagram_caption: caption });
+  const content = normalizeBulletFormatting(sanitizeRecursively({ ...rawCards, instagram_caption: caption }));
   content.instagram_caption = finalizeCaption(content.instagram_caption);
   content.template_theme = 'unified';
   content.theme_color = '#3B82F6';
@@ -193,6 +236,7 @@ module.exports = {
   buildCardPrompt,
   finalizeCaption,
   generateCardContent,
+  ensureSingleHighlight,
   normalizeGeneratedContent,
   parseJsonResponse,
   sanitizeText,
