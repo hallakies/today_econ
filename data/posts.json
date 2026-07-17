@@ -1,6 +1,89 @@
 [
   {
-    "metrics": {},
+    "metrics": {
+      "24h": {
+        "views": {
+          "value": 48,
+          "status": "ok"
+        },
+        "reach": {
+          "value": 17,
+          "status": "ok"
+        },
+        "likes": {
+          "value": 3,
+          "status": "ok"
+        },
+        "comments": {
+          "value": 0,
+          "status": "ok"
+        },
+        "saved": {
+          "value": 0,
+          "status": "ok"
+        },
+        "shares": {
+          "value": 0,
+          "status": "ok"
+        },
+        "total_interactions": {
+          "value": 3,
+          "status": "ok"
+        },
+        "media": {
+          "views": {
+            "value": 48,
+            "status": "ok"
+          },
+          "reach": {
+            "value": 17,
+            "status": "ok"
+          },
+          "likes": {
+            "value": 3,
+            "status": "ok"
+          },
+          "comments": {
+            "value": 0,
+            "status": "ok"
+          },
+          "saved": {
+            "value": 0,
+            "status": "ok"
+          },
+          "shares": {
+            "value": 0,
+            "status": "ok"
+          },
+          "total_interactions": {
+            "value": 3,
+            "status": "ok"
+          }
+        },
+        "account": {
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "profile_views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "follows": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          }
+        },
+        "engagementRate": {
+          "value": 17.65,
+          "status": "ok"
+        },
+        "collectedAt": "2026-07-17T08:27:14.197Z"
+      }
+    },
     "mediaId": "18091029554150774",
     "permalink": "https://www.instagram.com/p/Da1ubMzlnjz/",
     "publishedAt": "2026-07-16T03:56:27+0000",
