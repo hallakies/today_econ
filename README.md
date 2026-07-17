@@ -18,8 +18,8 @@
 2. **뉴스 선정**: Groq의 `llama-3.3-70b-versatile`을 사용하고 실패 시 `llama-3.1-8b-instant`로 재시도합니다.
 3. **원고 생성**: NFC 정규화와 JSON 모드로 카드 원고·짧은 훅형 캡션·성과 분류 메타데이터를 만듭니다.
 4. **렌더링**: Pollinations.ai/curated fallback 이미지와 Playwright로 `slide_1.png`~`slide_4.png`를 생성합니다.
-5. **게시**: 카드 4장을 오디오가 포함된 9:16 릴스로 합성해 GitHub prerelease URL에서 Instagram Reels 컨테이너로 게시합니다. 릴스 장애 시에는 캐러셀을 자동 대체합니다.
-6. **알림·기록**: Slack에 카드·캡션·원문·게시 링크를 보내고 `history.json`, `data/posts.json`에 내구성 있는 메타데이터만 저장합니다.
+5. **게시**: 카드 4장을 오디오가 포함된 9:16 릴스로 합성해 GitHub prerelease URL에서 Instagram Reels 컨테이너로 게시합니다. 이어 같은 영상을 독립 Instagram Story로 게시하며, 스토리는 24시간 뒤 자동 삭제됩니다. 릴스 장애 시에는 캐러셀을 자동 대체합니다.
+6. **알림·기록**: Slack에 카드·캡션·원문·릴스·스토리 상태를 보내고 `history.json`, `data/posts.json`에 내구성 있는 메타데이터만 저장합니다.
 7. **측정·정리**: 별도 Actions가 성과 창을 수집하고 72시간이 지난 임시 release를 삭제합니다.
 
 ---

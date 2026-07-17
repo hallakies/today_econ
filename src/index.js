@@ -9,7 +9,7 @@ const { renderCardImages } = require('./renderer');
 const { sendPipelineFailure, sendToSlack } = require('./slack');
 const { cleanupExpiredReleases, createTemporaryRelease, deleteTemporaryRelease } = require('./github-assets');
 const { createReelVideo } = require('./reel');
-const { publishCarousel, publishReel } = require('./instagram');
+const { publishCarousel, publishReel, publishStory } = require('./instagram');
 const { addPublishedPost } = require('./post-store');
 const { recordPipelineEvent } = require('./pipeline-state');
 const { resolveInstagramToken } = require('./token-vault');
@@ -128,6 +128,23 @@ async function publishToInstagram(renderedFiles, cardContent, selectedNews, inst
       });
     }
     const publicationWithFormat = { ...publication, format: publishedFormat };
+    let storyPublication = null;
+    let storyError = null;
+    if (config.publishInstagramStory) {
+      try {
+        storyPublication = await publishStory({
+          videoUrl: temporaryRelease.videoUrl,
+          imageUrl: temporaryRelease.imageUrls[0],
+          userId: config.instagramUserId,
+          token: instagramToken,
+          version: config.instagramApiVersion,
+        });
+        console.log(`[Main] Instagram Story published: ${storyPublication.permalink || storyPublication.id}`);
+      } catch (error) {
+        storyError = error.message;
+        console.warn(`[Main] Instagram Story publish failed; Reel/Carousel remains published: ${error.message}`);
+      }
+    }
     addPublishedPost({
       mediaId: publicationWithFormat.id,
       permalink: publicationWithFormat.permalink,
@@ -139,13 +156,28 @@ async function publishToInstagram(renderedFiles, cardContent, selectedNews, inst
       format: publishedFormat,
       requestedFormat: config.instagramFormat,
       fallbackReason: fallbackReason || undefined,
+      story: storyPublication
+        ? {
+          id: storyPublication.id,
+          permalink: storyPublication.permalink,
+          publishedAt: storyPublication.timestamp || new Date().toISOString(),
+          format: 'standalone_story_copy',
+        }
+        : (config.publishInstagramStory ? { status: 'failed', error: storyError } : { status: 'disabled' }),
       release: {
         id: temporaryRelease.releaseId,
         tag: temporaryRelease.tag,
         deleteAfter: new Date(Date.now() + 72 * 3600000).toISOString(),
       },
     });
-    return { publication: publicationWithFormat, temporaryRelease, temporaryFiles: reelPath ? [reelPath] : [], format: publishedFormat };
+    return {
+      publication: publicationWithFormat,
+      storyPublication,
+      storyError,
+      temporaryRelease,
+      temporaryFiles: reelPath ? [reelPath] : [],
+      format: publishedFormat,
+    };
   } catch (error) {
     error.temporaryRelease = temporaryRelease;
     error.temporaryFiles = reelPath ? [reelPath] : [];
@@ -160,6 +192,8 @@ async function run() {
   let selectedNews = {};
   let temporaryRelease = null;
   let publication = null;
+  let storyPublication = null;
+  let storyError = null;
   let temporaryFiles = [];
   let stage = 'news_fetch';
   const recoveryMode = process.env.PIPELINE_RECOVERY_MODE === 'true';
@@ -188,6 +222,8 @@ async function run() {
         stage = 'instagram_publish';
         const result = await publishToInstagram(renderedFiles, cardContent, selectedNews, resolveInstagramToken());
         publication = result.publication;
+        storyPublication = result.storyPublication;
+        storyError = result.storyError;
         temporaryRelease = result.temporaryRelease;
         temporaryFiles = result.temporaryFiles || [];
         saveHistoryEntry(selectedNews.title);
@@ -201,7 +237,7 @@ async function run() {
     }
 
     stage = 'slack_notify';
-    await sendToSlack(renderedFiles, cardContent.instagram_caption, selectedNews, publication);
+    await sendToSlack(renderedFiles, cardContent.instagram_caption, selectedNews, publication, { storyPublication, storyError });
     recordPipelineEvent({
       status: publication ? 'published' : 'slack_only',
       stage,

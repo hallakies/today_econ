@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getAccountInsights, publishCarousel, publishReel, getMediaInsights } = require('../src/instagram');
+const { getAccountInsights, publishCarousel, publishReel, publishStory, getMediaInsights } = require('../src/instagram');
 
 function jsonResponse(payload, status = 200) {
   return new Response(JSON.stringify(payload), { status, headers: { 'Content-Type': 'application/json' } });
@@ -77,6 +77,31 @@ test('publishes a Reel through a video container before media_publish', async ()
   assert.match(calls[0].body, /media_type=REELS/);
   assert.match(calls[0].body, /video_url=https%3A%2F%2Fgithub.com%2Fexample%2Freel.mp4/);
   assert.match(calls[0].body, /share_to_feed=true/);
+  assert.ok(calls.every(call => !call.url.includes('secret')));
+});
+
+test('publishes a video Story through its own container after the Reel', async () => {
+  const calls = [];
+  const fetchImpl = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || 'GET', body: options.body?.toString() || '' });
+    if (String(url).endsWith('/1784/media') && options.method === 'POST') return jsonResponse({ id: 'story-container' });
+    if (String(url).includes('/story-container?') && (options.method || 'GET') === 'GET') return jsonResponse({ status_code: 'FINISHED' });
+    if (String(url).endsWith('/1784/media_publish')) return jsonResponse({ id: 'story-post' });
+    if (String(url).includes('/story-post?')) return jsonResponse({ id: 'story-post', media_type: 'STORIES', timestamp: '2026-07-17T00:00:00Z' });
+    throw new Error(`Unexpected request: ${url}`);
+  };
+
+  const result = await publishStory({
+    videoUrl: 'https://github.com/example/today-econ-reel.mp4',
+    userId: '1784',
+    token: 'secret',
+    fetchImpl,
+  });
+
+  assert.equal(result.id, 'story-post');
+  assert.equal(result.format, 'story');
+  assert.match(calls[0].body, /media_type=STORIES/);
+  assert.match(calls[0].body, /video_url=https%3A%2F%2Fgithub.com%2Fexample%2Ftoday-econ-reel.mp4/);
   assert.ok(calls.every(call => !call.url.includes('secret')));
 });
 

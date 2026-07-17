@@ -160,6 +160,43 @@ async function publishReel({ videoUrl, caption, userId, token, version = 'v23.0'
   return { ...media, id: published.id, containerId: reel.id };
 }
 
+async function publishStory({ imageUrl, videoUrl, userId, token, version = 'v23.0', fetchImpl = fetch }) {
+  if (!token || !userId) throw new Error('[Instagram] Missing access token or user ID.');
+  const hasImage = imageUrl && /^https?:\/\//i.test(imageUrl);
+  const hasVideo = videoUrl && /^https?:\/\//i.test(videoUrl);
+  if (!hasImage && !hasVideo) throw new Error('[Instagram] A Story requires one public image or video URL.');
+
+  const story = await instagramRequest({
+    path: `${userId}/media`,
+    token,
+    version,
+    method: 'POST',
+    params: {
+      media_type: 'STORIES',
+      ...(hasVideo ? { video_url: videoUrl } : { image_url: imageUrl }),
+    },
+    fetchImpl,
+  });
+  await waitForContainer({ id: story.id, token, version, fetchImpl, attempts: hasVideo ? 30 : 20, delayMs: hasVideo ? 4000 : 3000 });
+
+  const published = await instagramRequest({
+    path: `${userId}/media_publish`,
+    token,
+    version,
+    method: 'POST',
+    params: { creation_id: story.id },
+    fetchImpl,
+  });
+  const media = await instagramRequest({
+    path: published.id,
+    token,
+    version,
+    params: { fields: 'id,permalink,timestamp,media_type,media_product_type,username' },
+    fetchImpl,
+  });
+  return { ...media, id: published.id, containerId: story.id, format: 'story' };
+}
+
 function insightValue(item) {
   const first = Array.isArray(item.values) ? item.values[0]?.value : item.value;
   const value = typeof first === 'number' ? first : Number(first);
@@ -232,5 +269,6 @@ module.exports = {
   instagramRequest,
   publishCarousel,
   publishReel,
+  publishStory,
   waitForContainer,
 };

@@ -10,7 +10,7 @@ const web = new WebClient(config.slackBotToken);
  * @param {Array<string>} imagePaths File paths of the 3 rendered PNG slides.
  * @param {object} selectedNews The original news item object containing title and link.
  */
-async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publication = null) {
+async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publication = null, storyResult = {}) {
   if (!config.slackBotToken || !config.slackChannelId) {
     throw new Error('[Slack] Missing SLACK_BOT_TOKEN or SLACK_CHANNEL_ID. Cannot send notification.');
   }
@@ -41,7 +41,12 @@ async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publ
   const publishRef = publication?.permalink
     ? `\n\n✅ Instagram 자동 게시 완료 (${publication.format === 'reel' ? '릴스' : '캐러셀'}): <${publication.permalink}|게시물 열기>`
     : '\n\nℹ️ Instagram 자동 게시는 비활성화된 실행입니다.';
-  const captionMessage = `${captionBody}${newsRef}${publishRef}${hashtags}`;
+  const storyRef = storyResult.storyPublication
+    ? '\n✅ Instagram 스토리도 자동 게시되었습니다. (24시간 후 자동 삭제)'
+    : (storyResult.storyError
+      ? `\n⚠️ 릴스는 게시됐지만 스토리 자동 게시는 실패했습니다: ${storyResult.storyError}`
+      : '');
+  const captionMessage = `${captionBody}${newsRef}${publishRef}${storyRef}${hashtags}`;
 
   try {
     // 1. Upload files first (without initial_comment to prevent duplicate posts in some slack APIs)

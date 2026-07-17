@@ -56,6 +56,7 @@ jobs:
           INSTAGRAM_API_VERSION: 'v23.0'
           PUBLISH_INSTAGRAM: ${{ github.event_name == 'schedule' || inputs.publish_instagram == true }}
           INSTAGRAM_FORMAT: 'reel'
+          PUBLISH_INSTAGRAM_STORY: 'true'
           INSTAGRAM_ALLOW_CAROUSEL_FALLBACK: 'true'
           REEL_DURATION_PER_SLIDE: '3'
           GITHUB_TOKEN: ${{ github.token }}
