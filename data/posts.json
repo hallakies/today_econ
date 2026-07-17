@@ -181,5 +181,34 @@
       "tag": "instagram-assets-29578619498-1784289995162",
       "deleteAfter": "2026-07-20T12:07:37.530Z"
     }
+  },
+  {
+    "metrics": {},
+    "mediaId": "18107032373098555",
+    "permalink": "https://www.instagram.com/reel/Da6aW5CjXCx/",
+    "publishedAt": "2026-07-17T23:37:38+0000",
+    "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12101222",
+    "contentMetadata": {
+      "topic": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
+      "audience": "경제 관심 독자",
+      "hook_type": "숫자",
+      "money_channel": "housing",
+      "editorial_format": "money-change-brief-fallback"
+    },
+    "qualityScore": 100,
+    "format": "reel",
+    "requestedFormat": "reel",
+    "story": {
+      "id": "18020840663853671",
+      "permalink": "https://www.instagram.com/stories/today.econ/3943580658944790720",
+      "publishedAt": "2026-07-17T23:38:15+0000",
+      "format": "standalone_story_copy"
+    },
+    "release": {
+      "id": 355966790,
+      "tag": "instagram-assets-29621067118-1784331426615",
+      "deleteAfter": "2026-07-20T23:38:22.766Z"
+    }
   }
 ]

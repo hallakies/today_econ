@@ -39,6 +39,16 @@
       "repairAttempts": 0,
       "qualityScore": 100,
       "error": ""
+    },
+    {
+      "at": "2026-07-17T23:38:24.026Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
     }
   ]
 }
