@@ -1,3 +1,14 @@
 {
-  "events": []
+  "events": [
+    {
+      "at": "2026-07-17T08:25:44.367Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "“퇴직금 없는 우리엄마 희소식”…이달부터 자영업자 노란우산 한도 연 1800만원으로",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
+    }
+  ]
 }
