@@ -84,3 +84,28 @@ test('accepts natural Korean conditional forecast wording', () => {
   const report = evaluateContentQuality(content, '주택담보대출 한도 축소와 기타담보대출 잔액 1조7억원, 지난해 4018억원 대비 2.5배를 다룬 기사');
   assert.equal(report.passed, true, JSON.stringify(report));
 });
+
+test('blocks contradictory percentages and transformed source numbers before publishing', () => {
+  const content = validContent();
+  content.card2.bullets[0] = '60대 이상 취약차주 비중은 <hl>2021년 15%에서 2022년 19%</hl>로 높아졌어요.';
+  content.card2.bullets[1] = '60대 이상 연체율은 <hl>1.4%에서 1.4%로 두 배</hl> 뛰었어요.';
+  content.card3.bullets[1] = '고령 자영업자의 평균 대출은 <hl>1억원</hl>으로 30대보다 두 배 많아질 수 있어요.';
+  const source = '60대 이상 취약차주 비중은 2021년 15%에서 2022년 19%로 높아졌다. 고령 자영업자의 1인당 평균 대출 규모는 3억9000만원이다.';
+  const report = evaluateContentQuality(content, source);
+  assert.equal(report.passed, false);
+  assert.match(report.errors.join(' '), /contradictory|do not appear together|not grounded/);
+});
+
+test('requires a concrete reader hook and three distinct money checks', () => {
+  const content = validContent();
+  content.card1 = { title: '금리 인상 후 고령층 타격', subtitle: '60대 이상 취약차주 비중 변화' };
+  content.card4.action_steps = [
+    '앱에서 대출 상태를 확인하세요.',
+    '계약서를 확인해서 대출 상태를 확인하세요.',
+    '약관을 확인해서 대출 상태를 확인하세요.',
+  ];
+  content.analysis.uncertainty = '정확히 예측할 수 없어요.';
+  const report = evaluateContentQuality(content, '금리 인상과 고령층 가계대출, 대출 한도와 금리 조건을 다룬 기사');
+  assert.equal(report.passed, false);
+  assert.match(report.errors.join(' '), /cover must name|concrete money check|repeat the same vague|uncertainty/);
+});

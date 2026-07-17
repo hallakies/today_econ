@@ -48,8 +48,37 @@ function jaccardSimilarity(a, b) {
 }
 
 function extractMaterialNumbers(text = '') {
-  const matches = String(text).match(/\d[\d,.]*(?:%|percent|원|조|억|만|명|개|배|퍼센트)/gi) || [];
+  const matches = String(text).match(/\d[\d,.]*(?:년|%|percent|원|조|억|만|명|개|배|퍼센트)/gi) || [];
   return matches.map(value => value.replace(/[,\s]/g, '').toLowerCase());
+}
+
+function sourceSentences(sourceText = '') {
+  return String(sourceText)
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map(normalizeSource)
+    .filter(Boolean);
+}
+
+function hasGroundedNumericSentence(text, sourceText) {
+  const numbers = extractMaterialNumbers(stripMarkup(text));
+  if (!numbers.length) return true;
+  return sourceSentences(sourceText).some(sentence => numbers.every(number => sentence.includes(number)));
+}
+
+function hasImpossibleNumericComparison(text = '') {
+  const plain = stripMarkup(text).replace(/\s+/g, '');
+  const repeatedValueWithChange = /(\d[\d,.]*(?:%|원|조|억|만|명|개|배|퍼센트)?)에서\1(?:로|으로)?(?:두배|2배|증가|감소|늘|줄|뛰)/;
+  return repeatedValueWithChange.test(plain);
+}
+
+function hasConcreteActionTarget(text = '') {
+  return /(금리변동일|월(?:상환액|이자)|만기(?:일)?|상환방식|대출잔액|연체(?:여부|율)?|대출한도|한도|잔액|적용(?:시점|기준)|시행일|납입(?:액|여력)|가입조건|세액|보유세|취득세|매수가|매도가|수수료|담보비율|계약기간|갱신조건)/.test(stripMarkup(text).replace(/\s+/g, ''));
+}
+
+function hasUsefulUncertainty(text = '') {
+  const plain = stripMarkup(text);
+  if (!plain || !/(예측할수없|알수없|불확실|단정할수없)/.test(plain.replace(/\s+/g, ''))) return true;
+  return /(금리|소득|상환|시행|조건|대상|시장|정책|개인별|계약)/.test(plain);
 }
 
 function extractDateTokens(text = '') {
@@ -109,6 +138,9 @@ function evaluateContentQuality(content, sourceText = '') {
   if (title.length < 8 || title.length > 32) fail('cover title must be 8-32 characters');
   if (!subtitle || subtitle.length < 8) fail('cover subtitle must explain the reader money effect');
   if (/^(?:혹시|아세요|Did you know)/i.test(title)) fail('cover uses a generic opening', 8);
+  if (!/(내|부모|가족|월|상환|이자|대출|집값|세금|생활비|노후|사업|자영업|투자금|현금흐름)/.test(`${title} ${subtitle}`)) {
+    fail('cover must name a concrete reader money connection', 15);
+  }
 
   const expectedCounts = { card2: 2, card3: 2, card4: 3 };
   for (const [key, expectedTitle] of Object.entries(FRIENDLY_SECTIONS)) {
@@ -127,6 +159,8 @@ function evaluateContentQuality(content, sourceText = '') {
       if ((String(bullet).match(/<hl>.*?<\/hl>/gi) || []).length !== 1) fail(`${key} bullet ${index + 1} needs exactly one highlight`, 8);
       if (GENERIC_PHRASES.some(phrase => plain.includes(phrase))) fail(`${key} bullet ${index + 1} contains generic or sensational wording`, 12);
       if (key === 'card3' && isRunOnImpact(plain)) fail(`${key} bullet ${index + 1} merges multiple audience impacts`, 10);
+      if (hasImpossibleNumericComparison(plain)) fail(`${key} bullet ${index + 1} has a contradictory numeric comparison`, 25);
+      if (!hasGroundedNumericSentence(plain, sourceText)) fail(`${key} bullet ${index + 1} combines numbers that do not appear together in the article`, 25);
     });
     for (let i = 0; i < card.bullets.length; i += 1) {
       for (let j = i + 1; j < card.bullets.length; j += 1) {
@@ -175,7 +209,13 @@ function evaluateContentQuality(content, sourceText = '') {
   (steps || []).forEach((step, index) => {
     const plain = stripMarkup(step);
     if (!plain || plain.length < 12 || !/(앱|약관|한도|잔액|시행|금리|수수료|담보|조건|비교|확인|계약)/.test(plain)) fail(`card4 action step ${index + 1} is incomplete or lacks a target`, 8);
+    if (!hasConcreteActionTarget(plain)) fail(`card4 action step ${index + 1} must name a concrete money check`, 12);
   });
+  for (let i = 0; i < (steps || []).length; i += 1) {
+    for (let j = i + 1; j < (steps || []).length; j += 1) {
+      if (jaccardSimilarity(steps[i], steps[j]) >= 0.55) fail('card4 action steps repeat the same vague check', 12);
+    }
+  }
 
   const allCardText = [content.card1?.title, content.card1?.subtitle]
     .concat(content.card2?.bullets || [], content.card3?.bullets || [], content.card4?.bullets || [])
@@ -203,6 +243,7 @@ function evaluateContentQuality(content, sourceText = '') {
   if (!caption.includes('?')) warn('caption has no reader question');
   if (/빚투족|무대출자|당신의 금융 상황에 어떤 영향을|오늘경제의 한 줄 해석/i.test(caption)) fail('caption contains old or stigmatizing wording', 10);
   if (collectVisibleStrings(caption).length) fail('caption contains literal invalid text', 20);
+  if (!hasUsefulUncertainty(content.analysis?.uncertainty)) fail('uncertainty must name the variable that could change the outcome', 10);
 
   return { score: Math.max(0, score), passed: errors.length === 0 && score >= 80, errors, warnings };
 }

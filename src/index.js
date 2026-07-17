@@ -211,11 +211,8 @@ async function run() {
     await new Promise(resolve => setTimeout(resolve, 8000));
     stage = 'content_generate';
     const cardContent = await generateCardContent(selectedNews);
-    const backgroundUrl = cardContent.image_prompt
-      ? `https://image.pollinations.ai/prompt/${encodeURIComponent(cardContent.image_prompt)}?width=1080&height=1350&nologo=true`
-      : null;
     stage = 'render';
-    renderedFiles = await renderCardImages(cardContent, backgroundUrl);
+    renderedFiles = await renderCardImages(cardContent);
 
     if (config.publishInstagram) {
       try {

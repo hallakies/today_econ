@@ -10,6 +10,9 @@ function highlightText(text, themeColor) {
 }
 
 function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'TODAY', mascotBase64 = '', coreInsight = '', slideNumber = 1, totalSlides = 4, seriesLabel = '오늘의 돈 신호') {
+  const backgroundSrc = String(imageBase64 || '').startsWith('data:')
+    ? imageBase64
+    : `data:image/png;base64,${imageBase64}`;
   const mascotHtml = mascotBase64 
     ? `<img src="data:image/png;base64,${mascotBase64}" alt="오늘이" style="width: 76px; height: 76px; object-fit: contain; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.55));" />`
     : '';
@@ -22,7 +25,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         
         <!-- Full Bleed AI Background Image -->
         <div class="absolute inset-0 z-0">
-          <img class="w-full h-full object-cover scale-105" src="data:image/png;base64,${imageBase64}" alt="background" />
+          <img class="w-full h-full object-cover scale-105" src="${backgroundSrc}" alt="background" />
           <!-- Premium Gradient Overlay -->
           <div class="absolute inset-0 bg-gradient-to-b from-[#0B101A]/60 via-[#0B101A]/40 to-[#0B101A]/95"></div>
         </div>
@@ -89,7 +92,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         
         <!-- Ambient Background -->
         <div class="absolute inset-0 z-0">
-          <img class="w-full h-full object-cover filter blur-[8px] scale-105 opacity-80" src="data:image/png;base64,${imageBase64}" alt="ambient" />
+          <img class="w-full h-full object-cover filter blur-[8px] scale-105 opacity-80" src="${backgroundSrc}" alt="ambient" />
           <div class="absolute inset-0 bg-[#0B101A]/50"></div>
         </div>
         

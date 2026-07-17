@@ -110,12 +110,37 @@ function normalizeActionStep(step, index) {
   return clean;
 }
 
-function normalizeActionSteps(steps) {
-  const defaults = [
+function actionStepDefaults(sourceText = '') {
+  if (/대출|금리|신용|담보|연체|차주/.test(sourceText)) {
+    return [
+      '대출 앱에서 다음 금리변동일과 월 상환액을 확인하세요.',
+      '계약서에서 만기일과 상환 방식을 확인하세요.',
+      '추가 대출 전 금리와 수수료를 비교하세요.',
+    ];
+  }
+  if (/노란우산|공제|노후|퇴직|연금|자영업|소상공인/.test(sourceText)) {
+    return [
+      '공제 앱에서 올해 납입액과 남은 한도를 확인하세요.',
+      '약관에서 가입 조건과 중도 해지 기준을 확인하세요.',
+      '월 납입액과 기존 저축 비중을 비교하세요.',
+    ];
+  }
+  if (/주택|부동산|전세|분양/.test(sourceText)) {
+    return [
+      '은행 앱에서 대출 한도와 월 상환액을 확인하세요.',
+      '계약서에서 잔금일과 대출 실행 조건을 확인하세요.',
+      '매수 전 금리와 취득 비용을 비교하세요.',
+    ];
+  }
+  return [
     '앱에서 현재 한도와 잔액을 확인하세요.',
     '약관에서 시행일과 적용 기준을 확인하세요.',
     '추가 이용 전 금리와 수수료를 비교하세요.',
   ];
+}
+
+function normalizeActionSteps(steps, sourceText = '') {
+  const defaults = actionStepDefaults(sourceText);
   const normalized = (Array.isArray(steps) ? steps : [])
     .slice(0, 3)
     .map(normalizeActionStep)
@@ -150,6 +175,7 @@ function moneyFallbackSubtitle(sourceText = '') {
   if (/물가|생활비|소비자/.test(text)) return '내 생활비와 소비 계획에 연결돼요';
   if (/세금|과세|공제/.test(text)) return '내 세금과 현금흐름을 확인해요';
   if (/주식|증시|종목|ETF|코인/.test(text)) return '내 투자금과 리스크를 다시 점검해요';
+  if (/대출|금리|신용|담보|연체|차주/.test(text)) return '내 월 이자와 상환 계획을 다시 확인해요';
   return '내 돈의 선택지가 어떻게 달라지는지 봐요';
 }
 
@@ -158,6 +184,11 @@ function forecastFallback(sourceText = '', index = 0) {
     return index === 0
       ? '제도 활용 폭은 <hl>사업 소득과 납입 여력</hl>에 따라 달라질 수 있어요.'
       : '실제 체감 혜택은 <hl>가입 조건과 유지 기간</hl>에 따라 달라질 수 있어요.';
+  }
+  if (/대출|금리|신용|담보|연체|차주/.test(sourceText)) {
+    return index === 0
+      ? '금리 흐름에 따라 <hl>월 이자 부담</hl>이 더 커질 수 있어요.'
+      : '상환 여력은 <hl>소득과 만기 조건</hl>에 따라 달라질 수 있어요.';
   }
   return index === 0
     ? '실제 영향은 <hl>개인별 조건과 적용 시점</hl>에 따라 달라질 수 있어요.'
@@ -190,6 +221,12 @@ function fallbackImpactBullets(sourceText = '') {
     return [
       '집을 준비 중이라면 <hl>내 대출 한도와 자금 계획</hl>을 다시 확인해요.',
       '이미 보유 중이라면 <hl>상환 일정과 현금 여력</hl>을 함께 점검해요.',
+    ];
+  }
+  if (/대출|금리|신용|담보|연체|차주/.test(sourceText)) {
+    return [
+      '대출 이용 중이라면 <hl>다음 금리변동일과 월 이자</hl>를 함께 확인해요.',
+      '부모님 대출이 걱정된다면 <hl>만기와 상환 방식</hl>을 먼저 살펴보세요.',
     ];
   }
   return [
@@ -232,7 +269,7 @@ function buildFallbackEditorial(selectedNews) {
       card4: {
         section_title: FRIENDLY_SECTIONS.card4,
         bullets: [forecastFallback(source, 0), forecastFallback(source, 1), '공식 홈페이지에서 <hl>가입·납입 조건</hl>을 확인하세요.'],
-        action_steps: ['공식 홈페이지에서 현재 한도와 조건을 확인하세요.', '약관에서 적용 시점과 가입 기준을 확인하세요.', '기존 저축과 월 납입 금액을 비교하세요.'],
+        action_steps: actionStepDefaults(source),
         hard_terms: [],
         policy_points: [],
       },
@@ -353,7 +390,7 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
     .map(plainBulletText)
     .filter(Boolean)
     .slice(0, 3);
-  content.card4.action_steps = normalizeActionSteps(content.card4.action_steps);
+  content.card4.action_steps = normalizeActionSteps(content.card4.action_steps, source);
   content.card2.hard_terms = normalizeTerms(content.card2.hard_terms);
   content.card3.hard_terms = normalizeTerms(content.card3.hard_terms);
   content.card4.hard_terms = normalizeTerms(content.card4.hard_terms);
@@ -427,8 +464,12 @@ function buildCardPrompt() {
 - 각 불릿은 15~90자의 완전한 문장이며, 가장 중요한 구절 하나만 <hl>...</hl>로 표시하세요.
 - 한 카드 안에서 같은 단어나 의미를 반복하지 마세요.
 - card2~card4를 생략하지 마세요.
-- 숫자는 기사 표기와 단위를 그대로 보존하고, 숫자 카드에는 숫자·기간·비교 기준을 함께 적으세요.
+- 숫자는 기사 표기와 단위를 그대로 보존하고, 숫자 카드에는 숫자·기간·비교 기준을 함께 적으세요. 같은 문장에 있는 숫자만 함께 묶고, "1.4%에서 1.4%로 두 배"처럼 앞뒤가 모순되는 비교는 절대 쓰지 마세요.
 - 사실(기사에 적힌 내용), 해석(오늘경제의 판단), 행동(독자가 지금 할 일)을 문장 역할로 구분하세요.
+- 표지는 뉴스 제목을 반복하지 말고 "부모님 대출", "내 월 이자", "내 노후자금"처럼 독자가 자신의 돈과 연결할 수 있는 표현을 하나 이상 넣으세요.
+- card3은 "누가 / 어떤 조건에서 / 무엇이 달라질 수 있는지"를 한 문장에 담으세요. card4의 전망은 card3의 문장을 바꿔 쓰지 말고, 금리·소득·시행 시점처럼 결과를 바꿀 변수를 밝혀야 합니다.
+- action_steps 3개는 서로 다른 확인 대상(예: 금리변동일·월 상환액 / 만기·상환 방식 / 수수료·대체 조건)을 써야 합니다. "앱·계약서·약관을 확인"처럼 반복되는 장소 나열은 금지합니다.
+- image_prompt에는 사람·얼굴·인물 사진을 넣지 말고, 대출 명세서·상환 일정·금리 그래프처럼 기사 메커니즘만 묘사하세요.
 ${failureMemory}
 
 카드 구조:
@@ -453,7 +494,7 @@ JSON만 응답하세요:
     "uncertainty": "기사만으로 단정할 수 없는 부분"
   },
   "cards": {
-    "image_prompt": "English high-end editorial financial visual prompt: show the article's actual mechanism (for example a stock-collateral loan document, broker app interface, limit gauge, or regulation signal), premium magazine photography or restrained 3D collage, dark navy and warm gold palette, clear subject, generous negative space for Korean overlay, no text, no logos, no coins, no generic office still-life",
+    "image_prompt": "English high-end editorial financial visual prompt: show the article's actual money mechanism with documents, a repayment schedule, a rate chart, or a policy gauge; no people, no faces, no portraits, no text, no logos, no coins",
     "series_label": "오늘의 돈 신호",
   "core_insight": "오늘경제 한 줄 생각",
     "card1": { "kicker": "오늘의 쟁점", "title": "내 돈과 연결된 훅", "subtitle": "시행일·숫자·독자 영향" },

@@ -4,6 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { buildVideoFilters, createReelVideo } = require('../src/reel');
+const { createEditorialBackdrop } = require('../src/renderer');
 
 test('builds a 9:16 blurred-background filter for every card', () => {
   const filter = buildVideoFilters(4);
@@ -40,4 +41,10 @@ test('creates a Reel command with an embedded audio track', async () => {
   assert.ok(calls[1].args.includes('-map'));
   assert.ok(calls[1].args.includes('4:a:0'));
   assert.equal(calls[1].args.at(-1), path.join(directory, 'reel.mp4'));
+});
+
+test('uses a deterministic financial background without an unrelated portrait', () => {
+  const backdrop = Buffer.from(createEditorialBackdrop('credit', '#D7A84B').split(',')[1], 'base64').toString('utf8');
+  assert.match(backdrop, /path|rect/i);
+  assert.doesNotMatch(backdrop, /person|portrait|face|woman|man/i);
 });
