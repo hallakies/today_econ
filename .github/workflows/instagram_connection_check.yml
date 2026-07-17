@@ -32,6 +32,7 @@ jobs:
           INSTAGRAM_TOKEN_ENCRYPTION_KEY: ${{ secrets.INSTAGRAM_TOKEN_ENCRYPTION_KEY }}
           INSTAGRAM_USER_ID: ${{ vars.INSTAGRAM_USER_ID }}
           INSTAGRAM_API_VERSION: 'v23.0'
+          PUBLISH_INSTAGRAM_STORY: 'true'
         run: node src/check-instagram.js --bootstrap
 
       - name: Commit Encrypted Token Vault

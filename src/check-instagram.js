@@ -19,6 +19,9 @@ async function checkInstagramConnection({ fetchImpl = fetch, bootstrap = false }
   if (profile.username !== 'today.econ') {
     throw new Error(`[Instagram Check] Expected today.econ but token belongs to ${profile.username}.`);
   }
+  if (config.publishInstagramStory && String(profile.account_type || '').toUpperCase() !== 'BUSINESS') {
+    throw new Error('[Instagram Check] Automatic Story publishing requires an Instagram Business account.');
+  }
   if (bootstrap && config.instagramTokenEncryptionKey && !fs.existsSync(config.instagramTokenFile)) {
     writeEncryptedToken(token);
     console.log('[Instagram Check] Encrypted token vault initialized.');
