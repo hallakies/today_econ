@@ -11,6 +11,7 @@ const { cleanupExpiredReleases, createTemporaryRelease, deleteTemporaryRelease }
 const { createReelVideo } = require('./reel');
 const { publishCarousel, publishReel } = require('./instagram');
 const { addPublishedPost } = require('./post-store');
+const { recordPipelineEvent } = require('./pipeline-state');
 const { resolveInstagramToken } = require('./token-vault');
 
 function validateConfig() {
@@ -160,24 +161,31 @@ async function run() {
   let temporaryRelease = null;
   let publication = null;
   let temporaryFiles = [];
+  let stage = 'news_fetch';
+  const recoveryMode = process.env.PIPELINE_RECOVERY_MODE === 'true';
 
   try {
     const newsList = await fetchNews(config.newsRssUrl);
     if (newsList.length === 0) throw new Error('[Main] No news articles found.');
 
+    stage = 'news_select';
     selectedNews = await selectNews(newsList);
     console.log(`[Main] Selected news: ${selectedNews.title}`);
+    stage = 'article_fetch';
     selectedNews.fullText = await fetchArticleBody(selectedNews.link) || selectedNews.summary;
 
     await new Promise(resolve => setTimeout(resolve, 8000));
+    stage = 'content_generate';
     const cardContent = await generateCardContent(selectedNews);
     const backgroundUrl = cardContent.image_prompt
       ? `https://image.pollinations.ai/prompt/${encodeURIComponent(cardContent.image_prompt)}?width=1080&height=1350&nologo=true`
       : null;
+    stage = 'render';
     renderedFiles = await renderCardImages(cardContent, backgroundUrl);
 
     if (config.publishInstagram) {
       try {
+        stage = 'instagram_publish';
         const result = await publishToInstagram(renderedFiles, cardContent, selectedNews, resolveInstagramToken());
         publication = result.publication;
         temporaryRelease = result.temporaryRelease;
@@ -192,11 +200,28 @@ async function run() {
       }
     }
 
+    stage = 'slack_notify';
     await sendToSlack(renderedFiles, cardContent.instagram_caption, selectedNews, publication);
+    recordPipelineEvent({
+      status: publication ? 'published' : 'slack_only',
+      stage,
+      articleTitle: selectedNews.title,
+      recoveryMode,
+      qualityScore: cardContent.quality_score,
+    });
     console.log('[Main] Pipeline completed successfully.');
     return { publication, temporaryRelease };
   } catch (error) {
     console.error('[Main] Pipeline failed:', error);
+    recordPipelineEvent({
+      status: 'failed',
+      stage,
+      articleTitle: selectedNews.title,
+      recoveryMode,
+      repairAttempts: error.repairAttempts,
+      qualityScore: error.qualityReport?.score,
+      error: error.message,
+    });
     await sendPipelineFailure(error, selectedNews).catch(slackError => {
       console.warn(`[Main] Could not send failure alert: ${slackError.message}`);
     });

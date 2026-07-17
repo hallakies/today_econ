@@ -23,6 +23,7 @@ module.exports = {
   newsRssUrl: process.env.NEWS_RSS_URL || 'https://www.mk.co.kr/rss/30100041/',
   historyFile: process.env.HISTORY_FILE || path.join(__dirname, 'history.json'),
   postsFile: process.env.POSTS_FILE || path.join(__dirname, 'data', 'posts.json'),
+  pipelineStateFile: process.env.PIPELINE_STATE_FILE || path.join(__dirname, 'data', 'pipeline-state.json'),
   instagramTokenFile: process.env.INSTAGRAM_TOKEN_FILE || path.join(__dirname, 'data', 'instagram-token.enc'),
   maxHistoryDays: parseInt(process.env.MAX_HISTORY_DAYS || '7', 10),
 };

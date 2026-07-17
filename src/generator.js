@@ -1,6 +1,7 @@
 const Groq = require('groq-sdk');
 const config = require('../config');
-const { assertContentQuality, extractMaterialNumbers } = require('./quality');
+const { assertContentQuality, extractMaterialNumbers, jaccardSimilarity } = require('./quality');
+const { loadPipelineState } = require('./pipeline-state');
 
 const MAIN_MODEL = 'llama-3.3-70b-versatile';
 const FALLBACK_MODEL = 'llama-3.1-8b-instant';
@@ -126,6 +127,119 @@ function normalizeActionSteps(steps) {
   return normalized.slice(0, 3);
 }
 
+function ensureCompleteSentence(value) {
+  const text = plainBulletText(value);
+  if (!text) return '';
+  if (/[.!?]$/.test(text) || /(?:요|다|니다|습니다|세요|예요|이에요)$/.test(text)) return text;
+  if (/(?:확대|제한|변경|시행|지원|관리|증가|감소|가능|준비|확인|비교|신청|유지|도입)$/.test(text)) return `${text}돼요.`;
+  return `${text}이에요.`;
+}
+
+function hasGroundedEffectiveDate(value, sourceText) {
+  const clean = plainBulletText(value);
+  if (!clean) return false;
+  const source = normalizeEvidence(sourceText);
+  const tokens = clean.match(/\d{4}[./-]\d{1,2}[./-]\d{1,2}|\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?|\d{1,2}월(?:\s*\d{1,2}일)?/g) || [];
+  return tokens.length > 0 && tokens.every(token => source.includes(normalizeEvidence(token)));
+}
+
+function moneyFallbackSubtitle(sourceText = '') {
+  const text = String(sourceText);
+  if (/노란우산|공제|노후|퇴직|연금|자영업|소상공인/.test(text)) return '자영업자라면 내 노후자금 계획을 확인해요';
+  if (/주택|부동산|전세|분양/.test(text)) return '내 집값·대출 계획에 미칠 영향을 봐요';
+  if (/물가|생활비|소비자/.test(text)) return '내 생활비와 소비 계획에 연결돼요';
+  if (/세금|과세|공제/.test(text)) return '내 세금과 현금흐름을 확인해요';
+  if (/주식|증시|종목|ETF|코인/.test(text)) return '내 투자금과 리스크를 다시 점검해요';
+  return '내 돈의 선택지가 어떻게 달라지는지 봐요';
+}
+
+function forecastFallback(sourceText = '', index = 0) {
+  if (/노란우산|공제|노후|퇴직|연금|자영업|소상공인/.test(sourceText)) {
+    return index === 0
+      ? '제도 활용 폭은 <hl>사업 소득과 납입 여력</hl>에 따라 달라질 수 있어요.'
+      : '실제 체감 혜택은 <hl>가입 조건과 유지 기간</hl>에 따라 달라질 수 있어요.';
+  }
+  return index === 0
+    ? '실제 영향은 <hl>개인별 조건과 적용 시점</hl>에 따라 달라질 수 있어요.'
+    : '시장 반응은 <hl>후속 정책과 금리 환경</hl>에 따라 달라질 수 있어요.';
+}
+
+function compactCoverTitle(title = '') {
+  const clean = plainBulletText(title).replace(/[“”"'…]/g, '').trim();
+  if (clean.length >= 8 && clean.length <= 32) return clean;
+  if (clean.length > 32) return `${clean.slice(0, 29).trim()}…`;
+  return `${clean || '오늘의 경제 변화'} 핵심`;
+}
+
+function sourceFactSentences(sourceText = '') {
+  return String(sourceText)
+    .split(/[.!?]\s+|\n+/)
+    .map(sentence => sanitizeText(sentence).trim())
+    .filter(sentence => sentence.length >= 15 && sentence.length <= 88)
+    .slice(0, 4);
+}
+
+function fallbackImpactBullets(sourceText = '') {
+  if (/노란우산|공제|노후|퇴직|연금|자영업|소상공인/.test(sourceText)) {
+    return [
+      '자영업자는 <hl>월별 납입 여력</hl>을 다시 계산해볼 수 있어요.',
+      '노후 준비 중이라면 <hl>기존 저축과의 비중</hl>을 비교해보세요.',
+    ];
+  }
+  if (/주택|부동산|전세|분양/.test(sourceText)) {
+    return [
+      '집을 준비 중이라면 <hl>내 대출 한도와 자금 계획</hl>을 다시 확인해요.',
+      '이미 보유 중이라면 <hl>상환 일정과 현금 여력</hl>을 함께 점검해요.',
+    ];
+  }
+  return [
+    '내 상황에 맞는 <hl>금액과 적용 조건</hl>을 먼저 확인해보세요.',
+    '기존 계획과 비교해 <hl>현금흐름의 변화</hl>를 점검해보세요.',
+  ];
+}
+
+function buildFallbackEditorial(selectedNews) {
+  const source = `${selectedNews.title || ''} ${selectedNews.fullText || selectedNews.summary || ''}`;
+  const facts = sourceFactSentences(selectedNews.fullText || selectedNews.summary || '');
+  const fallbackFacts = [
+    '기사에 나온 <hl>변경 내용과 적용 대상</hl>을 함께 확인해야 해요.',
+    '실제 적용은 <hl>개인별 가입 조건</hl>에 따라 달라질 수 있어요.',
+  ];
+  const impacts = fallbackImpactBullets(source);
+  return {
+    analysis: {
+      topic: plainBulletText(selectedNews.title || '경제 변화'),
+      audience: /자영업|소상공인/.test(source) ? '자영업자' : '경제 관심 독자',
+      hook_type: /\d/.test(source) ? '숫자' : '시의성',
+      verified_facts: facts.slice(0, 2),
+      money_channel: inferMoneyChannel(source),
+      money_effect: moneyFallbackSubtitle(source),
+      publication_date: '',
+      effective_date: '',
+      uncertainty: '개인별 조건과 실제 적용 범위',
+    },
+    cards: {
+      image_prompt: 'English premium editorial financial visual, show a clear policy or household money decision mechanism, dark navy and warm gold palette, generous negative space, no text, no logos',
+      series_label: '오늘의 돈 신호',
+      core_insight: '내 상황에 맞는 금액과 적용 조건을 먼저 확인하는 것이 중요해요.',
+      card1: {
+        kicker: '오늘의 쟁점',
+        title: compactCoverTitle(selectedNews.title),
+        subtitle: moneyFallbackSubtitle(source),
+      },
+      card2: { section_title: FRIENDLY_SECTIONS.card2, bullets: [facts[0] || fallbackFacts[0], facts[1] || fallbackFacts[1]], stats: [], hard_terms: [] },
+      card3: { section_title: FRIENDLY_SECTIONS.card3, bullets: impacts, hard_terms: [] },
+      card4: {
+        section_title: FRIENDLY_SECTIONS.card4,
+        bullets: [forecastFallback(source, 0), forecastFallback(source, 1), '공식 홈페이지에서 <hl>가입·납입 조건</hl>을 확인하세요.'],
+        action_steps: ['공식 홈페이지에서 현재 한도와 조건을 확인하세요.', '약관에서 적용 시점과 가입 기준을 확인하세요.', '기존 저축과 월 납입 금액을 비교하세요.'],
+        hard_terms: [],
+        policy_points: [],
+      },
+    },
+  };
+}
+
 function normalizeEvidence(text = '') {
   return String(text).normalize('NFC').replace(/[\s,]/g, '').toLowerCase();
 }
@@ -220,7 +334,7 @@ function normalizeBulletFormatting(content) {
     const card = content[key];
     if (!card || !Array.isArray(card.bullets)) continue;
     card.section_title = sectionTitle;
-    card.bullets = card.bullets.map(ensureSingleHighlight);
+    card.bullets = card.bullets.map(bullet => ensureSingleHighlight(ensureCompleteSentence(bullet)));
   }
   return content;
 }
@@ -244,11 +358,29 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   content.card3.hard_terms = normalizeTerms(content.card3.hard_terms);
   content.card4.hard_terms = normalizeTerms(content.card4.hard_terms);
   content.core_insight = normalizeCoreInsight(content.core_insight);
-  content.instagram_caption = finalizeCaption(buildCanonicalCaption(content, selectedNews.link));
   content.analysis ||= {};
+  content.analysis.effective_date = hasGroundedEffectiveDate(content.analysis.effective_date, source)
+    ? plainBulletText(content.analysis.effective_date)
+    : '';
   content.analysis.money_channel = MONEY_CHANNELS.includes(content.analysis.money_channel)
     ? content.analysis.money_channel
     : inferMoneyChannel(source);
+  const visibleMoneyText = [content.card1.title, content.card1.subtitle]
+    .concat(content.card2.bullets || [], content.card3.bullets || [])
+    .map(plainBulletText)
+    .join(' ');
+  if (!/내 돈|주식|집값|대출|세금|물가|금리|스톡론|부동산|투자|노후|퇴직|공제|저축|납입|자영업|소상공인|연금/.test(visibleMoneyText)) {
+    content.card1.subtitle = moneyFallbackSubtitle(source);
+  }
+  const card3Bullets = content.card3.bullets || [];
+  content.card4.bullets = (content.card4.bullets || []).map((bullet, index) => {
+    const normalized = ensureSingleHighlight(ensureCompleteSentence(bullet));
+    if (index < 2 && card3Bullets.some(impact => jaccardSimilarity(normalized, impact) >= 0.72)) {
+      return forecastFallback(source, index);
+    }
+    return normalized;
+  });
+  content.instagram_caption = finalizeCaption(buildCanonicalCaption(content, selectedNews.link));
   content.template_theme = 'unified';
   const topicText = `${content.analysis?.topic || ''} ${selectedNews.title || ''}`;
   content.theme_color = /반도체|AI|빅테크|코인|가상자산|플랫폼/i.test(topicText) ? '#B883FF'
@@ -273,6 +405,14 @@ function inferMoneyChannel(sourceText = '') {
 }
 
 function buildCardPrompt() {
+  const recentFailureHints = loadPipelineState().events
+    .filter(event => event.status === 'failed' && event.stage === 'content_generate' && event.error)
+    .slice(-3)
+    .map(event => `- ${event.error}`)
+    .join('\n');
+  const failureMemory = recentFailureHints
+    ? `\n최근 자동 검수에서 반복된 결함입니다. 이번 원고에서 반드시 피하세요:\n${recentFailureHints}\n`
+    : '';
   return `당신은 20~30대 직장인과 재테크 초보를 위한 경제 미디어 "오늘경제(@today.econ)"의 수석 에디터입니다.
 
 브랜드 약속: "오늘 가장 중요한 경제 뉴스 하나를, 내 돈에 미치는 영향과 지금 확인할 것까지 1분 안에 설명한다."
@@ -289,6 +429,7 @@ function buildCardPrompt() {
 - card2~card4를 생략하지 마세요.
 - 숫자는 기사 표기와 단위를 그대로 보존하고, 숫자 카드에는 숫자·기간·비교 기준을 함께 적으세요.
 - 사실(기사에 적힌 내용), 해석(오늘경제의 판단), 행동(독자가 지금 할 일)을 문장 역할로 구분하세요.
+${failureMemory}
 
 카드 구조:
 1. card1: 독자의 돈과 연결된 8~32자 표지 훅. 숫자·시행일·결정 포인트 중 하나를 포함하고 "혹시 이거 아세요?"는 금지합니다. kicker에는 "오늘의 쟁점"을 쓰세요.
@@ -398,6 +539,24 @@ async function generateCardContent(selectedNews) {
   }
 
   const error = lastError || new Error('[Generator] Content generation failed without a quality report');
+  try {
+    const fallbackDraft = buildFallbackEditorial(selectedNews);
+    const fallback = normalizeGeneratedContent({ ...fallbackDraft.cards, analysis: fallbackDraft.analysis }, '', selectedNews);
+    fallback.content_metadata = {
+      topic: fallback.analysis.topic || '미분류',
+      audience: fallback.analysis.audience || '경제 관심 독자',
+      hook_type: fallback.analysis.hook_type || '시의성',
+      money_channel: fallback.analysis.money_channel,
+      editorial_format: 'money-change-brief-fallback',
+    };
+    fallback.instagram_caption = finalizeCaption(buildCanonicalCaption(fallback, selectedNews.link));
+    const qualityReport = assertContentQuality(fallback, sourceText);
+    fallback.quality_score = qualityReport.score;
+    console.warn(`[Generator] Published safe fallback after ${repairAttempts} LLM repair attempt(s).`);
+    return fallback;
+  } catch (fallbackError) {
+    error.fallbackError = fallbackError.message;
+  }
   error.repairAttempts = repairAttempts;
   error.draft = content || { cards: cardResult?.cards || {}, analysis: cardResult?.analysis || {}, instagram_caption: '' };
   throw error;
@@ -414,6 +573,7 @@ module.exports = {
   normalizeActionStep,
   normalizeActionSteps,
   inferMoneyChannel,
+  buildFallbackEditorial,
   normalizeCoreInsight,
   normalizeStats,
   parseJsonResponse,

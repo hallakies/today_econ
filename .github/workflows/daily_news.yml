@@ -64,14 +64,19 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           NEWS_RSS_URL: 'https://www.mk.co.kr/rss/30100041/'
           MAX_HISTORY_DAYS: '7'
-        run: node src/index.js
+        run: |
+          if node src/index.js; then
+            exit 0
+          fi
+          echo "[Recovery] First attempt failed. Starting one self-healing retry."
+          PIPELINE_RECOVERY_MODE=true node src/index.js
 
       - name: Commit Durable Publishing Data
         if: always()
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add history.json data/posts.json data/analytics-state.json
+          git add history.json data/posts.json data/analytics-state.json data/pipeline-state.json
           if ! git diff --cached --quiet; then
             git commit -m "Preserve Instagram publishing and measurement history" -m "Automated runs persist only durable post metadata and never temporary image assets.\n\nConstraint: Instagram requires public image URLs during ingestion\nConfidence: high\nScope-risk: narrow\nTested: GitHub Actions pipeline data persistence\nNot-tested: Live Instagram response for this run"
             git push

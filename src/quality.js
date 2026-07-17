@@ -22,7 +22,7 @@ const MONEY_CHANNEL_EVIDENCE = Object.freeze({
   living_cost: /물가|소비자|생활비|가격|장바구니/,
   credit: /대출|금리|담보|한도|신용|차입/,
   tax: /세금|소득세|보유세|취득세|과세/,
-  mixed: /주식|증시|종목|스톡론|증권|투자|주택|부동산|집값|전세|분양|물가|소비자|생활비|가격|대출|금리|담보|한도|신용|세금|과세/,
+  mixed: /주식|증시|종목|스톡론|증권|투자|주택|부동산|집값|전세|분양|물가|소비자|생활비|가격|대출|금리|담보|한도|신용|세금|과세|노란우산|공제|노후|퇴직|연금|자영업|소상공인|저축|납입/,
 });
 
 function stripMarkup(text = '') {
@@ -154,7 +154,7 @@ function evaluateContentQuality(content, sourceText = '') {
     fail(`money_channel ${moneyChannel} lacks source/evidence mapping`, 15);
   }
   const moneyText = [title, subtitle, ...(content.card2?.bullets || []), ...(content.card3?.bullets || [])].map(stripMarkup).join(' ');
-  if (!/내 돈|주식|집값|대출|세금|물가|금리|스톡론|부동산|투자/.test(moneyText)) fail('cover and first two cards do not connect the story to reader money', 15);
+  if (!/내 돈|주식|집값|대출|세금|물가|금리|스톡론|부동산|투자|노후|퇴직|공제|저축|납입|자영업|소상공인|연금/.test(moneyText)) fail('cover and first two cards do not connect the story to reader money', 15);
 
   const effectiveDate = stripMarkup(content.analysis?.effective_date);
   if (effectiveDate) {
