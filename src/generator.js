@@ -1,6 +1,6 @@
 const Groq = require('groq-sdk');
 const config = require('../config');
-const { assertContentQuality } = require('./quality');
+const { assertContentQuality, extractMaterialNumbers } = require('./quality');
 
 const MAIN_MODEL = 'llama-3.3-70b-versatile';
 const FALLBACK_MODEL = 'llama-3.1-8b-instant';
@@ -11,6 +11,7 @@ const FRIENDLY_SECTIONS = Object.freeze({
   card4: '앞으로 이렇게 될 수도',
 });
 const MONEY_CHANNELS = Object.freeze(['stocks', 'housing', 'living_cost', 'credit', 'tax', 'mixed']);
+const MAX_QUALITY_REPAIR_ATTEMPTS = 2;
 
 function getGroqClient() {
   return new Groq({ apiKey: config.groqApiKey });
@@ -108,6 +109,43 @@ function normalizeActionStep(step, index) {
   return clean;
 }
 
+function normalizeEvidence(text = '') {
+  return String(text).normalize('NFC').replace(/[\s,]/g, '').toLowerCase();
+}
+
+function normalizeCoreInsight(value) {
+  return plainBulletText(value)
+    .replace(/^오늘경제\s*한\s*줄\s*(?:생각|해석)\s*:?\s*/u, '')
+    .trim();
+}
+
+function normalizeStats(stats, sourceText) {
+  const source = normalizeEvidence(sourceText);
+  return (Array.isArray(stats) ? stats : []).filter(stat => {
+    if (!stat || typeof stat !== 'object') return false;
+    const value = plainBulletText(stat.value);
+    const label = plainBulletText(stat.label);
+    if (!value || !label) return false;
+    const visible = ['value', 'comparison', 'baseline'].map(field => plainBulletText(stat[field])).join(' ');
+    return extractMaterialNumbers(visible).every(number => source.includes(number));
+  }).slice(0, 2);
+}
+
+function normalizeTerms(terms) {
+  return (Array.isArray(terms) ? terms : []).filter(term => (
+    term && typeof term === 'object' && plainBulletText(term.term) && plainBulletText(term.explanation)
+  )).slice(0, 2);
+}
+
+function buildQualityRepairPrompt(errors) {
+  return `${buildCardPrompt()}
+
+이번 원고는 품질 게이트에서 다음 이유로 보류되었습니다:
+${errors.map(error => `- ${error}`).join('\n')}
+
+같은 기사에 근거해 오류가 난 필드만 고치세요. 기사에 없는 숫자·정책·날짜를 추가하지 말고, 선택형 stats는 근거가 없으면 빈 배열로 두세요. 전망은 가능성·변수·"수 있어요"·"~될 경우"처럼 불확실성을 분명히 하세요. JSON 구조는 그대로 유지하세요.`;
+}
+
 function buildCanonicalCaption(content, sourceLink = '') {
   const facts = (content.card2?.bullets || []).map(plainBulletText).filter(Boolean).slice(0, 2).map(text => text.replace(/[.!?]+$/, ''));
   const impacts = (content.card3?.bullets || []).map(plainBulletText).filter(Boolean).slice(0, 2).map(text => text.replace(/[.!?]+$/, ''));
@@ -115,7 +153,7 @@ function buildCanonicalCaption(content, sourceLink = '') {
   const forecasts = (content.card4?.bullets || []).slice(0, 2).map(plainBulletText).filter(Boolean);
   const title = plainBulletText(content.card1?.title || '');
   const subtitle = plainBulletText(content.card1?.subtitle || '').replace(/[.!?]+$/, '');
-  const insight = plainBulletText(content.core_insight || '').replace(/[.!?]+$/, '');
+  const insight = normalizeCoreInsight(content.core_insight || '').replace(/[.!?]+$/, '');
   const uncertainty = plainBulletText(content.analysis?.uncertainty || '').replace(/[.!?]+$/, '');
   const paragraphs = [];
   if (title || subtitle) paragraphs.push(`${title}${title && subtitle ? ` — ${subtitle}` : subtitle}`.trim());
@@ -176,16 +214,20 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   content.card2 = content.card2 || {};
   content.card3 = content.card3 || {};
   content.card4 = content.card4 || {};
-  content.card2.stats = Array.isArray(content.card2.stats) ? content.card2.stats.slice(0, 2) : [];
-  content.card4.policy_points = Array.isArray(content.card4.policy_points) ? content.card4.policy_points.slice(0, 3) : [];
+  const source = `${selectedNews.title || ''} ${selectedNews.fullText || selectedNews.summary || ''}`;
+  content.card2.stats = normalizeStats(content.card2.stats, source);
+  content.card4.policy_points = (Array.isArray(content.card4.policy_points) ? content.card4.policy_points : [])
+    .map(plainBulletText)
+    .filter(Boolean)
+    .slice(0, 3);
   content.card4.action_steps = Array.isArray(content.card4.action_steps)
     ? content.card4.action_steps.slice(0, 3).map(normalizeActionStep).filter(Boolean)
     : [];
-  content.card2.hard_terms = Array.isArray(content.card2.hard_terms) ? content.card2.hard_terms.slice(0, 2) : [];
-  content.card3.hard_terms = Array.isArray(content.card3.hard_terms) ? content.card3.hard_terms.slice(0, 2) : [];
-  content.card4.hard_terms = Array.isArray(content.card4.hard_terms) ? content.card4.hard_terms.slice(0, 2) : [];
+  content.card2.hard_terms = normalizeTerms(content.card2.hard_terms);
+  content.card3.hard_terms = normalizeTerms(content.card3.hard_terms);
+  content.card4.hard_terms = normalizeTerms(content.card4.hard_terms);
+  content.core_insight = normalizeCoreInsight(content.core_insight);
   content.instagram_caption = finalizeCaption(buildCanonicalCaption(content, selectedNews.link));
-  const source = `${selectedNews.title || ''} ${selectedNews.fullText || selectedNews.summary || ''}`;
   content.analysis ||= {};
   content.analysis.money_channel = MONEY_CHANNELS.includes(content.analysis.money_channel)
     ? content.analysis.money_channel
@@ -285,35 +327,63 @@ async function generateCardContent(selectedNews) {
     .slice(0, 12000);
 
   console.log('[Generator] Generating evidence-led four-card editorial...');
-  const cardResult = await executeLLMCall(
-    buildCardPrompt(),
-    `기사 제목: ${selectedNews.title}\n기사 본문:\n${sourceText}`,
-    5000
-  );
-  if (!cardResult.cards) throw new Error("Validation Failed: missing 'cards' object");
-
+  let cardResult;
   let content;
+  let lastError;
+  let repairAttempts = 0;
+
   try {
-    content = normalizeGeneratedContent(
-      { ...cardResult.cards, analysis: cardResult.analysis || {} },
-      '',
-      selectedNews
+    cardResult = await executeLLMCall(
+      buildCardPrompt(),
+      `기사 제목: ${selectedNews.title}\n기사 본문:\n${sourceText}`,
+      5000
     );
-    const qualityReport = assertContentQuality(content, sourceText);
-    content.quality_score = qualityReport.score;
-    content.content_metadata = {
-      topic: content.analysis?.topic || '미분류',
-      audience: content.analysis?.audience || '재테크 초보',
-      hook_type: content.analysis?.hook_type || '미분류',
-      money_channel: content.analysis?.money_channel || 'mixed',
-      editorial_format: 'money-change-brief',
-    };
-    console.log(`[Generator] Quality gate passed: ${qualityReport.score}/100`);
-    return content;
   } catch (error) {
-    error.draft = content || { cards: cardResult.cards, analysis: cardResult.analysis || {}, instagram_caption: '' };
+    error.draft = { cards: {}, analysis: {}, instagram_caption: '' };
     throw error;
   }
+
+  for (let attempt = 0; attempt <= MAX_QUALITY_REPAIR_ATTEMPTS; attempt += 1) {
+    try {
+      if (!cardResult?.cards) throw new Error("Validation Failed: missing 'cards' object");
+      content = normalizeGeneratedContent(
+        { ...cardResult.cards, analysis: cardResult.analysis || {} },
+        '',
+        selectedNews
+      );
+      const qualityReport = assertContentQuality(content, sourceText);
+      content.quality_score = qualityReport.score;
+      content.content_metadata = {
+        topic: content.analysis?.topic || '미분류',
+        audience: content.analysis?.audience || '재테크 초보',
+        hook_type: content.analysis?.hook_type || '미분류',
+        money_channel: content.analysis?.money_channel || 'mixed',
+        editorial_format: 'money-change-brief',
+      };
+      console.log(`[Generator] Quality gate passed: ${qualityReport.score}/100 after ${repairAttempts} repair attempt(s)`);
+      return content;
+    } catch (error) {
+      lastError = error;
+      if (!error.qualityReport || attempt === MAX_QUALITY_REPAIR_ATTEMPTS) break;
+      repairAttempts += 1;
+      console.warn(`[Generator] Quality gate failed; requesting repair ${repairAttempts}/${MAX_QUALITY_REPAIR_ATTEMPTS}: ${error.message}`);
+      try {
+        cardResult = await executeLLMCall(
+          buildQualityRepairPrompt(error.qualityReport.errors),
+          `기사 제목: ${selectedNews.title}\n기사 본문:\n${sourceText.slice(0, 9000)}\n\n수정할 원고 JSON:\n${JSON.stringify(cardResult).slice(0, 12000)}`,
+          5000
+        );
+      } catch (repairError) {
+        error.repairError = repairError.message;
+        break;
+      }
+    }
+  }
+
+  const error = lastError || new Error('[Generator] Content generation failed without a quality report');
+  error.repairAttempts = repairAttempts;
+  error.draft = content || { cards: cardResult?.cards || {}, analysis: cardResult?.analysis || {}, instagram_caption: '' };
+  throw error;
 }
 
 module.exports = {
@@ -326,6 +396,8 @@ module.exports = {
   normalizeGeneratedContent,
   normalizeActionStep,
   inferMoneyChannel,
+  normalizeCoreInsight,
+  normalizeStats,
   parseJsonResponse,
   sanitizeText,
 };

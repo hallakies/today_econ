@@ -165,8 +165,9 @@ function evaluateContentQuality(content, sourceText = '') {
   }
 
   const forecasts = content.card4?.bullets || [];
-  if (!/(가능|수 있어|달라질|변수|높아질|줄어들|늘어날|커질)/.test(stripMarkup(forecasts[0] || ''))) fail('card4 forecast 1 needs a possibility or variable marker', 8);
-  if (!/(가능|수 있어|달라질|변수|높아질|줄어들|늘어날|커질)/.test(stripMarkup(forecasts[1] || ''))) fail('card4 forecast 2 needs a possibility or variable marker', 8);
+  const forecastMarker = /(가능|수\s*있|될\s*경우|전망|예상|달라질|변수|높아질|줄어들|늘어날|커질|좁아질|위축될|악화될|완화될|이어질)/;
+  if (!forecastMarker.test(stripMarkup(forecasts[0] || ''))) fail('card4 forecast 1 needs a possibility or variable marker', 8);
+  if (!forecastMarker.test(stripMarkup(forecasts[1] || ''))) fail('card4 forecast 2 needs a possibility or variable marker', 8);
   if (!/(확인|비교|물어|살펴|기록|저장|계산|점검)/.test(stripMarkup(forecasts[2] || ''))) fail('card4 bullet 3 must be a concrete action', 8);
 
   const steps = content.card4?.action_steps;

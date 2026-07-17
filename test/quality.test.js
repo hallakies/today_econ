@@ -76,3 +76,11 @@ test('requires an effective date claim to be sourced', () => {
   assert.equal(report.passed, false);
   assert.match(report.errors.join(' '), /effective_date/);
 });
+
+test('accepts natural Korean conditional forecast wording', () => {
+  const content = validContent();
+  content.card4.bullets[0] = '규제가 장기화될 경우 <hl>대출 창구</hl>가 더 좁아질 수 있어요.';
+  content.card4.bullets[1] = '은행별 심사 기준은 <hl>달라질 수 있어요</hl>.';
+  const report = evaluateContentQuality(content, '주택담보대출 한도 축소와 기타담보대출 잔액 1조7억원, 지난해 4018억원 대비 2.5배를 다룬 기사');
+  assert.equal(report.passed, true, JSON.stringify(report));
+});

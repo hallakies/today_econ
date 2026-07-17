@@ -77,6 +77,9 @@ async function sendAnalyticsReport(message) {
 async function sendPipelineFailure(error, selectedNews = {}) {
   if (!config.slackBotToken || !config.slackChannelId) return null;
   const title = selectedNews.title ? `\n기사: ${selectedNews.title}` : '';
+  const recovery = Number.isInteger(error.repairAttempts)
+    ? `\n자동 수정 시도: ${error.repairAttempts}회${error.repairError ? `\n수정 호출 오류: ${error.repairError}` : ''}`
+    : '';
   const quality = error.qualityReport
     ? `\n품질 점수: ${error.qualityReport.score}/100\n${error.qualityReport.errors.join('\n')}`
     : '';
@@ -85,7 +88,7 @@ async function sendPipelineFailure(error, selectedNews = {}) {
     : '';
   return web.chat.postMessage({
     channel: config.slackChannelId,
-    text: `❌ 오늘경제 파이프라인이 게시 전에 중단됐어요.${title}${quality}\n원인: ${error.message}${draft}`,
+    text: `❌ 오늘경제 파이프라인이 게시 전에 중단됐어요.${title}${recovery}${quality}\n원인: ${error.message}${draft}`,
   });
 }
 
