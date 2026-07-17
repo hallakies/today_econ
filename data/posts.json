@@ -123,5 +123,34 @@
       "tag": "instagram-assets-29565987844-1784276655605",
       "deleteAfter": "2026-07-20T08:25:43.516Z"
     }
+  },
+  {
+    "metrics": {},
+    "mediaId": "18107671913083555",
+    "permalink": "https://www.instagram.com/reel/Da5I9hHDh1E/",
+    "publishedAt": "2026-07-17T11:46:19+0000",
+    "articleTitle": "“퇴직금 없는 우리엄마 희소식”…이달부터 자영업자 노란우산 한도 연 1800만원으로",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12100934",
+    "contentMetadata": {
+      "topic": "“퇴직금 없는 우리엄마 희소식”…이달부터 자영업자 노란우산 한도 연 1800만원으로",
+      "audience": "자영업자",
+      "hook_type": "숫자",
+      "money_channel": "stocks",
+      "editorial_format": "money-change-brief-fallback"
+    },
+    "qualityScore": 100,
+    "format": "reel",
+    "requestedFormat": "reel",
+    "story": {
+      "id": "18123696214681987",
+      "permalink": "https://www.instagram.com/stories/today.econ/3943222612704534581",
+      "publishedAt": "2026-07-17T11:46:54+0000",
+      "format": "standalone_story_copy"
+    },
+    "release": {
+      "id": 355646100,
+      "tag": "instagram-assets-29577611086-1784288737957",
+      "deleteAfter": "2026-07-20T11:46:57.293Z"
+    }
   }
 ]
