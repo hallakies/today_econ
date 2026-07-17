@@ -152,5 +152,34 @@
       "tag": "instagram-assets-29577611086-1784288737957",
       "deleteAfter": "2026-07-20T11:46:57.293Z"
     }
+  },
+  {
+    "metrics": {},
+    "mediaId": "18107510099096236",
+    "permalink": "https://www.instagram.com/reel/Da5LVZBlOoT/",
+    "publishedAt": "2026-07-17T12:07:03+0000",
+    "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12101110",
+    "contentMetadata": {
+      "topic": "금리인상",
+      "audience": "고령층",
+      "hook_type": "반전",
+      "money_channel": "credit",
+      "editorial_format": "money-change-brief"
+    },
+    "qualityScore": 100,
+    "format": "reel",
+    "requestedFormat": "reel",
+    "story": {
+      "id": "18166900348450610",
+      "permalink": "https://www.instagram.com/stories/today.econ/3943233051924823956",
+      "publishedAt": "2026-07-17T12:07:33+0000",
+      "format": "standalone_story_copy"
+    },
+    "release": {
+      "id": 355655549,
+      "tag": "instagram-assets-29578619498-1784289995162",
+      "deleteAfter": "2026-07-20T12:07:37.530Z"
+    }
   }
 ]

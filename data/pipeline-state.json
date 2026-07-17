@@ -19,6 +19,26 @@
       "repairAttempts": 0,
       "qualityScore": 100,
       "error": ""
+    },
+    {
+      "at": "2026-07-17T12:03:54.597Z",
+      "status": "failed",
+      "stage": "content_generate",
+      "articleTitle": "60대이상 취약차주 빚 평균 1억원 … 30대보다 2배 많아",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 6037, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
+    },
+    {
+      "at": "2026-07-17T12:07:38.952Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
+      "recoveryMode": true,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
     }
   ]
 }
