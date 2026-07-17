@@ -39,6 +39,37 @@ test('uploads images as prerelease assets without committing them', async () => 
   assert.match(release.tag, /^instagram-assets-42-/);
 });
 
+test('uploads a Reel alongside card images and returns typed public URLs', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'today-econ-assets-'));
+  const files = ['slide_1.png', 'slide_2.png', 'reel.mp4'].map(name => {
+    const file = path.join(directory, name);
+    fs.writeFileSync(file, Buffer.from(name));
+    return file;
+  });
+  let uploadCount = 0;
+  const fetchImpl = async (url, options = {}) => {
+    if (String(url).endsWith('/releases') && options.method === 'POST') {
+      return jsonResponse({ id: 8, upload_url: 'https://uploads.github.com/release{?name}', html_url: 'release', created_at: '2026-07-15T00:00:00Z' });
+    }
+    if (String(url).startsWith('https://uploads.github.com/release')) {
+      uploadCount += 1;
+      const name = new URL(url).searchParams.get('name');
+      return jsonResponse({ id: uploadCount, name, browser_download_url: `https://github.com/download/${name}` });
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  };
+
+  const release = await createTemporaryRelease({
+    assetPaths: files.map((file, index) => ({ path: file, filename: path.basename(file), contentType: index === 2 ? 'video/mp4' : 'image/png' })),
+    token: 'token',
+    repository: 'owner/repo',
+    runId: '43',
+    fetchImpl,
+  });
+  assert.equal(release.imageUrls.length, 2);
+  assert.equal(release.videoUrl, 'https://github.com/download/reel.mp4');
+});
+
 test('deletes only expired today.econ prereleases and their tags', async () => {
   const deleted = [];
   const fetchImpl = async (url, options = {}) => {

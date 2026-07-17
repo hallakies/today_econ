@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ensureSingleHighlight, finalizeCaption, normalizeActionStep, normalizeGeneratedContent, parseJsonResponse } = require('../src/generator');
+const { ensureSingleHighlight, finalizeCaption, normalizeActionStep, normalizeActionSteps, normalizeGeneratedContent, parseJsonResponse } = require('../src/generator');
 
 test('preserves useful caption paragraphs and replaces generated hashtags', () => {
   const caption = finalizeCaption('훅입니다.\n\n핵심 설명입니다.\n\n어떻게 보세요?\n\n#임시태그');
@@ -44,6 +44,13 @@ test('repairs incomplete action steps and builds a usable caption', () => {
   assert.doesNotMatch(content.instagram_caption, /문턱과\s*을/);
   assert.match(content.instagram_caption, /저장해둘 확인 순서/);
   assert.match(content.instagram_caption, /https:\/\/example\.com\/stock-loan/);
+});
+
+test('fills a missing action step with a concrete, saveable check', () => {
+  const steps = normalizeActionSteps(['앱에서 한도 확인', '', '']);
+  assert.equal(steps.length, 3);
+  assert.match(steps[1], /약관|시행일/);
+  assert.match(steps[2], /금리|수수료/);
 });
 
 test('drops malformed or unsourced optional stats without weakening required facts', () => {

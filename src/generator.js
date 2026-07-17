@@ -109,6 +109,23 @@ function normalizeActionStep(step, index) {
   return clean;
 }
 
+function normalizeActionSteps(steps) {
+  const defaults = [
+    '앱에서 현재 한도와 잔액을 확인하세요.',
+    '약관에서 시행일과 적용 기준을 확인하세요.',
+    '추가 이용 전 금리와 수수료를 비교하세요.',
+  ];
+  const normalized = (Array.isArray(steps) ? steps : [])
+    .slice(0, 3)
+    .map(normalizeActionStep)
+    .filter(Boolean);
+  for (const fallback of defaults) {
+    if (normalized.length >= 3) break;
+    if (!normalized.includes(fallback)) normalized.push(fallback);
+  }
+  return normalized.slice(0, 3);
+}
+
 function normalizeEvidence(text = '') {
   return String(text).normalize('NFC').replace(/[\s,]/g, '').toLowerCase();
 }
@@ -156,14 +173,16 @@ function buildCanonicalCaption(content, sourceLink = '') {
   const insight = normalizeCoreInsight(content.core_insight || '').replace(/[.!?]+$/, '');
   const uncertainty = plainBulletText(content.analysis?.uncertainty || '').replace(/[.!?]+$/, '');
   const paragraphs = [];
+  // Captions are intentionally tighter than the card copy: the first two lines
+  // earn the pause, while the cards carry the full evidence and explanation.
   if (title || subtitle) paragraphs.push(`${title}${title && subtitle ? ` — ${subtitle}` : subtitle}`.trim());
-  if (facts.length) paragraphs.push(`${FRIENDLY_SECTIONS.card2}\n${facts.map((fact, index) => `${index + 1}. ${fact}.`).join('\n')}`);
-  if (impacts.length) paragraphs.push(`${FRIENDLY_SECTIONS.card3}\n${impacts.map((impact, index) => `${index + 1}. ${impact}${/[.!?]$/.test(impact) ? '' : '.'}`).join('\n')}`);
+  if (facts.length) paragraphs.push(`${FRIENDLY_SECTIONS.card2}\n${facts.map(fact => `• ${fact}.`).join('\n')}`);
+  if (impacts.length) paragraphs.push(`${FRIENDLY_SECTIONS.card3}\n${impacts.map(impact => `• ${impact}${/[.!?]$/.test(impact) ? '' : '.'}`).join('\n')}`);
   if (insight) paragraphs.push(`오늘경제 한 줄 생각\n${insight}.`);
-  if (forecasts.length) paragraphs.push(`앞으로 이렇게 될 수도\n${forecasts.map((forecast, index) => `${index + 1}. ${forecast}${/[.!?]$/.test(forecast) ? '' : '.'}`).join('\n')}`);
-  if (uncertainty && !/단정할 수 없|없습니다|없어요/.test(uncertainty)) paragraphs.push(`참고로\n${uncertainty}.`);
+  if (forecasts.length) paragraphs.push(`앞으로 이렇게 될 수도\n${forecasts.map(forecast => `• ${forecast}${/[.!?]$/.test(forecast) ? '' : '.'}`).join('\n')}`);
+  if (uncertainty && !/단정할 수 없|없습니다|없어요/.test(uncertainty)) paragraphs.push(`참고로, ${uncertainty}.`);
   if (steps.length) paragraphs.push(`저장해둘 확인 순서\n${steps.map((step, index) => `${['①', '②', '③'][index]} ${step}`).join('\n')}`);
-  paragraphs.push('이 내용이 필요한 분께 저장하고 공유해 주세요. 지금 이용 중·검토 중·관심 없음 중 어디에 가까운지도 알려주세요.');
+  paragraphs.push('이 내용이 필요한 분께 저장·공유해 주세요. 지금 이용 중·검토 중·관심 없음 중 어디에 가까운가요?');
   if (sourceLink) paragraphs.push(`🔗 원문 기사\n${sourceLink}`);
   return paragraphs.join('\n\n');
 }
@@ -220,9 +239,7 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
     .map(plainBulletText)
     .filter(Boolean)
     .slice(0, 3);
-  content.card4.action_steps = Array.isArray(content.card4.action_steps)
-    ? content.card4.action_steps.slice(0, 3).map(normalizeActionStep).filter(Boolean)
-    : [];
+  content.card4.action_steps = normalizeActionSteps(content.card4.action_steps);
   content.card2.hard_terms = normalizeTerms(content.card2.hard_terms);
   content.card3.hard_terms = normalizeTerms(content.card3.hard_terms);
   content.card4.hard_terms = normalizeTerms(content.card4.hard_terms);
@@ -395,6 +412,7 @@ module.exports = {
   ensureSingleHighlight,
   normalizeGeneratedContent,
   normalizeActionStep,
+  normalizeActionSteps,
   inferMoneyChannel,
   normalizeCoreInsight,
   normalizeStats,

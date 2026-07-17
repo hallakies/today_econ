@@ -31,6 +31,7 @@ async function githubRequest(url, options = {}, token, fetchImpl = fetch) {
 
 async function createTemporaryRelease({
   imagePaths,
+  assetPaths,
   token,
   repository,
   runId = Date.now().toString(),
@@ -38,9 +39,10 @@ async function createTemporaryRelease({
   fetchImpl = fetch,
 }) {
   if (!token) throw new Error('[GitHub Assets] Missing GITHUB_TOKEN.');
-  if (!Array.isArray(imagePaths) || imagePaths.length < 2) {
-    throw new Error('[GitHub Assets] At least two carousel images are required.');
-  }
+  const assetsToUpload = Array.isArray(assetPaths)
+    ? assetPaths.map(asset => typeof asset === 'string' ? { path: asset } : asset)
+    : (Array.isArray(imagePaths) ? imagePaths.map((filePath, index) => ({ path: filePath, filename: `slide_${index + 1}.png`, contentType: 'image/png' })) : []);
+  if (assetsToUpload.length < 1) throw new Error('[GitHub Assets] At least one public asset is required.');
   const { owner, repo } = parseRepository(repository);
   const tag = `${RELEASE_TAG_PREFIX}${runId}-${Date.now()}`;
   const apiBase = `https://api.github.com/repos/${owner}/${repo}`;
@@ -60,13 +62,15 @@ async function createTemporaryRelease({
   const uploadBase = release.upload_url.replace(/\{.*$/, '');
   const assets = [];
   try {
-    for (let index = 0; index < imagePaths.length; index += 1) {
-      const imagePath = imagePaths[index];
+    for (let index = 0; index < assetsToUpload.length; index += 1) {
+      const asset = assetsToUpload[index];
+      const imagePath = asset.path;
       if (!fs.existsSync(imagePath)) throw new Error(`Image not found: ${imagePath}`);
-      const filename = `slide_${index + 1}.png`;
+      const filename = asset.filename || path.basename(imagePath);
+      const contentType = asset.contentType || (path.extname(filename).toLowerCase() === '.mp4' ? 'video/mp4' : 'application/octet-stream');
       const uploaded = await githubRequest(`${uploadBase}?name=${encodeURIComponent(filename)}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'image/png' },
+        headers: { 'Content-Type': contentType },
         body: fs.readFileSync(imagePath),
       }, token, fetchImpl);
       assets.push({ name: filename, url: uploaded.browser_download_url, id: uploaded.id });
@@ -82,7 +86,8 @@ async function createTemporaryRelease({
     htmlUrl: release.html_url,
     createdAt: release.created_at,
     assets,
-    imageUrls: assets.map(asset => asset.url),
+    imageUrls: assets.filter(asset => /\.png$/i.test(asset.name)).map(asset => asset.url),
+    videoUrl: assets.find(asset => /\.mp4$/i.test(asset.name))?.url || null,
   };
 }
 

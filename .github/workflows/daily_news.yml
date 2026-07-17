@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       publish_instagram:
-        description: 'Publish the generated carousel to Instagram (uncheck for Slack-only test)'
+        description: 'Publish the generated Reel to Instagram (uncheck for Slack-only test)'
         required: true
         default: true
         type: boolean
@@ -40,6 +40,9 @@ jobs:
       - name: Install Playwright and OS Dependencies
         run: npx playwright install --with-deps chromium
 
+      - name: Install ffmpeg for Reel rendering
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: Run Card News Creator Pipeline
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
@@ -52,6 +55,9 @@ jobs:
           INSTAGRAM_USER_ID: ${{ vars.INSTAGRAM_USER_ID }}
           INSTAGRAM_API_VERSION: 'v23.0'
           PUBLISH_INSTAGRAM: ${{ github.event_name == 'schedule' || inputs.publish_instagram == true }}
+          INSTAGRAM_FORMAT: 'reel'
+          INSTAGRAM_ALLOW_CAROUSEL_FALLBACK: 'true'
+          REEL_DURATION_PER_SLIDE: '3'
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}

@@ -39,7 +39,7 @@ async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publ
 
   const newsRef = selectedNews.link ? `\n\n🔗 원본 기사:\n<${selectedNews.link}|${selectedNews.title}>` : '';
   const publishRef = publication?.permalink
-    ? `\n\n✅ Instagram 자동 게시 완료: <${publication.permalink}|게시물 열기>`
+    ? `\n\n✅ Instagram 자동 게시 완료 (${publication.format === 'reel' ? '릴스' : '캐러셀'}): <${publication.permalink}|게시물 열기>`
     : '\n\nℹ️ Instagram 자동 게시는 비활성화된 실행입니다.';
   const captionMessage = `${captionBody}${newsRef}${publishRef}${hashtags}`;
 

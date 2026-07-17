@@ -1,4 +1,6 @@
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const config = require('../config');
 const { fetchNews, fetchArticleBody } = require('./crawler');
 const { selectNews, saveHistoryEntry } = require('./selector');
@@ -6,7 +8,8 @@ const { generateCardContent } = require('./generator');
 const { renderCardImages } = require('./renderer');
 const { sendPipelineFailure, sendToSlack } = require('./slack');
 const { cleanupExpiredReleases, createTemporaryRelease, deleteTemporaryRelease } = require('./github-assets');
-const { publishCarousel } = require('./instagram');
+const { createReelVideo } = require('./reel');
+const { publishCarousel, publishReel } = require('./instagram');
 const { addPublishedPost } = require('./post-store');
 const { resolveInstagramToken } = require('./token-vault');
 
@@ -47,39 +50,104 @@ async function publishToInstagram(renderedFiles, cardContent, selectedNews, inst
   });
   if (removed.length) console.log(`[Main] Removed ${removed.length} expired asset releases.`);
 
-  const temporaryRelease = await createTemporaryRelease({
-    imagePaths: renderedFiles,
-    token: config.githubToken,
-    repository: config.githubRepository,
-    runId: config.githubRunId || Date.now().toString(),
-    targetCommitish: config.githubSha,
-  });
+  let reelPath = null;
+  let requestedFormat = String(config.instagramFormat || 'reel').toLowerCase();
+  if (!['reel', 'carousel'].includes(requestedFormat)) requestedFormat = 'reel';
+  if (requestedFormat === 'reel') {
+    reelPath = path.join(os.tmpdir(), `today-econ-${config.githubRunId || Date.now()}.mp4`);
+    try {
+      reelPath = await createReelVideo({
+        imagePaths: renderedFiles,
+        outputPath: reelPath,
+        audioPath: config.instagramAudioFile || undefined,
+        durationPerSlide: config.reelDurationPerSlide,
+      });
+      console.log(`[Main] Reel video created: ${reelPath}`);
+    } catch (error) {
+      if (!config.instagramAllowCarouselFallback) throw error;
+      console.warn(`[Main] Reel creation failed; using carousel fallback: ${error.message}`);
+      reelPath = null;
+      requestedFormat = 'carousel';
+    }
+  }
+
+  const assetPaths = renderedFiles.map((filePath, index) => ({
+    path: filePath,
+    filename: `slide_${index + 1}.png`,
+    contentType: 'image/png',
+  }));
+  if (reelPath) assetPaths.push({ path: reelPath, filename: 'today-econ-reel.mp4', contentType: 'video/mp4' });
+  let temporaryRelease;
+  try {
+    temporaryRelease = await createTemporaryRelease({
+      assetPaths,
+      token: config.githubToken,
+      repository: config.githubRepository,
+      runId: config.githubRunId || Date.now().toString(),
+      targetCommitish: config.githubSha,
+    });
+  } catch (error) {
+    error.temporaryFiles = reelPath ? [reelPath] : [];
+    throw error;
+  }
 
   try {
-    const publication = await publishCarousel({
-      imageUrls: temporaryRelease.imageUrls,
-      caption: cardContent.instagram_caption,
-      userId: config.instagramUserId,
-      token: instagramToken,
-      version: config.instagramApiVersion,
-    });
+    let publication;
+    let publishedFormat = requestedFormat;
+    let fallbackReason = '';
+    if (requestedFormat === 'reel' && temporaryRelease.videoUrl) {
+      try {
+        publication = await publishReel({
+          videoUrl: temporaryRelease.videoUrl,
+          caption: cardContent.instagram_caption,
+          userId: config.instagramUserId,
+          token: instagramToken,
+          version: config.instagramApiVersion,
+        });
+      } catch (error) {
+        if (!config.instagramAllowCarouselFallback) throw error;
+        fallbackReason = error.message;
+        publishedFormat = 'carousel';
+        console.warn(`[Main] Reel publish failed; using carousel fallback: ${error.message}`);
+        publication = await publishCarousel({
+          imageUrls: temporaryRelease.imageUrls,
+          caption: cardContent.instagram_caption,
+          userId: config.instagramUserId,
+          token: instagramToken,
+          version: config.instagramApiVersion,
+        });
+      }
+    } else {
+      publication = await publishCarousel({
+        imageUrls: temporaryRelease.imageUrls,
+        caption: cardContent.instagram_caption,
+        userId: config.instagramUserId,
+        token: instagramToken,
+        version: config.instagramApiVersion,
+      });
+    }
+    const publicationWithFormat = { ...publication, format: publishedFormat };
     addPublishedPost({
-      mediaId: publication.id,
-      permalink: publication.permalink,
-      publishedAt: publication.timestamp || new Date().toISOString(),
+      mediaId: publicationWithFormat.id,
+      permalink: publicationWithFormat.permalink,
+      publishedAt: publicationWithFormat.timestamp || new Date().toISOString(),
       articleTitle: selectedNews.title,
       articleUrl: selectedNews.link,
       contentMetadata: cardContent.content_metadata,
       qualityScore: cardContent.quality_score,
+      format: publishedFormat,
+      requestedFormat: config.instagramFormat,
+      fallbackReason: fallbackReason || undefined,
       release: {
         id: temporaryRelease.releaseId,
         tag: temporaryRelease.tag,
         deleteAfter: new Date(Date.now() + 72 * 3600000).toISOString(),
       },
     });
-    return { publication, temporaryRelease };
+    return { publication: publicationWithFormat, temporaryRelease, temporaryFiles: reelPath ? [reelPath] : [], format: publishedFormat };
   } catch (error) {
     error.temporaryRelease = temporaryRelease;
+    error.temporaryFiles = reelPath ? [reelPath] : [];
     throw error;
   }
 }
@@ -91,6 +159,7 @@ async function run() {
   let selectedNews = {};
   let temporaryRelease = null;
   let publication = null;
+  let temporaryFiles = [];
 
   try {
     const newsList = await fetchNews(config.newsRssUrl);
@@ -112,10 +181,12 @@ async function run() {
         const result = await publishToInstagram(renderedFiles, cardContent, selectedNews, resolveInstagramToken());
         publication = result.publication;
         temporaryRelease = result.temporaryRelease;
+        temporaryFiles = result.temporaryFiles || [];
         saveHistoryEntry(selectedNews.title);
         console.log(`[Main] Instagram post published: ${publication.permalink}`);
       } catch (publishError) {
         temporaryRelease = publishError.temporaryRelease || null;
+        temporaryFiles = publishError.temporaryFiles || [];
         await sendToSlack(renderedFiles, cardContent.instagram_caption, selectedNews, null).catch(() => {});
         throw publishError;
       }
@@ -139,7 +210,7 @@ async function run() {
     }
     throw error;
   } finally {
-    cleanupTempFiles(renderedFiles);
+    cleanupTempFiles([...renderedFiles, ...temporaryFiles]);
   }
 }
 

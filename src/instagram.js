@@ -122,6 +122,44 @@ async function publishCarousel({ imageUrls, caption, userId, token, version = 'v
   return { ...media, id: published.id, containerId: carousel.id, childIds };
 }
 
+async function publishReel({ videoUrl, caption, userId, token, version = 'v23.0', shareToFeed = true, fetchImpl = fetch }) {
+  if (!token || !userId) throw new Error('[Instagram] Missing access token or user ID.');
+  if (!videoUrl || !/^https?:\/\//i.test(videoUrl)) throw new Error('[Instagram] A Reel requires one public video URL.');
+  if (!caption || caption.length > 2200) throw new Error('[Instagram] Caption must be 1-2200 characters.');
+
+  const reel = await instagramRequest({
+    path: `${userId}/media`,
+    token,
+    version,
+    method: 'POST',
+    params: {
+      media_type: 'REELS',
+      video_url: videoUrl,
+      caption,
+      share_to_feed: shareToFeed,
+    },
+    fetchImpl,
+  });
+  await waitForContainer({ id: reel.id, token, version, fetchImpl, attempts: 30, delayMs: 4000 });
+
+  const published = await instagramRequest({
+    path: `${userId}/media_publish`,
+    token,
+    version,
+    method: 'POST',
+    params: { creation_id: reel.id },
+    fetchImpl,
+  });
+  const media = await instagramRequest({
+    path: published.id,
+    token,
+    version,
+    params: { fields: 'id,permalink,timestamp,media_type,media_product_type,username' },
+    fetchImpl,
+  });
+  return { ...media, id: published.id, containerId: reel.id };
+}
+
 function insightValue(item) {
   const first = Array.isArray(item.values) ? item.values[0]?.value : item.value;
   const value = typeof first === 'number' ? first : Number(first);
@@ -193,5 +231,6 @@ module.exports = {
   getMediaInsights,
   instagramRequest,
   publishCarousel,
+  publishReel,
   waitForContainer,
 };
