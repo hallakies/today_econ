@@ -58,7 +58,8 @@ jobs:
           INSTAGRAM_FORMAT: 'reel'
           PUBLISH_INSTAGRAM_STORY: 'true'
           INSTAGRAM_ALLOW_CAROUSEL_FALLBACK: 'true'
-          REEL_DURATION_PER_SLIDE: '3'
+          # Leave unset/zero so each slide receives 6-12 seconds from its visible text length.
+          REEL_DURATION_PER_SLIDE: '0'
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}

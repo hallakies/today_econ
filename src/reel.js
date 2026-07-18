@@ -5,8 +5,23 @@ const { execFile } = require('child_process');
 const { promisify } = require('util');
 
 const execFileAsync = promisify(execFile);
-const DEFAULT_DURATION_SECONDS = 3;
-const DEFAULT_AUDIO_SECONDS = 12;
+const DEFAULT_DURATION_SECONDS = 8;
+const DEFAULT_AUDIO_SECONDS = 24;
+
+function estimateSlideDuration(text = '', { charsPerSecond = 6, minSeconds = 6, maxSeconds = 12 } = {}) {
+  const visibleLength = String(text)
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, '')
+    .length;
+  return Math.max(minSeconds, Math.min(maxSeconds, Math.ceil(visibleLength / charsPerSecond + 1.5)));
+}
+
+function resolveSlideDurations(slideTexts, override) {
+  const texts = Array.isArray(slideTexts) ? slideTexts : [];
+  const fixed = Number(override);
+  if (fixed > 0) return texts.map(() => fixed);
+  return texts.map(text => estimateSlideDuration(text));
+}
 
 function resolveFfmpegPath() {
   return process.env.FFMPEG_PATH || 'ffmpeg';
@@ -51,7 +66,9 @@ async function createReelVideo({
   imagePaths,
   outputPath = path.join(os.tmpdir(), `today-econ-reel-${Date.now()}.mp4`),
   audioPath,
-  durationPerSlide = DEFAULT_DURATION_SECONDS,
+  durationPerSlide,
+  slideTexts,
+  slideDurations,
   execFileImpl,
 } = {}) {
   if (!Array.isArray(imagePaths) || imagePaths.length < 2) {
@@ -62,30 +79,35 @@ async function createReelVideo({
   });
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-  const duration = Number(durationPerSlide) > 0 ? Number(durationPerSlide) : DEFAULT_DURATION_SECONDS;
+  const durations = Array.isArray(slideDurations) && slideDurations.length === imagePaths.length
+    ? slideDurations.map(value => Math.max(1, Number(value) || DEFAULT_DURATION_SECONDS))
+    : resolveSlideDurations(
+      Array.isArray(slideTexts) && slideTexts.length === imagePaths.length ? slideTexts : imagePaths.map(() => ''),
+      durationPerSlide
+    );
+  const totalDuration = durations.reduce((sum, value) => sum + value, 0);
   let resolvedAudio = audioPath;
   let generatedAudio = false;
   if (!resolvedAudio || !fs.existsSync(resolvedAudio)) {
     resolvedAudio = path.join(os.tmpdir(), `today-econ-bed-${Date.now()}.m4a`);
-    await createAmbientAudio({ outputPath: resolvedAudio, durationSeconds: imagePaths.length * duration, execFileImpl });
+    await createAmbientAudio({ outputPath: resolvedAudio, durationSeconds: totalDuration, execFileImpl });
     generatedAudio = true;
   }
 
   const args = ['-y'];
-  imagePaths.forEach(imagePath => args.push('-loop', '1', '-t', String(duration), '-i', imagePath));
-  args.push('-i', resolvedAudio);
+  imagePaths.forEach((imagePath, index) => args.push('-loop', '1', '-t', String(durations[index]), '-i', imagePath));
+  args.push('-stream_loop', '-1', '-i', resolvedAudio);
   args.push(
     '-filter_complex', buildVideoFilters(imagePaths.length),
     '-map', '[v]',
     '-map', `${imagePaths.length}:a:0`,
-    '-t', String(imagePaths.length * duration),
+    '-t', String(totalDuration),
     '-r', '30',
     '-c:v', 'libx264',
     '-pix_fmt', 'yuv420p',
     '-c:a', 'aac',
     '-b:a', '96k',
     '-movflags', '+faststart',
-    '-shortest',
     outputPath,
   );
 
@@ -104,5 +126,7 @@ module.exports = {
   buildVideoFilters,
   createAmbientAudio,
   createReelVideo,
+  estimateSlideDuration,
+  resolveSlideDurations,
   runFfmpeg,
 };

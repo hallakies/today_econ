@@ -2,16 +2,15 @@ const Groq = require('groq-sdk');
 const config = require('../config');
 const { assertContentQuality, extractMaterialNumbers, jaccardSimilarity } = require('./quality');
 const { loadPipelineState } = require('./pipeline-state');
+const { buildArticleBrief, isBoilerplate } = require('./article');
 
 const MAIN_MODEL = 'llama-3.3-70b-versatile';
 const FALLBACK_MODEL = 'llama-3.1-8b-instant';
-const STANDARD_HASHTAGS = '#경제공부 #경제뉴스 #오늘의경제 #재테크 #today.econ';
+const STANDARD_HASHTAGS = '#경제뉴스 #경제공부 #오늘경제 #today_econ';
 const FRIENDLY_SECTIONS = Object.freeze({
   card2: '무슨 일이야?',
   card3: '그래서 내 돈은?',
-  card4: '앞으로 이렇게 될 수도',
 });
-const MONEY_CHANNELS = Object.freeze(['stocks', 'housing', 'living_cost', 'credit', 'tax', 'mixed']);
 const MAX_QUALITY_REPAIR_ATTEMPTS = 2;
 
 function getGroqClient() {
@@ -92,64 +91,12 @@ function sanitizeRecursively(value) {
 
 function finalizeCaption(caption) {
   let clean = sanitizeText(caption || '');
-  const hashtagIndex = clean.indexOf('#');
-  if (hashtagIndex >= 0) clean = clean.slice(0, hashtagIndex).trim();
-  return `${clean}\n\n${STANDARD_HASHTAGS}`;
-}
-
-function normalizeActionStep(step, index) {
-  const clean = plainBulletText(step)
-    .replace(/^[①②③④⑤\d.)\s-]+/, '')
-    .replace(/\s+/g, ' ')
+  clean = clean
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/(?:#[0-9A-Za-z가-힣_.-]+\s*)+/g, '')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
-  if (!clean) return '';
-  if (/대출 문턱과\s*을|문턱과\s*을/.test(clean)) return '대출 문턱과 조건을 비교하세요.';
-  if (clean.length < 12) return '';
-  if (/한다[.!]?$/.test(clean)) return `${clean.replace(/한다[.!]?$/, '')}하세요.`;
-  if (!/[.!요다세요]$/.test(clean)) return `${clean}하세요.`;
-  return clean;
-}
-
-function actionStepDefaults(sourceText = '') {
-  if (/대출|금리|신용|담보|연체|차주/.test(sourceText)) {
-    return [
-      '대출 앱에서 다음 금리변동일과 월 상환액을 확인하세요.',
-      '계약서에서 만기일과 상환 방식을 확인하세요.',
-      '추가 대출 전 금리와 수수료를 비교하세요.',
-    ];
-  }
-  if (/노란우산|공제|노후|퇴직|연금|자영업|소상공인/.test(sourceText)) {
-    return [
-      '공제 앱에서 올해 납입액과 남은 한도를 확인하세요.',
-      '약관에서 가입 조건과 중도 해지 기준을 확인하세요.',
-      '월 납입액과 기존 저축 비중을 비교하세요.',
-    ];
-  }
-  if (/주택|부동산|전세|분양/.test(sourceText)) {
-    return [
-      '은행 앱에서 대출 한도와 월 상환액을 확인하세요.',
-      '계약서에서 잔금일과 대출 실행 조건을 확인하세요.',
-      '매수 전 금리와 취득 비용을 비교하세요.',
-    ];
-  }
-  return [
-    '앱에서 현재 한도와 잔액을 확인하세요.',
-    '약관에서 시행일과 적용 기준을 확인하세요.',
-    '추가 이용 전 금리와 수수료를 비교하세요.',
-  ];
-}
-
-function normalizeActionSteps(steps, sourceText = '') {
-  const defaults = actionStepDefaults(sourceText);
-  const normalized = (Array.isArray(steps) ? steps : [])
-    .slice(0, 3)
-    .map(normalizeActionStep)
-    .filter(Boolean);
-  for (const fallback of defaults) {
-    if (normalized.length >= 3) break;
-    if (!normalized.includes(fallback)) normalized.push(fallback);
-  }
-  return normalized.slice(0, 3);
+  return `${clean}\n\n${STANDARD_HASHTAGS}`;
 }
 
 function ensureCompleteSentence(value) {
@@ -168,89 +115,82 @@ function hasGroundedEffectiveDate(value, sourceText) {
   return tokens.length > 0 && tokens.every(token => source.includes(normalizeEvidence(token)));
 }
 
-function moneyFallbackSubtitle(sourceText = '') {
-  const text = String(sourceText);
-  if (/노란우산|공제|노후|퇴직|연금|자영업|소상공인/.test(text)) return '자영업자라면 내 노후자금 계획을 확인해요';
-  if (/주택|부동산|전세|분양/.test(text)) return '내 집값·대출 계획에 미칠 영향을 봐요';
-  if (/물가|생활비|소비자/.test(text)) return '내 생활비와 소비 계획에 연결돼요';
-  if (/세금|과세|공제/.test(text)) return '내 세금과 현금흐름을 확인해요';
-  if (/주식|증시|종목|ETF|코인/.test(text)) return '내 투자금과 리스크를 다시 점검해요';
-  if (/대출|금리|신용|담보|연체|차주/.test(text)) return '내 월 이자와 상환 계획을 다시 확인해요';
-  return '내 돈의 선택지가 어떻게 달라지는지 봐요';
-}
-
-function forecastFallback(sourceText = '', index = 0) {
-  if (/노란우산|공제|노후|퇴직|연금|자영업|소상공인/.test(sourceText)) {
-    return index === 0
-      ? '제도 활용 폭은 <hl>사업 소득과 납입 여력</hl>에 따라 달라질 수 있어요.'
-      : '실제 체감 혜택은 <hl>가입 조건과 유지 기간</hl>에 따라 달라질 수 있어요.';
-  }
-  if (/대출|금리|신용|담보|연체|차주/.test(sourceText)) {
-    return index === 0
-      ? '금리 흐름에 따라 <hl>월 이자 부담</hl>이 더 커질 수 있어요.'
-      : '상환 여력은 <hl>소득과 만기 조건</hl>에 따라 달라질 수 있어요.';
-  }
-  return index === 0
-    ? '실제 영향은 <hl>개인별 조건과 적용 시점</hl>에 따라 달라질 수 있어요.'
-    : '시장 반응은 <hl>후속 정책과 금리 환경</hl>에 따라 달라질 수 있어요.';
-}
-
-function compactCoverTitle(title = '') {
-  const clean = plainBulletText(title).replace(/[“”"'…]/g, '').trim();
-  if (clean.length >= 8 && clean.length <= 32) return clean;
-  if (clean.length > 32) return `${clean.slice(0, 29).trim()}…`;
-  return `${clean || '오늘의 경제 변화'} 핵심`;
-}
-
-function sourceFactSentences(sourceText = '') {
-  return String(sourceText)
-    .split(/[.!?]\s+|\n+/)
-    .map(sentence => sanitizeText(sentence).trim())
-    .filter(sentence => sentence.length >= 15 && sentence.length <= 88)
-    .slice(0, 4);
-}
-
-function fallbackImpactBullets(sourceText = '') {
-  if (/노란우산|공제|노후|퇴직|연금|자영업|소상공인/.test(sourceText)) {
+function fallbackImpactBullets(brief) {
+  if (brief.topic === 'retirement') {
     return [
       '자영업자는 <hl>월별 납입 여력</hl>을 다시 계산해볼 수 있어요.',
       '노후 준비 중이라면 <hl>기존 저축과의 비중</hl>을 비교해보세요.',
+      '공식 안내에서 <hl>가입 조건과 납입 한도</hl>를 확인하세요.',
     ];
   }
-  if (/주택|부동산|전세|분양/.test(sourceText)) {
+  if (brief.topic === 'housing') {
     return [
-      '집을 준비 중이라면 <hl>내 대출 한도와 자금 계획</hl>을 다시 확인해요.',
-      '이미 보유 중이라면 <hl>상환 일정과 현금 여력</hl>을 함께 점검해요.',
+      '청약을 유지 중이라면 <hl>해지 전 회복할 수 없는 조건</hl>을 먼저 확인해요.',
+      '집을 준비 중이라면 <hl>청약 계획과 월 납입 부담</hl>을 함께 비교해요.',
+      '은행 앱에서 <hl>납입 횟수와 인정 금액</hl>을 확인하세요.',
     ];
   }
-  if (/대출|금리|신용|담보|연체|차주/.test(sourceText)) {
+  if (brief.topic === 'credit') {
     return [
       '대출 이용 중이라면 <hl>다음 금리변동일과 월 이자</hl>를 함께 확인해요.',
       '부모님 대출이 걱정된다면 <hl>만기와 상환 방식</hl>을 먼저 살펴보세요.',
+      '대출 앱에서 <hl>월 상환액과 남은 만기</hl>를 확인하세요.',
+    ];
+  }
+  if (brief.topic === 'stocks') {
+    return [
+      '투자 중이라면 <hl>내 종목의 직접 영향</hl>이 있는지 구분해보세요.',
+      '시장 전체 흐름과 <hl>개별 기업 실적</hl>을 따로 확인해요.',
+      '매매 전에 <hl>수수료와 손실 한도</hl>를 확인하세요.',
+    ];
+  }
+  if (brief.topic === 'living_cost') {
+    return [
+      '가계부에서 <hl>이번 달 필수지출</hl>이 얼마나 늘었는지 확인해요.',
+      '가격 변화가 큰 항목은 <hl>구매 시점과 대체재</hl>를 비교해보세요.',
+      '지난달과 <hl>같은 품목의 결제액</hl>을 비교하세요.',
     ];
   }
   return [
     '내 상황에 맞는 <hl>금액과 적용 조건</hl>을 먼저 확인해보세요.',
     '기존 계획과 비교해 <hl>현금흐름의 변화</hl>를 점검해보세요.',
+    '공식 안내에서 <hl>적용 대상과 시행 시점</hl>을 확인하세요.',
   ];
 }
 
+function fallbackCoreInsight(brief) {
+  const insights = {
+    housing: '청약통장을 깨기 전, 다시 만들 수 없는 가입 기간과 납입 인정을 먼저 따져봐야 해요.',
+    credit: '대출 뉴스는 한도보다 내 월 상환액이 실제로 얼마나 달라지는지를 먼저 봐야 해요.',
+    stocks: '시장 뉴스와 내 종목의 실적 영향을 구분해야 불필요한 매매를 줄일 수 있어요.',
+    living_cost: '물가 뉴스는 체감보다 같은 품목의 실제 결제액을 비교할 때 더 정확해요.',
+    tax: '세금 변화는 적용 대상과 시행 시점을 내 상황에 대입해야 실제 부담을 알 수 있어요.',
+    retirement: '공제 한도보다 내 소득에서 꾸준히 납입할 수 있는 금액을 먼저 계산해야 해요.',
+  };
+  return insights[brief.topic] || '내 상황에 적용되는 조건과 금액을 먼저 확인하는 것이 중요해요.';
+}
+
 function buildFallbackEditorial(selectedNews) {
-  const source = `${selectedNews.title || ''} ${selectedNews.fullText || selectedNews.summary || ''}`;
-  const facts = sourceFactSentences(selectedNews.fullText || selectedNews.summary || '');
+  const brief = buildArticleBrief(selectedNews);
+  const facts = brief.facts;
+  if (facts.length < 2) {
+    const error = new Error('[Generator] Article rejected: fewer than two clean, topic-relevant facts');
+    error.code = 'ARTICLE_REJECTED';
+    throw error;
+  }
   const fallbackFacts = [
     '기사에 나온 <hl>변경 내용과 적용 대상</hl>을 함께 확인해야 해요.',
     '실제 적용은 <hl>개인별 가입 조건</hl>에 따라 달라질 수 있어요.',
   ];
-  const impacts = fallbackImpactBullets(source);
+  const impacts = fallbackImpactBullets(brief);
   return {
     analysis: {
-      topic: plainBulletText(selectedNews.title || '경제 변화'),
-      audience: /자영업|소상공인/.test(source) ? '자영업자' : '경제 관심 독자',
-      hook_type: /\d/.test(source) ? '숫자' : '시의성',
+      topic: brief.topic,
+      audience: brief.audience,
+      hook_type: /\d/.test(`${brief.title} ${facts.join(' ')}`) ? '숫자' : '시의성',
       verified_facts: facts.slice(0, 2),
-      money_channel: inferMoneyChannel(source),
-      money_effect: moneyFallbackSubtitle(source),
+      money_channel: brief.money_channel,
+      money_effect: impacts[0],
       publication_date: '',
       effective_date: '',
       uncertainty: '개인별 조건과 실제 적용 범위',
@@ -258,21 +198,14 @@ function buildFallbackEditorial(selectedNews) {
     cards: {
       image_prompt: 'English premium editorial financial visual, show a clear policy or household money decision mechanism, dark navy and warm gold palette, generous negative space, no text, no logos',
       series_label: '오늘의 돈 신호',
-      core_insight: '내 상황에 맞는 금액과 적용 조건을 먼저 확인하는 것이 중요해요.',
+      core_insight: fallbackCoreInsight(brief),
       card1: {
         kicker: '오늘의 쟁점',
-        title: compactCoverTitle(selectedNews.title),
-        subtitle: moneyFallbackSubtitle(source),
+        title: brief.cover_title,
+        subtitle: plainBulletText(impacts[0]),
       },
       card2: { section_title: FRIENDLY_SECTIONS.card2, bullets: [facts[0] || fallbackFacts[0], facts[1] || fallbackFacts[1]], stats: [], hard_terms: [] },
       card3: { section_title: FRIENDLY_SECTIONS.card3, bullets: impacts, hard_terms: [] },
-      card4: {
-        section_title: FRIENDLY_SECTIONS.card4,
-        bullets: [forecastFallback(source, 0), forecastFallback(source, 1), '공식 홈페이지에서 <hl>가입·납입 조건</hl>을 확인하세요.'],
-        action_steps: actionStepDefaults(source),
-        hard_terms: [],
-        policy_points: [],
-      },
     },
   };
 }
@@ -314,27 +247,20 @@ ${errors.map(error => `- ${error}`).join('\n')}
 같은 기사에 근거해 오류가 난 필드만 고치세요. 기사에 없는 숫자·정책·날짜를 추가하지 말고, 선택형 stats는 근거가 없으면 빈 배열로 두세요. 전망은 가능성·변수·"수 있어요"·"~될 경우"처럼 불확실성을 분명히 하세요. JSON 구조는 그대로 유지하세요.`;
 }
 
-function buildCanonicalCaption(content, sourceLink = '') {
+function buildCanonicalCaption(content) {
   const facts = (content.card2?.bullets || []).map(plainBulletText).filter(Boolean).slice(0, 2).map(text => text.replace(/[.!?]+$/, ''));
   const impacts = (content.card3?.bullets || []).map(plainBulletText).filter(Boolean).slice(0, 2).map(text => text.replace(/[.!?]+$/, ''));
-  const steps = (content.card4?.action_steps || []).map(normalizeActionStep).filter(Boolean).slice(0, 3);
-  const forecasts = (content.card4?.bullets || []).slice(0, 2).map(plainBulletText).filter(Boolean);
+  const action = plainBulletText((content.card3?.bullets || [])[2] || '').replace(/[.!?]+$/, '');
   const title = plainBulletText(content.card1?.title || '');
   const subtitle = plainBulletText(content.card1?.subtitle || '').replace(/[.!?]+$/, '');
   const insight = normalizeCoreInsight(content.core_insight || '').replace(/[.!?]+$/, '');
-  const uncertainty = plainBulletText(content.analysis?.uncertainty || '').replace(/[.!?]+$/, '');
   const paragraphs = [];
-  // Captions are intentionally tighter than the card copy: the first two lines
-  // earn the pause, while the cards carry the full evidence and explanation.
   if (title || subtitle) paragraphs.push(`${title}${title && subtitle ? ` — ${subtitle}` : subtitle}`.trim());
   if (facts.length) paragraphs.push(`${FRIENDLY_SECTIONS.card2}\n${facts.map(fact => `• ${fact}.`).join('\n')}`);
   if (impacts.length) paragraphs.push(`${FRIENDLY_SECTIONS.card3}\n${impacts.map(impact => `• ${impact}${/[.!?]$/.test(impact) ? '' : '.'}`).join('\n')}`);
   if (insight) paragraphs.push(`오늘경제 한 줄 생각\n${insight}.`);
-  if (forecasts.length) paragraphs.push(`앞으로 이렇게 될 수도\n${forecasts.map(forecast => `• ${forecast}${/[.!?]$/.test(forecast) ? '' : '.'}`).join('\n')}`);
-  if (uncertainty && !/단정할 수 없|없습니다|없어요/.test(uncertainty)) paragraphs.push(`참고로, ${uncertainty}.`);
-  if (steps.length) paragraphs.push(`저장해둘 확인 순서\n${steps.map((step, index) => `${['①', '②', '③'][index]} ${step}`).join('\n')}`);
-  paragraphs.push('이 내용이 필요한 분께 저장·공유해 주세요. 지금 이용 중·검토 중·관심 없음 중 어디에 가까운가요?');
-  if (sourceLink) paragraphs.push(`🔗 원문 기사\n${sourceLink}`);
+  if (action) paragraphs.push(`오늘 확인할 것\n${action}.`);
+  paragraphs.push('놓치기 싫다면 저장해두고, 필요한 분께 공유해 주세요.');
   return paragraphs.join('\n\n');
 }
 
@@ -378,46 +304,39 @@ function normalizeBulletFormatting(content) {
 
 function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   const content = normalizeBulletFormatting(sanitizeRecursively({ ...rawCards, instagram_caption: caption }));
+  const brief = buildArticleBrief(selectedNews);
   content.series_label = content.series_label || '오늘의 돈 신호';
   content.card1 = content.card1 || {};
   content.card1.kicker = content.card1.kicker || '1분 경제 브리핑';
   content.card2 = content.card2 || {};
   content.card3 = content.card3 || {};
-  content.card4 = content.card4 || {};
-  const source = `${selectedNews.title || ''} ${selectedNews.fullText || selectedNews.summary || ''}`;
+  delete content.card4;
+  const source = `${brief.title} ${brief.cleanedBody}`;
   content.card2.stats = normalizeStats(content.card2.stats, source);
-  content.card4.policy_points = (Array.isArray(content.card4.policy_points) ? content.card4.policy_points : [])
-    .map(plainBulletText)
-    .filter(Boolean)
-    .slice(0, 3);
-  content.card4.action_steps = normalizeActionSteps(content.card4.action_steps, source);
   content.card2.hard_terms = normalizeTerms(content.card2.hard_terms);
   content.card3.hard_terms = normalizeTerms(content.card3.hard_terms);
-  content.card4.hard_terms = normalizeTerms(content.card4.hard_terms);
   content.core_insight = normalizeCoreInsight(content.core_insight);
   content.analysis ||= {};
   content.analysis.effective_date = hasGroundedEffectiveDate(content.analysis.effective_date, source)
     ? plainBulletText(content.analysis.effective_date)
     : '';
-  content.analysis.money_channel = MONEY_CHANNELS.includes(content.analysis.money_channel)
-    ? content.analysis.money_channel
-    : inferMoneyChannel(source);
-  const visibleMoneyText = [content.card1.title, content.card1.subtitle]
-    .concat(content.card2.bullets || [], content.card3.bullets || [])
-    .map(plainBulletText)
-    .join(' ');
-  if (!/내 돈|주식|집값|대출|세금|물가|금리|스톡론|부동산|투자|노후|퇴직|공제|저축|납입|자영업|소상공인|연금/.test(visibleMoneyText)) {
-    content.card1.subtitle = moneyFallbackSubtitle(source);
-  }
-  const card3Bullets = content.card3.bullets || [];
-  content.card4.bullets = (content.card4.bullets || []).map((bullet, index) => {
-    const normalized = ensureSingleHighlight(ensureCompleteSentence(bullet));
-    if (index < 2 && card3Bullets.some(impact => jaccardSimilarity(normalized, impact) >= 0.72)) {
-      return forecastFallback(source, index);
-    }
-    return normalized;
-  });
-  content.instagram_caption = finalizeCaption(buildCanonicalCaption(content, selectedNews.link));
+  content.analysis.money_channel = brief.money_channel;
+  content.analysis.topic = brief.topic;
+  content.analysis.audience = brief.audience;
+  const generatedCover = plainBulletText(content.card1.title);
+  content.card1.title = generatedCover.length >= 8
+    && generatedCover.length <= 36
+    && !/[…]|\.{3}/.test(generatedCover)
+    && !isBoilerplate(generatedCover)
+    && jaccardSimilarity(generatedCover, brief.title) < 0.75
+    ? generatedCover
+    : brief.cover_title;
+  const fallbackImpacts = fallbackImpactBullets(brief);
+  content.card3.bullets = (content.card3.bullets || []).slice(0, 3);
+  while (content.card3.bullets.length < 3) content.card3.bullets.push(fallbackImpacts[content.card3.bullets.length]);
+  content.card3.bullets = content.card3.bullets.map(bullet => ensureSingleHighlight(ensureCompleteSentence(bullet)));
+  if (!content.card1.subtitle || isBoilerplate(content.card1.subtitle)) content.card1.subtitle = plainBulletText(fallbackImpacts[0]);
+  content.instagram_caption = finalizeCaption(buildCanonicalCaption(content));
   content.template_theme = 'unified';
   const topicText = `${content.analysis?.topic || ''} ${selectedNews.title || ''}`;
   content.theme_color = /반도체|AI|빅테크|코인|가상자산|플랫폼/i.test(topicText) ? '#B883FF'
@@ -454,7 +373,7 @@ function buildCardPrompt() {
 
 브랜드 약속: "오늘 가장 중요한 경제 뉴스 하나를, 내 돈에 미치는 영향과 지금 확인할 것까지 1분 안에 설명한다."
 
-편집 포맷: 매 게시물은 오늘의 돈 신호 시리즈로 발행합니다. 사건 → 작동 원리 → 독자별 영향 → 확인 체크리스트의 흐름을 지키세요.
+편집 포맷: 매 게시물은 오늘의 돈 신호 시리즈 3장으로 발행합니다. 표지 → 사건과 이유 → 독자 영향과 한 가지 행동의 흐름을 지키세요.
 
 작성 원칙:
 - 모든 노출 문구는 자연스러운 한국어 해요체로 작성하세요.
@@ -463,20 +382,18 @@ function buildCardPrompt() {
 - "빚투족", "무대출자", "거리 나앉을 판"처럼 독자를 낙인찍거나 겁주는 표현은 사용하지 마세요.
 - 각 불릿은 15~90자의 완전한 문장이며, 가장 중요한 구절 하나만 <hl>...</hl>로 표시하세요.
 - 한 카드 안에서 같은 단어나 의미를 반복하지 마세요.
-- card2~card4를 생략하지 마세요.
+- card1~card3만 작성하고 card4는 만들지 마세요.
 - 숫자는 기사 표기와 단위를 그대로 보존하고, 숫자 카드에는 숫자·기간·비교 기준을 함께 적으세요. 같은 문장에 있는 숫자만 함께 묶고, "1.4%에서 1.4%로 두 배"처럼 앞뒤가 모순되는 비교는 절대 쓰지 마세요.
 - 사실(기사에 적힌 내용), 해석(오늘경제의 판단), 행동(독자가 지금 할 일)을 문장 역할로 구분하세요.
 - 표지는 뉴스 제목을 반복하지 말고 "부모님 대출", "내 월 이자", "내 노후자금"처럼 독자가 자신의 돈과 연결할 수 있는 표현을 하나 이상 넣으세요.
-- card3은 "누가 / 어떤 조건에서 / 무엇이 달라질 수 있는지"를 한 문장에 담으세요. card4의 전망은 card3의 문장을 바꿔 쓰지 말고, 금리·소득·시행 시점처럼 결과를 바꿀 변수를 밝혀야 합니다.
-- action_steps 3개는 서로 다른 확인 대상(예: 금리변동일·월 상환액 / 만기·상환 방식 / 수수료·대체 조건)을 써야 합니다. "앱·계약서·약관을 확인"처럼 반복되는 장소 나열은 금지합니다.
+- card3의 1~2번은 "누가 / 어떤 조건에서 / 무엇이 달라질 수 있는지"를 한 문장에 담고, 3번은 독자가 오늘 확인할 구체적인 행동 하나만 쓰세요.
 - image_prompt에는 사람·얼굴·인물 사진을 넣지 말고, 대출 명세서·상환 일정·금리 그래프처럼 기사 메커니즘만 묘사하세요.
 ${failureMemory}
 
 카드 구조:
 1. card1: 독자의 돈과 연결된 8~32자 표지 훅. 숫자·시행일·결정 포인트 중 하나를 포함하고 "혹시 이거 아세요?"는 금지합니다. kicker에는 "오늘의 쟁점"을 쓰세요.
 2. card2 "무슨 일이야?": 기사에 명시된 검증 가능한 핵심 사실 2개와 선택 가능한 stats 0~2개.
-3. card3 "그래서 내 돈은?": 실제 독자 상황 2개를 나눠 영향과 이유를 설명하세요.
-4. card4: core_insight는 "오늘경제 한 줄 생각"으로 쓰고, bullets 1~2는 "앞으로 이렇게 될 수도"에 해당하는 가능성·변수, bullet 3은 앱·계약서·약관에서 바로 할 수 있는 행동으로 작성하세요. action_steps에는 목적어가 분명한 실제 확인 순서를 최대 3개로 적으세요.
+3. card3 "그래서 내 돈은?": 실제 독자 영향 2개와 지금 확인할 행동 1개를 작성하세요.
 
 용어 해설은 카드당 최대 2개만 제공하고, "용어 = 생활 언어 풀이"와 짧은 비유를 쓰세요. 어려운 용어가 없으면 빈 배열입니다.
 
@@ -499,33 +416,24 @@ JSON만 응답하세요:
   "core_insight": "오늘경제 한 줄 생각",
     "card1": { "kicker": "오늘의 쟁점", "title": "내 돈과 연결된 훅", "subtitle": "시행일·숫자·독자 영향" },
     "card2": { "section_title": "무슨 일이야?", "bullets": ["사실 1", "사실 2"], "stats": [], "hard_terms": [] },
-    "card3": { "section_title": "그래서 내 돈은?", "bullets": ["상황 1의 영향과 이유", "상황 2의 영향과 이유"], "hard_terms": [] },
-    "card4": { "section_title": "앞으로 이렇게 될 수도", "bullets": ["가능성 1", "가능성 2", "확인 행동 1"], "action_steps": ["앱·계약서·약관에서 확인할 순서"], "hard_terms": [] }
+    "card3": { "section_title": "그래서 내 돈은?", "bullets": ["상황 1의 영향과 이유", "상황 2의 영향과 이유", "오늘 확인할 행동 1개"], "hard_terms": [] }
   }
 }`;
 }
 
-function buildCaptionPrompt() {
-  return `당신은 경제 미디어 "오늘경제"의 피드 에디터입니다.
-카드를 보지 않아도 저장할 가치가 있는 5~7개의 짧은 문단을 작성하세요.
-- 1문단: 숫자·시행일·독자 영향이 들어간 편집 훅. "혹시 이거 아세요?"는 금지.
-- 2문단: 기사 기준으로 확인된 사실 2개를 설명하고, 출처와 불확실성을 구분하세요.
-- 3문단: "오늘경제 한 줄 생각"으로 시작하는 독창적인 판단을 한 문장으로 쓰세요.
-- 4문단: 이미 이용 중인 사람/신규 검토자 등 독자 상황별 영향을 설명하세요.
-- 5문단: 저장할 수 있는 3단계 확인 체크리스트를 ① ② ③ 형식으로 쓰세요.
-- 마지막: "이용 중/검토 중/관심 없음"처럼 답하기 쉬운 선택형 질문 하나와 저장·공유 CTA를 넣으세요.
-- 이모지는 최대 2개, 해시태그와 <hl> 태그는 사용하지 마세요.
-- "빚투족", "무대출자", "당신의 금융 상황에 어떤 영향을" 같은 낙인·일반론 표현은 금지합니다.
-- 과장·정책 선동·투자 추천을 하지 마세요.
-JSON만 응답하세요: {"instagram_caption":"여러 문단의 캡션"}`;
-}
-
 async function generateCardContent(selectedNews) {
-  const sourceText = `${selectedNews.title}\n${selectedNews.fullText || selectedNews.summary || ''}`
+  const brief = buildArticleBrief(selectedNews);
+  if (brief.facts.length < 2) {
+    const error = new Error('[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts');
+    error.code = 'ARTICLE_REJECTED';
+    throw error;
+  }
+  const cleanNews = { ...selectedNews, fullText: brief.cleanedBody };
+  const sourceText = `${brief.title}\n${brief.cleanedBody}`
     .normalize('NFC')
     .slice(0, 12000);
 
-  console.log('[Generator] Generating evidence-led four-card editorial...');
+  console.log('[Generator] Generating evidence-led three-card editorial...');
   let cardResult;
   let content;
   let lastError;
@@ -534,7 +442,7 @@ async function generateCardContent(selectedNews) {
   try {
     cardResult = await executeLLMCall(
       buildCardPrompt(),
-      `기사 제목: ${selectedNews.title}\n기사 본문:\n${sourceText}`,
+      `고정된 기사 브리프: ${JSON.stringify(brief)}\n기사 본문:\n${sourceText}`,
       5000
     );
   } catch (error) {
@@ -548,7 +456,7 @@ async function generateCardContent(selectedNews) {
       content = normalizeGeneratedContent(
         { ...cardResult.cards, analysis: cardResult.analysis || {} },
         '',
-        selectedNews
+        cleanNews
       );
       const qualityReport = assertContentQuality(content, sourceText);
       content.quality_score = qualityReport.score;
@@ -569,7 +477,7 @@ async function generateCardContent(selectedNews) {
       try {
         cardResult = await executeLLMCall(
           buildQualityRepairPrompt(error.qualityReport.errors),
-          `기사 제목: ${selectedNews.title}\n기사 본문:\n${sourceText.slice(0, 9000)}\n\n수정할 원고 JSON:\n${JSON.stringify(cardResult).slice(0, 12000)}`,
+          `고정된 기사 브리프: ${JSON.stringify(brief)}\n기사 본문:\n${sourceText.slice(0, 9000)}\n\n수정할 원고 JSON:\n${JSON.stringify(cardResult).slice(0, 12000)}`,
           5000
         );
       } catch (repairError) {
@@ -581,8 +489,8 @@ async function generateCardContent(selectedNews) {
 
   const error = lastError || new Error('[Generator] Content generation failed without a quality report');
   try {
-    const fallbackDraft = buildFallbackEditorial(selectedNews);
-    const fallback = normalizeGeneratedContent({ ...fallbackDraft.cards, analysis: fallbackDraft.analysis }, '', selectedNews);
+    const fallbackDraft = buildFallbackEditorial(cleanNews);
+    const fallback = normalizeGeneratedContent({ ...fallbackDraft.cards, analysis: fallbackDraft.analysis }, '', cleanNews);
     fallback.content_metadata = {
       topic: fallback.analysis.topic || '미분류',
       audience: fallback.analysis.audience || '경제 관심 독자',
@@ -590,7 +498,7 @@ async function generateCardContent(selectedNews) {
       money_channel: fallback.analysis.money_channel,
       editorial_format: 'money-change-brief-fallback',
     };
-    fallback.instagram_caption = finalizeCaption(buildCanonicalCaption(fallback, selectedNews.link));
+    fallback.instagram_caption = finalizeCaption(buildCanonicalCaption(fallback));
     const qualityReport = assertContentQuality(fallback, sourceText);
     fallback.quality_score = qualityReport.score;
     console.warn(`[Generator] Published safe fallback after ${repairAttempts} LLM repair attempt(s).`);
@@ -605,14 +513,11 @@ async function generateCardContent(selectedNews) {
 
 module.exports = {
   buildCanonicalCaption,
-  buildCaptionPrompt,
   buildCardPrompt,
   finalizeCaption,
   generateCardContent,
   ensureSingleHighlight,
   normalizeGeneratedContent,
-  normalizeActionStep,
-  normalizeActionSteps,
   inferMoneyChannel,
   buildFallbackEditorial,
   normalizeCoreInsight,

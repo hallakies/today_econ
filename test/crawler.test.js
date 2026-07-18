@@ -12,3 +12,21 @@ test('collapses real whitespace when extracting article text', async () => {
     global.fetch = originalFetch;
   }
 });
+
+test('removes byline and Google recommendation chrome from the article body', async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => new Response(`
+    <article>
+      <div class="reporter">류영상 기자 입력 : 2026.07.17 21:56</div>
+      <div class="google-promo">구글 검색 선호 추가 알아보기 Google 검색에서 매일경제 기사를 더 자주 볼 수 있습니다.</div>
+      <p>청약통장 가입자는 한 달 새 10만명 감소했다.</p>
+      <p>분양가 상승으로 통장을 해지하는 가입자가 늘었다.</p>
+    </article>`, { status: 200 });
+  try {
+    const text = await fetchArticleBody('https://example.com/article');
+    assert.match(text, /청약통장 가입자/);
+    assert.doesNotMatch(text, /류영상|기자 입력|Google|구글 검색|알아보기/);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});

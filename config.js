@@ -14,7 +14,7 @@ module.exports = {
   instagramFormat: process.env.INSTAGRAM_FORMAT || 'reel',
   publishInstagramStory: process.env.PUBLISH_INSTAGRAM_STORY !== 'false',
   instagramAudioFile: process.env.INSTAGRAM_AUDIO_FILE || '',
-  reelDurationPerSlide: parseFloat(process.env.REEL_DURATION_PER_SLIDE || '3'),
+  reelDurationPerSlide: parseFloat(process.env.REEL_DURATION_PER_SLIDE || '0'),
   instagramAllowCarouselFallback: process.env.INSTAGRAM_ALLOW_CAROUSEL_FALLBACK !== 'false',
   publishInstagram: process.env.PUBLISH_INSTAGRAM === 'true',
   githubToken: process.env.GITHUB_TOKEN,

@@ -44,7 +44,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         <!-- Centered Typography Area -->
         <main class="w-full z-20 flex-1 flex flex-col justify-center items-center space-y-6 text-center">
           <div class="text-white/80 font-black text-2xl tracking-[0.16em] uppercase">${content.kicker || '오늘의 쟁점'}</div>
-          <h1 class="font-display text-[3.8rem] font-black text-white leading-[1.16] break-keep max-w-[940px] drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]">${highlightText(content.title.replace(/\\n/g, '<br/>'), themeColor)}</h1>
+          <h1 class="font-display text-[3.8rem] font-black text-white leading-[1.16] break-keep max-w-[940px] drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]">${highlightText(content.title.replace(/\\n|\n/g, '<br/>'), themeColor)}</h1>
           
           <div class="h-1.5 w-32 rounded-full" style="background: ${themeColor}; box-shadow: 0 0 20px ${themeColor};"></div>
           
@@ -146,7 +146,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         </main>
         
         <footer class="w-full z-20 mt-8 flex justify-between items-center text-white/35 font-bold text-lg tracking-wider">
-           <span>출처는 캡션의 원문 링크에서 확인하세요</span>
+           <span>매일경제 기사 바탕</span>
            <span>${String(slideNumber).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}</span>
         </footer>
       </div>

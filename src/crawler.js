@@ -1,5 +1,6 @@
 const Parser = require('rss-parser');
 const cheerio = require('cheerio');
+const { cleanArticleText } = require('./article');
 const parser = new Parser();
 
 /**
@@ -150,11 +151,14 @@ async function fetchArticleBody(articleUrl) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // Remove script, style, noscript, iframe tags to clean up the content
-    $('script, style, noscript, iframe, header, footer, nav, aside').remove();
+    // Remove page chrome before selecting the editorial body. MK occasionally
+    // renders author/search widgets inside the article wrapper, so selectors and
+    // a final phrase sanitizer are both required.
+    $('script, style, noscript, iframe, header, footer, nav, aside, form, button').remove();
+    $('[class*="author"], [class*="reporter"], [class*="byline"], [class*="google"], [class*="related"], [class*="recommend"], [class*="share"], [id*="author"], [id*="reporter"], [id*="google"], [id*="related"]').remove();
 
     // Most news sites put their main content in article, .article, #article, #content, etc.
-    let contentNode = $('article, .article, #article, .news_content, #news_body, #art_body, #dic_area').first();
+    let contentNode = $('.news_cnt_detail_wrap, .news_cnt_detail, .article_body, .article-body, #article_body, #news_body, #art_body, #dic_area, article').first();
     
     if (contentNode.length === 0) {
       // Fallback: Just grab body and let text extraction handle the rest
@@ -162,8 +166,7 @@ async function fetchArticleBody(articleUrl) {
     }
 
     // Extract text and clean up excess whitespace
-    let fullText = contentNode.text();
-    fullText = fullText.replace(/\s+/g, ' ').trim().slice(0, 16000);
+    let fullText = cleanArticleText(contentNode.text()).slice(0, 16000);
     
     // Normalize to NFC to avoid tokenizer issues as instructed in AGENTS.md
     if (fullText) {

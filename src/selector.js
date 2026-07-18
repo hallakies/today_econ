@@ -48,6 +48,18 @@ function buildFallbackRanking(newsList) {
     .sort((a, b) => b.score - a.score)[0]?.index || 0;
 }
 
+function rankNewsCandidates(newsList, preferred) {
+  const highIntent = /(주식|주가|금리|대출|주택|부동산|청약|세금|물가|환율|ETF|예금|적금|연금|소득|고용|코인)/i;
+  return [...newsList]
+    .map((item, index) => ({
+      item,
+      index,
+      score: (item === preferred ? 100 : 0) + (highIntent.test(item.title) ? 10 : 0) + Math.max(0, 5 - index * 0.25),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map(entry => entry.item);
+}
+
 async function selectNews(newsList) {
   if (!Array.isArray(newsList) || newsList.length === 0) {
     throw new Error('[Selector] News list is empty.');
@@ -96,6 +108,7 @@ JSON만 응답하세요: {"selected_index":0,"scores":{"money_impact":0,"actiona
 
 module.exports = {
   buildFallbackRanking,
+  rankNewsCandidates,
   loadHistory,
   saveHistoryEntry,
   selectNews,

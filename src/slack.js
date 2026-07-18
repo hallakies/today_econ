@@ -28,16 +28,7 @@ async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publ
     };
   });
 
-  // Extract body and hashtags from instagramCaption to insert the original news source link in between
-  const hashtagsPattern = /\n\n#경제공부.*/s;
-  let captionBody = instagramCaption;
-  const hashtags = '\n\n#경제공부 #경제뉴스 #오늘의경제 #10초경제 #today.econ';
-  
-  if (hashtagsPattern.test(instagramCaption)) {
-    captionBody = instagramCaption.replace(hashtagsPattern, '').trim();
-  }
-
-  const newsRef = selectedNews.link ? `\n\n🔗 원본 기사:\n<${selectedNews.link}|${selectedNews.title}>` : '';
+  const newsRef = selectedNews.link ? `🔗 원본 기사: <${selectedNews.link}|${selectedNews.title}>` : '';
   const publishRef = publication?.permalink
     ? `\n\n✅ Instagram 자동 게시 완료 (${publication.format === 'reel' ? '릴스' : '캐러셀'}): <${publication.permalink}|게시물 열기>`
     : '\n\nℹ️ Instagram 자동 게시는 비활성화된 실행입니다.';
@@ -46,7 +37,7 @@ async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publ
     : (storyResult.storyError
       ? `\n⚠️ 릴스는 게시됐지만 스토리 자동 게시는 실패했습니다: ${storyResult.storyError}`
       : '');
-  const captionMessage = `${captionBody}${newsRef}${publishRef}${storyRef}${hashtags}`;
+  const operationMessage = [newsRef, publishRef.trim(), storyRef.trim()].filter(Boolean).join('\n');
 
   try {
     // 1. Upload files first (without initial_comment to prevent duplicate posts in some slack APIs)
@@ -60,8 +51,14 @@ async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publ
     console.log('[Slack] Posting Instagram caption via chat.postMessage...');
     await web.chat.postMessage({
       channel: config.slackChannelId,
-      text: captionMessage,
+      text: instagramCaption,
     });
+    if (operationMessage) {
+      await web.chat.postMessage({
+        channel: config.slackChannelId,
+        text: operationMessage,
+      });
+    }
 
     console.log('[Slack] Files and caption successfully posted to Slack!');
     return uploadResponse;

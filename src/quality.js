@@ -13,7 +13,6 @@ const GENERIC_PHRASES = [
 const FRIENDLY_SECTIONS = Object.freeze({
   card2: '무슨 일이야?',
   card3: '그래서 내 돈은?',
-  card4: '앞으로 이렇게 될 수도',
 });
 
 const MONEY_CHANNEL_EVIDENCE = Object.freeze({
@@ -23,6 +22,14 @@ const MONEY_CHANNEL_EVIDENCE = Object.freeze({
   credit: /대출|금리|담보|한도|신용|차입/,
   tax: /세금|소득세|보유세|취득세|과세/,
   mixed: /주식|증시|종목|스톡론|증권|투자|주택|부동산|집값|전세|분양|물가|소비자|생활비|가격|대출|금리|담보|한도|신용|세금|과세|노란우산|공제|노후|퇴직|연금|자영업|소상공인|저축|납입/,
+});
+const VISIBLE_BOILERPLATE = /(?:[가-힣]{2,4}\s*기자\s*(?:입력|수정)?|Google\s*검색|구글\s*검색|선호\s*추가|알아보기|매일경제\s*기사를\s*더\s*자주)/i;
+const TOPIC_DRIFT = Object.freeze({
+  housing: /자영업|소상공인|노란우산|퇴직금|노후자금|공제\s*납입/,
+  stocks: /청약통장|무주택|분양가|노란우산|공제\s*납입/,
+  living_cost: /청약통장|스톡론|노란우산|공제\s*납입/,
+  credit: /청약통장|노란우산|공제\s*납입/,
+  tax: /청약통장|스톡론|노란우산/,
 });
 
 function stripMarkup(text = '') {
@@ -67,7 +74,7 @@ function hasGroundedNumericSentence(text, sourceText) {
 
 function hasImpossibleNumericComparison(text = '') {
   const plain = stripMarkup(text).replace(/\s+/g, '');
-  const repeatedValueWithChange = /(\d[\d,.]*(?:%|원|조|억|만|명|개|배|퍼센트)?)에서\1(?:로|으로)?(?:두배|2배|증가|감소|늘|줄|뛰)/;
+  const repeatedValueWithChange = /(\d[\d,.]*(?:(?:조|억|만)(?:원|명)?|%|원|명|개|배|퍼센트)?)에서\1(?:로|으로)?(?:두배|2배|증가|감소|늘|줄|뛰)/;
   return repeatedValueWithChange.test(plain);
 }
 
@@ -129,20 +136,23 @@ function evaluateContentQuality(content, sourceText = '') {
 
   for (const invalid of collectVisibleStrings(content)) fail(`${invalid.path} contains ${invalid.reason}`, 25);
 
-  for (const key of ['card1', 'card2', 'card3', 'card4']) {
+  for (const key of ['card1', 'card2', 'card3']) {
     if (!content?.[key] || typeof content[key] !== 'object') fail(`${key} is missing`, 25);
   }
+  if (content?.card4) fail('default editorial must contain exactly three cards', 15);
 
   const title = stripMarkup(content.card1?.title);
   const subtitle = stripMarkup(content.card1?.subtitle);
-  if (title.length < 8 || title.length > 32) fail('cover title must be 8-32 characters');
+  if (title.length < 8 || title.length > 36) fail('cover title must be 8-36 characters');
+  if (/[…]|\.{3}/.test(title)) fail('cover title must not end in an ellipsis', 20);
+  if (VISIBLE_BOILERPLATE.test(`${title} ${subtitle}`)) fail('cover contains page metadata instead of editorial copy', 25);
   if (!subtitle || subtitle.length < 8) fail('cover subtitle must explain the reader money effect');
   if (/^(?:혹시|아세요|Did you know)/i.test(title)) fail('cover uses a generic opening', 8);
-  if (!/(내|부모|가족|월|상환|이자|대출|집값|세금|생활비|노후|사업|자영업|투자금|현금흐름)/.test(`${title} ${subtitle}`)) {
+  if (!/(내|부모|가족|월|상환|이자|대출|집값|주택|청약|세금|생활비|노후|사업|자영업|투자금|현금흐름)/.test(`${title} ${subtitle}`)) {
     fail('cover must name a concrete reader money connection', 15);
   }
 
-  const expectedCounts = { card2: 2, card3: 2, card4: 3 };
+  const expectedCounts = { card2: 2, card3: 3 };
   for (const [key, expectedTitle] of Object.entries(FRIENDLY_SECTIONS)) {
     const card = content[key];
     if (!card) continue;
@@ -158,6 +168,7 @@ function evaluateContentQuality(content, sourceText = '') {
       if (!hasSentenceEnding(plain)) fail(`${key} bullet ${index + 1} must be a complete sentence`, 8);
       if ((String(bullet).match(/<hl>.*?<\/hl>/gi) || []).length !== 1) fail(`${key} bullet ${index + 1} needs exactly one highlight`, 8);
       if (GENERIC_PHRASES.some(phrase => plain.includes(phrase))) fail(`${key} bullet ${index + 1} contains generic or sensational wording`, 12);
+      if (VISIBLE_BOILERPLATE.test(plain)) fail(`${key} bullet ${index + 1} contains page metadata`, 25);
       if (key === 'card3' && isRunOnImpact(plain)) fail(`${key} bullet ${index + 1} merges multiple audience impacts`, 10);
       if (hasImpossibleNumericComparison(plain)) fail(`${key} bullet ${index + 1} has a contradictory numeric comparison`, 25);
       if (!hasGroundedNumericSentence(plain, sourceText)) fail(`${key} bullet ${index + 1} combines numbers that do not appear together in the article`, 25);
@@ -169,7 +180,7 @@ function evaluateContentQuality(content, sourceText = '') {
     }
   }
 
-  const optionalArrays = [content.card2?.stats, content.card2?.hard_terms, content.card3?.hard_terms, content.card4?.hard_terms, content.card4?.policy_points];
+  const optionalArrays = [content.card2?.stats, content.card2?.hard_terms, content.card3?.hard_terms];
   optionalArrays.flat().forEach(value => {
     if (value && typeof value === 'object' && Object.values(value).some(hasLiteralInvalid)) fail('optional metadata contains literal invalid text', 20);
   });
@@ -184,11 +195,11 @@ function evaluateContentQuality(content, sourceText = '') {
   const moneyChannel = content.analysis?.money_channel;
   if (!Object.prototype.hasOwnProperty.call(MONEY_CHANNEL_EVIDENCE, moneyChannel)) {
     fail('analysis.money_channel must use the controlled enum', 15);
-  } else if (!MONEY_CHANNEL_EVIDENCE[moneyChannel].test(`${sourceText} ${content.analysis?.money_effect || ''}`)) {
+  } else if (!MONEY_CHANNEL_EVIDENCE[moneyChannel].test(sourceText)) {
     fail(`money_channel ${moneyChannel} lacks source/evidence mapping`, 15);
   }
   const moneyText = [title, subtitle, ...(content.card2?.bullets || []), ...(content.card3?.bullets || [])].map(stripMarkup).join(' ');
-  if (!/내 돈|주식|집값|대출|세금|물가|금리|스톡론|부동산|투자|노후|퇴직|공제|저축|납입|자영업|소상공인|연금/.test(moneyText)) fail('cover and first two cards do not connect the story to reader money', 15);
+  if (!/내 돈|주식|집값|주택|청약|대출|세금|물가|금리|스톡론|부동산|투자|노후|퇴직|공제|저축|납입|자영업|소상공인|연금/.test(moneyText)) fail('cover and first two cards do not connect the story to reader money', 15);
 
   const effectiveDate = stripMarkup(content.analysis?.effective_date);
   if (effectiveDate) {
@@ -198,35 +209,24 @@ function evaluateContentQuality(content, sourceText = '') {
     }
   }
 
-  const forecasts = content.card4?.bullets || [];
-  const forecastMarker = /(가능|수\s*있|될\s*경우|전망|예상|달라질|변수|높아질|줄어들|늘어날|커질|좁아질|위축될|악화될|완화될|이어질)/;
-  if (!forecastMarker.test(stripMarkup(forecasts[0] || ''))) fail('card4 forecast 1 needs a possibility or variable marker', 8);
-  if (!forecastMarker.test(stripMarkup(forecasts[1] || ''))) fail('card4 forecast 2 needs a possibility or variable marker', 8);
-  if (!/(확인|비교|물어|살펴|기록|저장|계산|점검)/.test(stripMarkup(forecasts[2] || ''))) fail('card4 bullet 3 must be a concrete action', 8);
-
-  const steps = content.card4?.action_steps;
-  if (!Array.isArray(steps) || steps.length !== 3) fail('card4 requires exactly three saveable action steps', 10);
-  (steps || []).forEach((step, index) => {
-    const plain = stripMarkup(step);
-    if (!plain || plain.length < 12 || !/(앱|약관|한도|잔액|시행|금리|수수료|담보|조건|비교|확인|계약)/.test(plain)) fail(`card4 action step ${index + 1} is incomplete or lacks a target`, 8);
-    if (!hasConcreteActionTarget(plain)) fail(`card4 action step ${index + 1} must name a concrete money check`, 12);
-  });
-  for (let i = 0; i < (steps || []).length; i += 1) {
-    for (let j = i + 1; j < (steps || []).length; j += 1) {
-      if (jaccardSimilarity(steps[i], steps[j]) >= 0.55) fail('card4 action steps repeat the same vague check', 12);
-    }
+  const action = stripMarkup(content.card3?.bullets?.[2] || '');
+  if (!/(확인|비교|살펴|기록|계산|점검)/.test(action)) fail('card3 bullet 3 must be one concrete action', 10);
+  if (!hasConcreteActionTarget(action) && !/(납입횟수|인정금액|청약조건|가입조건|적용대상|결제액|손실한도)/.test(action.replace(/\s+/g, ''))) {
+    fail('card3 bullet 3 must name a concrete money check', 12);
   }
 
+  const storyText = [title, subtitle, ...(content.card2?.bullets || []), ...(content.card3?.bullets || [])].map(stripMarkup).join(' ');
+  if (TOPIC_DRIFT[moneyChannel]?.test(storyText)) fail(`cards drift away from the ${moneyChannel} article topic`, 25);
+
   const allCardText = [content.card1?.title, content.card1?.subtitle]
-    .concat(content.card2?.bullets || [], content.card3?.bullets || [], content.card4?.bullets || [])
+    .concat(content.card2?.bullets || [], content.card3?.bullets || [])
     .concat((content.card2?.stats || []).flatMap(stat => [stat?.value, stat?.label, stat?.comparison, stat?.baseline]))
-    .concat(content.card4?.action_steps || [])
     .map(value => stripMarkup(value))
     .join(' ');
   const normalizedNumbers = extractMaterialNumbers(allCardText);
   normalizedNumbers.forEach(number => { if (!source.includes(number)) fail(`numeric claim is not grounded in the article: ${number}`, 15); });
 
-  const cardList = [content.card2, content.card3, content.card4];
+  const cardList = [content.card2, content.card3];
   for (let i = 0; i < cardList.length; i += 1) for (let j = i + 1; j < cardList.length; j += 1) {
     for (const left of cardList[i]?.bullets || []) for (const right of cardList[j]?.bullets || []) {
       if (jaccardSimilarity(left, right) >= 0.92) fail(`card${i + 2} and card${j + 2} contain duplicate bullet copy`, 10);
@@ -234,13 +234,13 @@ function evaluateContentQuality(content, sourceText = '') {
   }
 
   const caption = String(content.instagram_caption || '').trim();
-  if (caption.length < 180 || caption.length > 2200) fail('caption must be 180-2200 characters', 8);
-  if (!caption.includes(FRIENDLY_SECTIONS.card2) || !caption.includes(FRIENDLY_SECTIONS.card3) || !caption.includes('오늘경제 한 줄 생각') || !caption.includes('앞으로 이렇게 될 수도')) fail('caption is missing a friendly editorial section');
-  if (!/https?:\/\//.test(caption)) fail('caption must include the original article URL', 10);
-  if (!/[①②③]/.test(caption)) fail('caption is missing a saveable three-step checklist', 8);
+  if (caption.length < 120 || caption.length > 1200) fail('caption must be 120-1200 characters', 8);
+  if (!caption.includes(FRIENDLY_SECTIONS.card2) || !caption.includes(FRIENDLY_SECTIONS.card3) || !caption.includes('오늘 확인할 것')) fail('caption is missing a friendly three-part editorial structure');
+  if (/https?:\/\//.test(caption)) fail('Instagram caption must not include a raw source URL', 10);
   if (!/저장/.test(caption) || !/공유/.test(caption)) fail('caption is missing save/share CTA', 6);
-  if (!/(체크|확인|정리|순서|숫자|조건|비교).*(저장|공유)|(저장|공유).*(체크|확인|정리|순서|숫자|조건|비교)/s.test(caption)) fail('CTA lacks a concrete save/share reward', 8);
-  if (!caption.includes('?')) warn('caption has no reader question');
+  if ((caption.match(/#today_econ/g) || []).length !== 1 || /#today\.econ/.test(caption)) fail('caption must contain one valid #today_econ hashtag', 12);
+  const hashtags = caption.match(/#[0-9A-Za-z가-힣_]+/g) || [];
+  if (new Set(hashtags).size !== hashtags.length) fail('caption contains duplicated hashtags', 12);
   if (/빚투족|무대출자|당신의 금융 상황에 어떤 영향을|오늘경제의 한 줄 해석/i.test(caption)) fail('caption contains old or stigmatizing wording', 10);
   if (collectVisibleStrings(caption).length) fail('caption contains literal invalid text', 20);
   if (!hasUsefulUncertainty(content.analysis?.uncertainty)) fail('uncertainty must name the variable that could change the outcome', 10);

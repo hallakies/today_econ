@@ -3,7 +3,7 @@ const os = require('os');
 const path = require('path');
 const config = require('../config');
 const { fetchNews, fetchArticleBody } = require('./crawler');
-const { selectNews, saveHistoryEntry } = require('./selector');
+const { rankNewsCandidates, selectNews, saveHistoryEntry } = require('./selector');
 const { generateCardContent } = require('./generator');
 const { renderCardImages } = require('./renderer');
 const { sendPipelineFailure, sendToSlack } = require('./slack');
@@ -62,6 +62,11 @@ async function publishToInstagram(renderedFiles, cardContent, selectedNews, inst
         outputPath: reelPath,
         audioPath: config.instagramAudioFile || undefined,
         durationPerSlide: config.reelDurationPerSlide,
+        slideTexts: [
+          `${cardContent.card1?.title || ''} ${cardContent.card1?.subtitle || ''}`,
+          (cardContent.card2?.bullets || []).join(' '),
+          `${cardContent.core_insight || ''} ${(cardContent.card3?.bullets || []).join(' ')}`,
+        ].slice(0, renderedFiles.length),
       });
       console.log(`[Main] Reel video created: ${reelPath}`);
     } catch (error) {
@@ -195,6 +200,7 @@ async function run() {
   let storyPublication = null;
   let storyError = null;
   let temporaryFiles = [];
+  let cardContent = null;
   let stage = 'news_fetch';
   const recoveryMode = process.env.PIPELINE_RECOVERY_MODE === 'true';
 
@@ -203,14 +209,32 @@ async function run() {
     if (newsList.length === 0) throw new Error('[Main] No news articles found.');
 
     stage = 'news_select';
-    selectedNews = await selectNews(newsList);
-    console.log(`[Main] Selected news: ${selectedNews.title}`);
-    stage = 'article_fetch';
-    selectedNews.fullText = await fetchArticleBody(selectedNews.link) || selectedNews.summary;
-
-    await new Promise(resolve => setTimeout(resolve, 8000));
-    stage = 'content_generate';
-    const cardContent = await generateCardContent(selectedNews);
+    const preferredNews = await selectNews(newsList);
+    const candidates = rankNewsCandidates(newsList.slice(0, 15), preferredNews).slice(0, 5);
+    let lastCandidateError = null;
+    for (let index = 0; index < candidates.length; index += 1) {
+      selectedNews = candidates[index];
+      console.log(`[Main] Trying news candidate ${index + 1}/${candidates.length}: ${selectedNews.title}`);
+      try {
+        stage = 'article_fetch';
+        selectedNews.fullText = await fetchArticleBody(selectedNews.link) || selectedNews.summary;
+        if (index === 0) await new Promise(resolve => setTimeout(resolve, 8000));
+        stage = 'content_generate';
+        cardContent = await generateCardContent(selectedNews);
+        break;
+      } catch (candidateError) {
+        lastCandidateError = candidateError;
+        recordPipelineEvent({
+          status: 'article_rejected',
+          stage,
+          articleTitle: selectedNews.title,
+          error: candidateError.message,
+          qualityScore: candidateError.qualityReport?.score,
+        });
+        console.warn(`[Main] Candidate rejected; moving to the next ranked article: ${candidateError.message}`);
+      }
+    }
+    if (!cardContent) throw lastCandidateError || new Error('[Main] No candidate produced a publishable editorial.');
     stage = 'render';
     renderedFiles = await renderCardImages(cardContent);
 
