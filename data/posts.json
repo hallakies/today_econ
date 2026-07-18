@@ -210,5 +210,34 @@
       "tag": "instagram-assets-29621067118-1784331426615",
       "deleteAfter": "2026-07-20T23:38:22.766Z"
     }
+  },
+  {
+    "metrics": {},
+    "mediaId": "18122352349687902",
+    "permalink": "https://www.instagram.com/reel/Da7BojykkKg/",
+    "publishedAt": "2026-07-18T05:20:47+0000",
+    "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12101110",
+    "contentMetadata": {
+      "topic": "credit",
+      "audience": "대출을 이용하는 사람",
+      "hook_type": "숫자",
+      "money_channel": "credit",
+      "editorial_format": "money-change-brief-fallback"
+    },
+    "qualityScore": 100,
+    "format": "reel",
+    "requestedFormat": "reel",
+    "story": {
+      "id": "18065043824493419",
+      "permalink": "https://www.instagram.com/stories/today.econ/3943753712757769926",
+      "publishedAt": "2026-07-18T05:22:01+0000",
+      "format": "standalone_story_copy"
+    },
+    "release": {
+      "id": 356025698,
+      "tag": "instagram-assets-29632015732-1784352008702",
+      "deleteAfter": "2026-07-21T05:22:05.891Z"
+    }
   }
 ]

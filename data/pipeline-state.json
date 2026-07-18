@@ -49,6 +49,26 @@
       "repairAttempts": 0,
       "qualityScore": 100,
       "error": ""
+    },
+    {
+      "at": "2026-07-18T05:18:42.195Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
+    },
+    {
+      "at": "2026-07-18T05:22:07.557Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
     }
   ]
 }
