@@ -32,6 +32,45 @@ function addPublishedPost(post, filePath = config.postsFile) {
   return posts;
 }
 
+function normalizeArticleUrl(value) {
+  return String(value || '').trim().replace(/\/+$/, '');
+}
+
+function findPublishedPost({ articleUrl, format }, filePath = config.postsFile) {
+  const normalizedUrl = normalizeArticleUrl(articleUrl);
+  return loadPosts(filePath).find(post => (
+    normalizedUrl &&
+    normalizeArticleUrl(post.articleUrl) === normalizedUrl &&
+    post.format === format &&
+    post.mediaId
+  )) || null;
+}
+
+function upsertPublishedPost(post, filePath = config.postsFile) {
+  const posts = loadPosts(filePath);
+  const normalizedUrl = normalizeArticleUrl(post.articleUrl);
+  const index = posts.findIndex(existing => (
+    (post.mediaId && existing.mediaId === post.mediaId) ||
+    (
+      normalizedUrl &&
+      normalizeArticleUrl(existing.articleUrl) === normalizedUrl &&
+      existing.format === post.format
+    )
+  ));
+  if (index >= 0) {
+    const existing = posts[index];
+    posts[index] = {
+      ...existing,
+      ...post,
+      metrics: post.metrics || existing.metrics || {},
+    };
+  } else {
+    posts.push({ metrics: {}, ...post });
+  }
+  savePosts(posts, filePath);
+  return posts;
+}
+
 function metricRecord(value) {
   if (value && typeof value === 'object' && 'status' in value) return value;
   const numeric = Number(value);
@@ -61,9 +100,11 @@ function calculateEngagementRate(metrics) {
 module.exports = {
   addPublishedPost,
   calculateEngagementRate,
+  findPublishedPost,
   metricNumber,
   metricRecord,
   ensureStore,
   loadPosts,
   savePosts,
+  upsertPublishedPost,
 };

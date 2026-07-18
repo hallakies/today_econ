@@ -7,20 +7,49 @@ const { promisify } = require('util');
 const execFileAsync = promisify(execFile);
 const DEFAULT_DURATION_SECONDS = 8;
 const DEFAULT_AUDIO_SECONDS = 24;
+const ROLE_DURATION_RANGES = Object.freeze({
+  cover: [4, 4.5],
+  fact: [7, 9],
+  audience: [7, 9],
+  action: [9, 11],
+});
 
-function estimateSlideDuration(text = '', { charsPerSecond = 6, minSeconds = 6, maxSeconds = 12 } = {}) {
+function estimateSlideDuration(text = '', { role = 'fact', minSeconds, maxSeconds } = {}) {
   const visibleLength = String(text)
     .replace(/<[^>]+>/g, '')
     .replace(/\s+/g, '')
     .length;
-  return Math.max(minSeconds, Math.min(maxSeconds, Math.ceil(visibleLength / charsPerSecond + 1.5)));
+  const [roleMinimum, roleMaximum] = ROLE_DURATION_RANGES[role] || ROLE_DURATION_RANGES.fact;
+  const minimum = Number.isFinite(minSeconds) ? minSeconds : roleMinimum;
+  const maximum = Number.isFinite(maxSeconds) ? maxSeconds : roleMaximum;
+  const expectedMinimum = role === 'cover' ? 18 : 40;
+  const expectedRange = role === 'cover' ? 55 : 100;
+  const ratio = Math.max(0, Math.min(1, (visibleLength - expectedMinimum) / expectedRange));
+  return Number((minimum + (maximum - minimum) * ratio).toFixed(1));
 }
 
-function resolveSlideDurations(slideTexts, override) {
+function resolveSlideDurations(slideTexts, override, roles = []) {
   const texts = Array.isArray(slideTexts) ? slideTexts : [];
   const fixed = Number(override);
   if (fixed > 0) return texts.map(() => fixed);
-  return texts.map(text => estimateSlideDuration(text));
+  return texts.map((text, index) => estimateSlideDuration(text, { role: roles[index] || 'fact' }));
+}
+
+function buildSlideTimingPlan(cardContent = {}, slideCount = 3, override) {
+  const hasActionCard = Boolean(cardContent.card4);
+  const roles = hasActionCard
+    ? ['cover', 'fact', 'audience', 'action']
+    : ['cover', 'fact', 'action'];
+  const cards = hasActionCard
+    ? [cardContent.card1, cardContent.card2, cardContent.card3, cardContent.card4]
+    : [cardContent.card1, cardContent.card2, cardContent.card3];
+  const slideTexts = Array.from({ length: slideCount }, (_, index) => {
+    const card = cards[index] || {};
+    return Object.values(card).flat(Infinity).join(' ');
+  });
+  const activeRoles = roles.slice(0, slideCount);
+  const durations = resolveSlideDurations(slideTexts, override, activeRoles);
+  return durations.map((duration, index) => ({ role: activeRoles[index] || 'fact', duration }));
 }
 
 function resolveFfmpegPath() {
@@ -123,6 +152,8 @@ async function createReelVideo({
 
 module.exports = {
   DEFAULT_DURATION_SECONDS,
+  ROLE_DURATION_RANGES,
+  buildSlideTimingPlan,
   buildVideoFilters,
   createAmbientAudio,
   createReelVideo,

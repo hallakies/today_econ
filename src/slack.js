@@ -10,6 +10,18 @@ const web = new WebClient(config.slackBotToken);
  * @param {Array<string>} imagePaths File paths of the 3 rendered PNG slides.
  * @param {object} selectedNews The original news item object containing title and link.
  */
+function buildPublicationRefs(publication, publications = {}) {
+  const resolved = {
+    reel: publications.reel || (publication?.format === 'reel' ? publication : null),
+    carousel: publications.carousel || (publication?.format === 'carousel' ? publication : null),
+  };
+  const labels = { reel: '릴스', carousel: '캐러셀' };
+  const lines = Object.entries(resolved)
+    .filter(([, result]) => result?.permalink)
+    .map(([format, result]) => `✅ Instagram ${labels[format]} 자동 게시 완료: <${result.permalink}|게시물 열기>`);
+  return lines.length ? lines.join('\n') : 'ℹ️ Instagram 자동 게시는 비활성화되었거나 아직 완료되지 않았습니다.';
+}
+
 async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publication = null, storyResult = {}) {
   if (!config.slackBotToken || !config.slackChannelId) {
     throw new Error('[Slack] Missing SLACK_BOT_TOKEN or SLACK_CHANNEL_ID. Cannot send notification.');
@@ -29,9 +41,7 @@ async function sendToSlack(imagePaths, instagramCaption, selectedNews = {}, publ
   });
 
   const newsRef = selectedNews.link ? `🔗 원본 기사: <${selectedNews.link}|${selectedNews.title}>` : '';
-  const publishRef = publication?.permalink
-    ? `\n\n✅ Instagram 자동 게시 완료 (${publication.format === 'reel' ? '릴스' : '캐러셀'}): <${publication.permalink}|게시물 열기>`
-    : '\n\nℹ️ Instagram 자동 게시는 비활성화된 실행입니다.';
+  const publishRef = buildPublicationRefs(publication, storyResult.publications);
   const storyRef = storyResult.storyPublication
     ? '\n✅ Instagram 스토리도 자동 게시되었습니다. (24시간 후 자동 삭제)'
     : (storyResult.storyError
@@ -95,6 +105,7 @@ async function sendPipelineFailure(error, selectedNews = {}) {
 }
 
 module.exports = {
+  buildPublicationRefs,
   sendAnalyticsReport,
   sendPipelineFailure,
   sendToSlack,

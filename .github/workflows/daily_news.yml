@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       publish_instagram:
-        description: 'Publish the generated Reel to Instagram (uncheck for Slack-only test)'
+        description: 'Publish the generated Reel, carousel, and Story to Instagram (uncheck for Slack-only test)'
         required: true
         default: true
         type: boolean

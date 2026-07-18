@@ -10,7 +10,18 @@ const BOILERPLATE_PATTERNS = [
 
 const VISIBLE_BOILERPLATE = /(?:[가-힣]{2,4}\s*기자\s*(?:입력|수정)?|Google\s*검색|구글\s*검색|선호\s*추가|알아보기|매일경제\s*기사를\s*더\s*자주)/i;
 const MONEY_TERMS = /청약|주택|부동산|집값|전세|분양|대출|금리|신용|연체|주식|증시|ETF|코인|물가|생활비|세금|공제|연금|노후|자영업|소상공인|예금|저축|보험/;
+const CHANGE_TERMS = /늘|줄|증가|감소|확대|축소|인상|인하|해지|가입|제한|완화|강화|시행|바뀌|변화|급감|급증/;
+const CAUSE_TERMS = /때문|영향|따라|이유|배경|여파|부담|가능성|전망/;
+const MATERIAL_NUMBER_PATTERN = /\d[\d,.]*(?:(?:조(?:\d[\d,.]*억)?(?:\d[\d,.]*만)?|억(?:\d[\d,.]*만)?|만)\s*(?:원|명)?|%|퍼센트|원|명|개|배|년|개월|월)/gi;
 const STOPWORDS = new Set(['이젠', '정말', '이유는', '무슨', '한달', '관련', '대한', '올해', '이번', '지난']);
+const TOPIC_LABELS = Object.freeze({
+  housing: '청약·주택',
+  stocks: '주식시장',
+  living_cost: '생활물가',
+  tax: '세금',
+  retirement: '노후자금',
+  credit: '대출',
+});
 
 function cleanArticleText(text = '') {
   let clean = String(text).normalize('NFC');
@@ -50,7 +61,30 @@ function isBoilerplate(text = '') {
   return VISIBLE_BOILERPLATE.test(String(text));
 }
 
-function extractRelevantFacts(title = '', body = '', limit = 4) {
+function normalizeMaterialNumber(value = '') {
+  return String(value).replace(/[,\s]/g, '').toLowerCase();
+}
+
+function extractMaterialNumbers(text = '') {
+  return (String(text).match(MATERIAL_NUMBER_PATTERN) || []).map(value => ({
+    raw: value,
+    normalized: normalizeMaterialNumber(value),
+  }));
+}
+
+function scoreFact(sentence, keywords, index) {
+  const keywordHits = keywords.filter(keyword => sentence.includes(keyword)).length;
+  const materialNumbers = extractMaterialNumbers(sentence);
+  const score = keywordHits * 5
+    + (MONEY_TERMS.test(sentence) ? 4 : 0)
+    + materialNumbers.length * 3
+    + (CHANGE_TERMS.test(sentence) ? 3 : 0)
+    + (CAUSE_TERMS.test(sentence) ? 2 : 0)
+    - index * 0.05;
+  return { keywordHits, materialNumbers, score };
+}
+
+function extractFactRecords(title = '', body = '', limit = 6) {
   const keywords = titleKeywords(title);
   const normalizedTitle = normalizeTitle(title).replace(/\s+/g, '');
   return splitSentences(body)
@@ -60,15 +94,24 @@ function extractRelevantFacts(title = '', body = '', limit = 4) {
       const compact = normalizeTitle(sentence).replace(/\s+/g, '');
       return compact !== normalizedTitle && !compact.startsWith(normalizedTitle);
     })
-    .map((sentence, index) => {
-      const keywordHits = keywords.filter(keyword => sentence.includes(keyword)).length;
-      const score = keywordHits * 4 + (MONEY_TERMS.test(sentence) ? 3 : 0) + (/\d/.test(sentence) ? 2 : 0) - index * 0.05;
-      return { sentence, score };
+    .map((sentence, sourceIndex) => {
+      const scored = scoreFact(sentence, keywords, sourceIndex);
+      return {
+        text: sentence,
+        score: scored.score,
+        keyword_hits: scored.keywordHits,
+        material_numbers: scored.materialNumbers,
+        source_index: sourceIndex,
+      };
     })
-    .filter(item => item.score >= 2)
-    .sort((a, b) => b.score - a.score)
+    .filter(item => item.score >= 4)
+    .sort((a, b) => b.score - a.score || a.source_index - b.source_index)
     .slice(0, limit)
-    .map(item => item.sentence);
+    .map((item, rank) => ({ ...item, rank: rank + 1 }));
+}
+
+function extractRelevantFacts(title = '', body = '', limit = 4) {
+  return extractFactRecords(title, body, limit).map(item => item.text);
 }
 
 function inferTopic(title = '', facts = []) {
@@ -100,18 +143,93 @@ function editorialCoverTitle(title = '', topicKey = '') {
   return `${topicLabel},\n오늘 달라진 핵심`;
 }
 
+function compactFactHook(fact = '', topicKey = '') {
+  const clean = normalizeTitle(fact)
+    .replace(/(?:했어요|합니다|했습니다|됐다|되었다|이에요|예요)$/u, '')
+    .trim();
+  const ratio = clean.match(/(?:전체\s*)?([가-힣]{2,12})\s*(\d+\s*명\s*중\s*\d+\s*명).*?((?:\d{2}대\s*이상|고령층|청년층))/);
+  if (ratio) return `${ratio[1]} ${ratio[2]},\n${ratio[3]}`;
+  if (clean.length >= 8 && clean.length <= 34) return clean;
+  const number = extractMaterialNumbers(clean)[0]?.raw;
+  const topicLabel = TOPIC_LABELS[topicKey] || '';
+  if (number && topicLabel) return `${topicLabel}, ${number} 변화`;
+  return '';
+}
+
+function buildHookCandidates({ title = '', topic = 'mixed', audience = '', factRecords = [] } = {}) {
+  const strongest = factRecords[0]?.text || '';
+  const materialNumber = factRecords.flatMap(record => record.material_numbers || [])[0]?.raw || '';
+  const topicLabel = TOPIC_LABELS[topic] || '';
+  const headlineHook = editorialCoverTitle(title, topic);
+  const factHook = compactFactHook(strongest, topic);
+  const strongestNumbers = new Set(
+    (factRecords[0]?.material_numbers || []).map(number => number.normalized)
+  );
+  const headlineNumbers = extractMaterialNumbers(headlineHook);
+  const headlineHasStrongestNumber = headlineNumbers.some(number => strongestNumbers.has(number.normalized));
+  const headlineHasNumber = headlineNumbers.length > 0;
+  const factHasNumber = extractMaterialNumbers(factHook).length > 0;
+  const candidates = [
+    {
+      text: headlineHook,
+      type: 'headline_edit',
+      score: headlineHasStrongestNumber ? 130 : (headlineHasNumber ? 95 : 85),
+    },
+    { text: factHook || `${topicLabel},\n기사에서 확인한 변화`, type: 'strongest_fact', score: factHasNumber ? 125 : 92 },
+    { text: materialNumber && topicLabel ? `${topicLabel},\n${materialNumber} 핵심 변화` : `${topicLabel},\n숫자보다 중요한 변화`, type: 'material_number', score: 80 },
+    { text: topicLabel && audience ? `${topicLabel},\n${audience}의 선택 변화` : `${topicLabel},\n내 돈의 선택 변화`, type: 'reader_decision', score: 72 },
+    { text: topicLabel && CHANGE_TERMS.test(strongest) ? `${topicLabel},\n지금 달라진 이유` : `${topicLabel},\n지금 봐야 할 신호`, type: 'change_signal', score: 64 },
+  ];
+
+  const seen = new Set();
+  return candidates.map((candidate, index) => {
+    const text = String(candidate.text || '').trim();
+    const normalized = normalizeTitle(text).replace(/\s+/g, '');
+    const valid = text.length >= 8
+      && text.length <= 36
+      && !/[…]|\.{3}/.test(text)
+      && !isBoilerplate(text)
+      && normalized
+      && !seen.has(normalized);
+    if (valid) seen.add(normalized);
+    return { ...candidate, index, text, valid };
+  });
+}
+
+function selectEditorialHook(candidates = []) {
+  const ranked = candidates
+    .filter(candidate => candidate.valid)
+    .sort((a, b) => b.score - a.score || a.index - b.index);
+  return ranked[0] || null;
+}
+
 function buildArticleBrief({ title = '', fullText = '', summary = '' } = {}) {
   const cleanedBody = cleanArticleText(fullText || summary);
-  const facts = extractRelevantFacts(title, cleanedBody, 4);
+  const factRecords = extractFactRecords(title, cleanedBody, 6);
+  const facts = factRecords.slice(0, 4).map(item => item.text);
   const topic = inferTopic(title, facts);
+  const hookCandidates = buildHookCandidates({
+    title,
+    topic: topic.key,
+    audience: topic.audience,
+    factRecords,
+  });
+  const selectedHook = selectEditorialHook(hookCandidates);
   return {
     title: normalizeTitle(title),
     cleanedBody,
     facts,
+    fact_records: factRecords,
+    strongest_fact: factRecords[0]?.text || '',
+    material_numbers: factRecords.flatMap(record => (
+      record.material_numbers.map(number => ({ ...number, fact: record.text, rank: record.rank }))
+    )),
     topic: topic.key,
     money_channel: topic.channel,
     audience: topic.audience,
-    cover_title: editorialCoverTitle(title, topic.key),
+    hook_candidates: hookCandidates,
+    selected_hook: selectedHook,
+    cover_title: selectedHook?.text || editorialCoverTitle(title, topic.key),
   };
 }
 
@@ -120,9 +238,13 @@ module.exports = {
   VISIBLE_BOILERPLATE,
   buildArticleBrief,
   cleanArticleText,
+  buildHookCandidates,
   editorialCoverTitle,
+  extractFactRecords,
+  extractMaterialNumbers,
   extractRelevantFacts,
   inferTopic,
   isBoilerplate,
   normalizeTitle,
+  selectEditorialHook,
 };

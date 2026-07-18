@@ -39,22 +39,35 @@ async function requestSelection(systemPrompt, userPrompt, model, maxTokens = 120
 }
 
 function buildFallbackRanking(newsList) {
-  const highIntent = /(주식|주가|금리|대출|주택|부동산|청약|세금|물가|환율|ETF|예금|적금|연금|소득|고용|코인)/i;
   return newsList
     .map((item, index) => ({
       index,
-      score: (highIntent.test(item.title) ? 10 : 0) + Math.max(0, 5 - index * 0.25),
+      score: scoreCandidate(item, index),
     }))
     .sort((a, b) => b.score - a.score)[0]?.index || 0;
 }
 
+function scoreCandidate(item = {}, index = 0, now = new Date()) {
+  const text = `${item.title || ''} ${item.summary || ''}`.normalize('NFC');
+  const publishedAt = new Date(item.pubDate || '');
+  const ageHours = Number.isNaN(publishedAt.getTime())
+    ? null
+    : Math.max(0, (now.getTime() - publishedAt.getTime()) / 3600000);
+  const moneyImpact = /(주식|주가|금리|대출|주택|부동산|청약|세금|물가|환율|ETF|예금|적금|연금|소득|고용|코인)/i.test(text) ? 12 : 0;
+  const saveableNumber = /\d[\d,.]*(?:%|퍼센트|원|조|억|만|명|배|년|월)/i.test(text) ? 8 : 0;
+  const concreteChange = /(인상|인하|늘|줄|증가|감소|확대|축소|제한|시행|폐지|개편|급등|급락|두\s*배)/.test(text) ? 6 : 0;
+  const readerDecision = /(상환|이자|한도|납입|해지|분양|매매|소득|가격|부담|혜택|연체)/.test(text) ? 5 : 0;
+  const timely = ageHours === null ? 0 : ageHours <= 24 ? 5 : ageHours <= 72 ? 2 : -2;
+  const lowValue = /(인사|선임|취임|업무협약|MOU|포토|화보|이벤트)/i.test(text) ? -20 : 0;
+  return moneyImpact + saveableNumber + concreteChange + readerDecision + timely + lowValue + Math.max(0, 5 - index * 0.25);
+}
+
 function rankNewsCandidates(newsList, preferred) {
-  const highIntent = /(주식|주가|금리|대출|주택|부동산|청약|세금|물가|환율|ETF|예금|적금|연금|소득|고용|코인)/i;
   return [...newsList]
     .map((item, index) => ({
       item,
       index,
-      score: (item === preferred ? 100 : 0) + (highIntent.test(item.title) ? 10 : 0) + Math.max(0, 5 - index * 0.25),
+      score: (item === preferred ? 100 : 0) + scoreCandidate(item, index),
     }))
     .sort((a, b) => b.score - a.score)
     .map(entry => entry.item);
@@ -111,5 +124,6 @@ module.exports = {
   rankNewsCandidates,
   loadHistory,
   saveHistoryEntry,
+  scoreCandidate,
   selectNews,
 };

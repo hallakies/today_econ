@@ -31,6 +31,16 @@ const TOPIC_DRIFT = Object.freeze({
   credit: /청약통장|노란우산|공제\s*납입/,
   tax: /청약통장|스톡론|노란우산/,
 });
+const TOPIC_ANCHORS = Object.freeze({
+  housing: /청약|주택|집|분양|전세|납입|당첨/,
+  stocks: /주식|증시|종목|투자|주가|업종|실적/,
+  living_cost: /물가|생활비|가격|지출|결제|품목|소비/,
+  tax: /세금|과세|소득세|보유세|취득세|공제|납세/,
+  retirement: /노후|연금|공제|납입|자영업|소상공인|저축/,
+  credit: /대출|금리|이자|상환|한도|신용|만기/,
+});
+const GENERIC_IMPACT = /(?:내 상황에 맞는|적용 조건을 먼저|기존 계획과 비교|현금흐름의 변화|개인별 조건|실제 적용 범위|중요해요)/;
+const IMPERATIVE_ENDING = /(?:(?:확인|비교|점검|계산|기록|저장|신청)(?:하|해)(?:보)?(?:세요|요)|살펴(?:보)?세요)[.!]?$/;
 
 function stripMarkup(text = '') {
   return String(text ?? '').replace(/<\/?hl>/gi, '').replace(/\s+/g, ' ').trim();
@@ -124,6 +134,110 @@ function collectVisibleStrings(value, path = []) {
     Object.entries(value).forEach(([key, child]) => found.push(...collectVisibleStrings(child, [...path, key])));
   }
   return found;
+}
+
+function evaluateBrandPromise(content, sourceText = '') {
+  const errors = [];
+  let score = 100;
+  const fail = (message, deduction = 20) => {
+    errors.push(message);
+    score -= deduction;
+  };
+  const analysis = content?.analysis || {};
+  const title = stripMarkup(content?.card1?.title);
+  const facts = (content?.card2?.bullets || []).map(stripMarkup);
+  const impacts = (content?.card3?.bullets || []).slice(0, 2).map(stripMarkup);
+  const strongestFact = stripMarkup(analysis.strongest_fact);
+  const verifiedFacts = Array.isArray(analysis.verified_facts)
+    ? analysis.verified_facts.map(stripMarkup).filter(Boolean)
+    : [];
+  const hookCandidates = Array.isArray(analysis.hook_candidates)
+    ? analysis.hook_candidates.map(stripMarkup)
+    : [];
+  const selectedHook = stripMarkup(analysis.selected_hook);
+
+  if (!strongestFact || !normalizeSource(sourceText).includes(normalizeSource(strongestFact))) {
+    fail('brand promise: strongest article fact is missing or ungrounded', 25);
+  }
+  if (verifiedFacts.length < 2 || verifiedFacts.some(fact => !normalizeSource(sourceText).includes(normalizeSource(fact)))) {
+    fail('brand promise: two article-specific verified facts are required', 25);
+  }
+  if (hookCandidates.length !== 5 || new Set(hookCandidates.filter(Boolean)).size !== 5) {
+    fail('brand promise: five deterministic hook candidates are required', 15);
+  }
+  if (!selectedHook || normalizeSource(selectedHook) !== normalizeSource(title) || !hookCandidates.some(hook => normalizeSource(hook) === normalizeSource(selectedHook))) {
+    fail('brand promise: cover must use the deterministically selected hook', 15);
+  }
+
+  const strongestNumbers = extractMaterialNumbers(strongestFact);
+  const normalizedTitle = normalizeSource(title);
+  if (
+    strongestNumbers.length > 0
+    && !strongestNumbers.some(number => normalizedTitle.includes(number))
+  ) {
+    fail('brand promise: cover omits the strongest numeric signal', 20);
+  }
+  const factCopy = facts.join(' ');
+  const strongestFactSupported = facts.some(fact => jaccardSimilarity(fact, strongestFact) >= 0.2)
+    || (strongestNumbers.length > 0 && strongestNumbers.every(number => normalizeSource(factCopy).includes(number)));
+  if (!strongestFactSupported) fail('brand promise: card2 omits the strongest article fact', 25);
+
+  const topic = analysis.topic;
+  const anchor = TOPIC_ANCHORS[topic] || TOPIC_ANCHORS[analysis.money_channel];
+  impacts.forEach((impact, index) => {
+    if (GENERIC_IMPACT.test(impact)) fail(`brand promise: impact ${index + 1} is generic rather than story-specific`, 20);
+    if (anchor && !anchor.test(impact)) fail(`brand promise: impact ${index + 1} is not tied to the article topic`, 20);
+  });
+
+  return { score: Math.max(0, score), passed: errors.length === 0 && score >= 80, errors };
+}
+
+function evaluateReadability(content) {
+  const errors = [];
+  let score = 100;
+  const fail = (message, deduction = 15) => {
+    errors.push(message);
+    score -= deduction;
+  };
+  const title = String(content?.card1?.title || '');
+  const titleLines = title.split('\n').map(line => stripMarkup(line)).filter(Boolean);
+  if (titleLines.length > 2 || titleLines.some(line => line.length > 22)) {
+    fail('readability: cover must fit in at most two short lines', 20);
+  }
+  if (/[…]|\.{3}/.test(title) || /(?:다|요)(?:한\s*달|이번|새\s)/.test(title.replace(/\s+/g, ' '))) {
+    fail('readability: cover contains a truncated or glued clause', 25);
+  }
+
+  for (const [key, bullets] of [
+    ['card2', content?.card2?.bullets || []],
+    ['card3', content?.card3?.bullets || []],
+  ]) {
+    bullets.forEach((bullet, index) => {
+      const plain = stripMarkup(bullet);
+      if (plain.length > 72) fail(`readability: ${key} bullet ${index + 1} is too dense`, 12);
+      if ((plain.match(/[,;:]/g) || []).length >= 3) fail(`readability: ${key} bullet ${index + 1} has too many clauses`, 10);
+    });
+  }
+
+  const facts = content?.card2?.bullets || [];
+  if (facts.some(fact => IMPERATIVE_ENDING.test(stripMarkup(fact)))) {
+    fail('readability: card2 facts must not be written as actions', 15);
+  }
+  const impacts = (content?.card3?.bullets || []).slice(0, 2);
+  if (impacts.some(impact => IMPERATIVE_ENDING.test(stripMarkup(impact)))) {
+    fail('readability: the first two card3 bullets must explain impact, not issue commands', 20);
+  }
+  const action = stripMarkup(content?.card3?.bullets?.[2] || '');
+  if (!IMPERATIVE_ENDING.test(action)) fail('readability: the last card3 bullet must be the single action', 20);
+  if (impacts.some(impact => jaccardSimilarity(impact, action) >= 0.55)) {
+    fail('readability: impact and action roles must be distinct', 15);
+  }
+
+  const caption = String(content?.instagram_caption || '');
+  if (caption.split(/\n{2,}/).some(paragraph => stripMarkup(paragraph).length > 280)) {
+    fail('readability: caption paragraphs must remain scannable', 10);
+  }
+  return { score: Math.max(0, score), passed: errors.length === 0 && score >= 80, errors };
 }
 
 function evaluateContentQuality(content, sourceText = '') {
@@ -245,7 +359,21 @@ function evaluateContentQuality(content, sourceText = '') {
   if (collectVisibleStrings(caption).length) fail('caption contains literal invalid text', 20);
   if (!hasUsefulUncertainty(content.analysis?.uncertainty)) fail('uncertainty must name the variable that could change the outcome', 10);
 
-  return { score: Math.max(0, score), passed: errors.length === 0 && score >= 80, errors, warnings };
+  const brandPromise = evaluateBrandPromise(content, sourceText);
+  const readability = evaluateReadability(content);
+  brandPromise.errors.forEach(message => fail(message, 12));
+  readability.errors.forEach(message => fail(message, 10));
+
+  return {
+    score: Math.max(0, score),
+    passed: errors.length === 0 && score >= 80 && brandPromise.passed && readability.passed,
+    errors,
+    warnings,
+    gates: {
+      brand_promise: brandPromise,
+      readability,
+    },
+  };
 }
 
 function assertContentQuality(content, sourceText) {
@@ -258,4 +386,13 @@ function assertContentQuality(content, sourceText) {
   return report;
 }
 
-module.exports = { assertContentQuality, evaluateContentQuality, jaccardSimilarity, stripMarkup, extractMaterialNumbers, extractDateTokens };
+module.exports = {
+  assertContentQuality,
+  evaluateBrandPromise,
+  evaluateContentQuality,
+  evaluateReadability,
+  jaccardSimilarity,
+  stripMarkup,
+  extractMaterialNumbers,
+  extractDateTokens,
+};

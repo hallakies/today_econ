@@ -66,13 +66,26 @@ function buildWeeklyReport(posts, now = new Date()) {
   }), { reach: 0, saved: 0, shares: 0, interactions: 0, reachUnavailable: false, savedUnavailable: false, sharesUnavailable: false });
   const top = ranked[0];
   const topMeta = top.post.contentMetadata || {};
+  const formatSummary = [...ranked.reduce((groups, item) => {
+    const format = item.post.format || 'unknown';
+    const current = groups.get(format) || { count: 0, reach: 0, saved: 0, shares: 0 };
+    current.count += 1;
+    current.reach += metricNumber(item.metrics.reach) ?? 0;
+    current.saved += metricNumber(item.metrics.saved) ?? 0;
+    current.shares += metricNumber(item.metrics.shares) ?? 0;
+    groups.set(format, current);
+    return groups;
+  }, new Map()).entries()]
+    .map(([format, metrics]) => `${format}: ${metrics.count}개 · 도달 ${metrics.reach.toLocaleString()} · 저장 ${metrics.saved.toLocaleString()} · 공유 ${metrics.shares.toLocaleString()}`)
+    .join('\n');
 
   return [
     '📊 *오늘경제 주간 성장 리포트*',
     `게시물 ${ranked.length}개 · 누적 도달 ${totals.reachUnavailable ? '집계 불가' : totals.reach.toLocaleString()} · 저장 ${totals.savedUnavailable ? '집계 불가' : totals.saved.toLocaleString()} · 공유 ${totals.sharesUnavailable ? '집계 불가' : totals.shares.toLocaleString()}`,
+    formatSummary ? `\n*형식별 성과*\n${formatSummary}` : '',
     '',
     `🏆 *반응 1위*: <${top.post.permalink}|${top.post.articleTitle}>`,
-    `참여율 ${displayRate(top.metrics.engagementRate)} · 주제 ${topMeta.topic || '미분류'} · 채널 ${topMeta.money_channel || '미분류'} · 훅 ${topMeta.hook_type || '미분류'}`,
+    `참여율 ${displayRate(top.metrics.engagementRate)} · 형식 ${top.post.format || '미분류'} · 주제 ${topMeta.topic || '미분류'} · 채널 ${topMeta.money_channel || '미분류'} · 훅 ${topMeta.hook_type || '미분류'}`,
     '',
     '다음 주 운영: 1위 게시물의 주제·훅 조합을 한 번 더 실험하고, 저장과 공유가 낮은 조합은 줄입니다.',
   ].join('\n');
@@ -128,7 +141,7 @@ async function collectInsights({ now = new Date(), fetchImpl = fetch } = {}) {
   if (collected.length > 0) {
     savePosts(posts);
     const lines = collected.map(({ post, window, metrics }) =>
-      `• ${window} · <${post.permalink}|${post.articleTitle}> · 도달 ${displayMetric(metrics, 'reach')} · 저장 ${displayMetric(metrics, 'saved')} · 공유 ${displayMetric(metrics, 'shares')} · 참여율 ${displayRate(metrics.engagementRate)}`
+      `• ${window} · ${post.format || '형식 미분류'} · <${post.permalink}|${post.articleTitle}> · 도달 ${displayMetric(metrics, 'reach')} · 저장 ${displayMetric(metrics, 'saved')} · 공유 ${displayMetric(metrics, 'shares')} · 참여율 ${displayRate(metrics.engagementRate)}`
     );
     await sendAnalyticsReport(`📈 *Instagram 성과 스냅샷*\n${lines.join('\n')}`);
   }

@@ -1,6 +1,6 @@
 const Groq = require('groq-sdk');
 const config = require('../config');
-const { assertContentQuality, extractMaterialNumbers, jaccardSimilarity } = require('./quality');
+const { assertContentQuality, extractMaterialNumbers } = require('./quality');
 const { loadPipelineState } = require('./pipeline-state');
 const { buildArticleBrief, isBoilerplate } = require('./article');
 
@@ -118,36 +118,36 @@ function hasGroundedEffectiveDate(value, sourceText) {
 function fallbackImpactBullets(brief) {
   if (brief.topic === 'retirement') {
     return [
-      '자영업자는 <hl>월별 납입 여력</hl>을 다시 계산해볼 수 있어요.',
-      '노후 준비 중이라면 <hl>기존 저축과의 비중</hl>을 비교해보세요.',
+      '자영업자는 한도 변화만큼 <hl>월별 납입 부담</hl>이 달라질 수 있어요.',
+      '노후 준비 중인 사람은 <hl>기존 저축과 공제 비중</hl>을 다시 정하게 돼요.',
       '공식 안내에서 <hl>가입 조건과 납입 한도</hl>를 확인하세요.',
     ];
   }
   if (brief.topic === 'housing') {
     return [
-      '청약을 유지 중이라면 <hl>해지 전 회복할 수 없는 조건</hl>을 먼저 확인해요.',
-      '집을 준비 중이라면 <hl>청약 계획과 월 납입 부담</hl>을 함께 비교해요.',
+      '청약을 유지 중인 사람은 <hl>해지와 월 납입 유지</hl> 사이에서 다시 판단하게 돼요.',
+      '집을 준비하는 사람은 <hl>분양가와 당첨 가능성</hl>을 함께 따져야 해요.',
       '은행 앱에서 <hl>납입 횟수와 인정 금액</hl>을 확인하세요.',
     ];
   }
   if (brief.topic === 'credit') {
     return [
-      '대출 이용 중이라면 <hl>다음 금리변동일과 월 이자</hl>를 함께 확인해요.',
-      '부모님 대출이 걱정된다면 <hl>만기와 상환 방식</hl>을 먼저 살펴보세요.',
+      '대출 이용자는 조건 변화에 따라 <hl>다음 달 월 이자</hl>가 달라질 수 있어요.',
+      '새 대출을 알아보는 사람은 <hl>승인 한도와 상환 부담</hl>이 함께 바뀔 수 있어요.',
       '대출 앱에서 <hl>월 상환액과 남은 만기</hl>를 확인하세요.',
     ];
   }
   if (brief.topic === 'stocks') {
     return [
-      '투자 중이라면 <hl>내 종목의 직접 영향</hl>이 있는지 구분해보세요.',
-      '시장 전체 흐름과 <hl>개별 기업 실적</hl>을 따로 확인해요.',
+      '투자자는 시장 변화가 <hl>보유 종목의 실적</hl>에 미치는 영향을 구분해야 해요.',
+      '같은 뉴스에도 <hl>업종별 주가 반응</hl>은 다르게 나타날 수 있어요.',
       '매매 전에 <hl>수수료와 손실 한도</hl>를 확인하세요.',
     ];
   }
   if (brief.topic === 'living_cost') {
     return [
-      '가계부에서 <hl>이번 달 필수지출</hl>이 얼마나 늘었는지 확인해요.',
-      '가격 변화가 큰 항목은 <hl>구매 시점과 대체재</hl>를 비교해보세요.',
+      '같은 소비를 해도 가구의 <hl>이번 달 필수지출</hl>이 늘어날 수 있어요.',
+      '가격이 크게 오른 품목은 <hl>구매 시점과 대체재</hl> 선택에 영향을 줘요.',
       '지난달과 <hl>같은 품목의 결제액</hl>을 비교하세요.',
     ];
   }
@@ -173,8 +173,8 @@ function fallbackCoreInsight(brief) {
 function buildFallbackEditorial(selectedNews) {
   const brief = buildArticleBrief(selectedNews);
   const facts = brief.facts;
-  if (facts.length < 2) {
-    const error = new Error('[Generator] Article rejected: fewer than two clean, topic-relevant facts');
+  if (facts.length < 2 || !brief.strongest_fact || brief.topic === 'mixed') {
+    const error = new Error('[Generator] Article rejected: no story-specific brief with two clean facts');
     error.code = 'ARTICLE_REJECTED';
     throw error;
   }
@@ -189,6 +189,11 @@ function buildFallbackEditorial(selectedNews) {
       audience: brief.audience,
       hook_type: /\d/.test(`${brief.title} ${facts.join(' ')}`) ? '숫자' : '시의성',
       verified_facts: facts.slice(0, 2),
+      strongest_fact: brief.strongest_fact,
+      material_numbers: brief.material_numbers.map(number => number.normalized),
+      hook_candidates: brief.hook_candidates.map(candidate => candidate.text),
+      selected_hook: brief.selected_hook?.text || brief.cover_title,
+      source_title: brief.title,
       money_channel: brief.money_channel,
       money_effect: impacts[0],
       publication_date: '',
@@ -201,7 +206,7 @@ function buildFallbackEditorial(selectedNews) {
       core_insight: fallbackCoreInsight(brief),
       card1: {
         kicker: '오늘의 쟁점',
-        title: brief.cover_title,
+        title: brief.selected_hook?.text || brief.cover_title,
         subtitle: plainBulletText(impacts[0]),
       },
       card2: { section_title: FRIENDLY_SECTIONS.card2, bullets: [facts[0] || fallbackFacts[0], facts[1] || fallbackFacts[1]], stats: [], hard_terms: [] },
@@ -302,6 +307,17 @@ function normalizeBulletFormatting(content) {
   return content;
 }
 
+function buildReelCaption(content) {
+  const title = plainBulletText(content.card1?.title || '').replace(/\s+/g, ' ');
+  const subtitle = plainBulletText(content.card1?.subtitle || '');
+  const insight = plainBulletText(content.core_insight || '');
+  return finalizeCaption([
+    [title, subtitle].filter(Boolean).join(' — '),
+    insight,
+    '핵심 숫자는 영상에서 확인하고, 놓치기 싫다면 저장해두세요.',
+  ].filter(Boolean).join('\n\n'));
+}
+
 function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   const content = normalizeBulletFormatting(sanitizeRecursively({ ...rawCards, instagram_caption: caption }));
   const brief = buildArticleBrief(selectedNews);
@@ -323,20 +339,20 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   content.analysis.money_channel = brief.money_channel;
   content.analysis.topic = brief.topic;
   content.analysis.audience = brief.audience;
-  const generatedCover = plainBulletText(content.card1.title);
-  content.card1.title = generatedCover.length >= 8
-    && generatedCover.length <= 36
-    && !/[…]|\.{3}/.test(generatedCover)
-    && !isBoilerplate(generatedCover)
-    && jaccardSimilarity(generatedCover, brief.title) < 0.75
-    ? generatedCover
-    : brief.cover_title;
+  content.analysis.verified_facts = brief.facts.slice(0, 2);
+  content.analysis.strongest_fact = brief.strongest_fact;
+  content.analysis.material_numbers = brief.material_numbers.map(number => number.normalized);
+  content.analysis.hook_candidates = brief.hook_candidates.map(candidate => candidate.text);
+  content.analysis.selected_hook = brief.selected_hook?.text || brief.cover_title;
+  content.analysis.source_title = brief.title;
+  content.card1.title = content.analysis.selected_hook;
   const fallbackImpacts = fallbackImpactBullets(brief);
   content.card3.bullets = (content.card3.bullets || []).slice(0, 3);
   while (content.card3.bullets.length < 3) content.card3.bullets.push(fallbackImpacts[content.card3.bullets.length]);
   content.card3.bullets = content.card3.bullets.map(bullet => ensureSingleHighlight(ensureCompleteSentence(bullet)));
   if (!content.card1.subtitle || isBoilerplate(content.card1.subtitle)) content.card1.subtitle = plainBulletText(fallbackImpacts[0]);
   content.instagram_caption = finalizeCaption(buildCanonicalCaption(content));
+  content.reel_caption = buildReelCaption(content);
   content.template_theme = 'unified';
   const topicText = `${content.analysis?.topic || ''} ${selectedNews.title || ''}`;
   content.theme_color = /반도체|AI|빅테크|코인|가상자산|플랫폼/i.test(topicText) ? '#B883FF'
@@ -466,6 +482,8 @@ async function generateCardContent(selectedNews) {
         hook_type: content.analysis?.hook_type || '미분류',
         money_channel: content.analysis?.money_channel || 'mixed',
         editorial_format: 'money-change-brief',
+        brand_promise_score: qualityReport.gates?.brand_promise?.score ?? null,
+        readability_score: qualityReport.gates?.readability?.score ?? null,
       };
       console.log(`[Generator] Quality gate passed: ${qualityReport.score}/100 after ${repairAttempts} repair attempt(s)`);
       return content;
@@ -491,15 +509,17 @@ async function generateCardContent(selectedNews) {
   try {
     const fallbackDraft = buildFallbackEditorial(cleanNews);
     const fallback = normalizeGeneratedContent({ ...fallbackDraft.cards, analysis: fallbackDraft.analysis }, '', cleanNews);
+    fallback.instagram_caption = finalizeCaption(buildCanonicalCaption(fallback));
+    const qualityReport = assertContentQuality(fallback, sourceText);
     fallback.content_metadata = {
       topic: fallback.analysis.topic || '미분류',
       audience: fallback.analysis.audience || '경제 관심 독자',
       hook_type: fallback.analysis.hook_type || '시의성',
       money_channel: fallback.analysis.money_channel,
       editorial_format: 'money-change-brief-fallback',
+      brand_promise_score: qualityReport.gates?.brand_promise?.score ?? null,
+      readability_score: qualityReport.gates?.readability?.score ?? null,
     };
-    fallback.instagram_caption = finalizeCaption(buildCanonicalCaption(fallback));
-    const qualityReport = assertContentQuality(fallback, sourceText);
     fallback.quality_score = qualityReport.score;
     console.warn(`[Generator] Published safe fallback after ${repairAttempts} LLM repair attempt(s).`);
     return fallback;
@@ -514,6 +534,7 @@ async function generateCardContent(selectedNews) {
 module.exports = {
   buildCanonicalCaption,
   buildCardPrompt,
+  buildReelCaption,
   finalizeCaption,
   generateCardContent,
   ensureSingleHighlight,

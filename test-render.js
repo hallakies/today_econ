@@ -29,21 +29,11 @@ const mockData = {
   card3: {
     section_title: "그래서 내 돈은?",
     bullets: [
-      "대출을 준비 중이라면 <hl>내 한도와 월 상환액</hl>을 다시 계산해야 해요.",
-      "현금 비중이 높다면 <hl>매수 시점보다 조건</hl>을 먼저 비교하는 편이 나아요."
+      "대출을 준비 중이라면 <hl>내 한도와 월 상환액</hl>이 달라질 수 있어요.",
+      "변동금리 이용자는 <hl>다음 금리변동일</hl>에 이자 부담이 커질 수 있어요.",
+      "은행 앱에서 <hl>내 대출 조건과 월 상환액</hl>을 확인하세요."
     ],
     hard_terms: [],
-  },
-  card4: {
-    section_title: "앞으로 이렇게 될 수도",
-    bullets: [
-      "실수요자 보완책이 나오는지가 <hl>대출 수요의 변수</hl>가 될 전망이에요.",
-      "은행별 운영 기준에 따라 <hl>현장 한도 차이</hl>는 남을 수 있어요.",
-      "은행 앱에서 <hl>내 대출 조건</hl>과 월 상환액을 직접 비교해보세요."
-    ],
-    hard_terms: [],
-    policy_points: ['1인 한도 10억원', '월 신규 취급액 30% 이내'],
-    action_steps: ['앱에서 현재 한도와 잔액을 확인하세요.', '약관에서 시행일과 적용 기준을 확인하세요.', '추가 대출 전 금리와 수수료를 비교하세요.'],
   },
   core_insight: "집값만 보면 놓치기 쉬운 것은 <hl>내가 빌릴 수 있는 돈</hl>이에요.",
   news_date: "2026.6.14",
@@ -73,7 +63,7 @@ async function runTest() {
       }
     }
     
-    console.log(`\n[Test] --- Test Complete! Check unified_1.png through unified_4.png ---`);
+    console.log(`\n[Test] --- Test Complete! Check unified_1.png through unified_3.png ---`);
   } catch (error) {
     console.error('[Test] Failed:', error);
   }

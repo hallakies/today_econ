@@ -8,6 +8,40 @@ const { buildThemeHtml } = require('./templates');
 // Path to the mascot image asset
 const MASCOT_PATH = path.join(__dirname, '..', 'assets', 'mascot.png');
 
+/**
+ * Converts browser layout measurements into actionable render failures.
+ * Keeping this outside Playwright makes the density contract unit-testable
+ * without launching a browser.
+ */
+function validateSlideLayout(layout, slideNumber = 1) {
+  const errors = [];
+  if (!layout || layout.missing) {
+    errors.push('slide container is missing');
+    return { ok: false, errors };
+  }
+  if (layout.cardType === 'title') {
+    if (layout.titleLineCount > 2) errors.push(`cover title wraps to ${layout.titleLineCount} lines (max 2)`);
+    if (layout.subtitleLineCount > 1) errors.push(`cover subtitle wraps to ${layout.subtitleLineCount} lines (must be 1)`);
+  }
+  if (layout.cardType === 'fact' && layout.statsCount > 2) {
+    errors.push(`fact card renders ${layout.statsCount} stat panels (max 2)`);
+  }
+  if (layout.cardType === 'action') {
+    if (layout.coreInsightCount !== 1) errors.push('action card needs one compact 오늘경제 한 줄 생각 block');
+    if (layout.actionBulletCount !== 3) {
+      errors.push(`action card renders ${layout.actionBulletCount} bullets (expected 2 forecasts + 1 action)`);
+    }
+  }
+  if (layout.boxOverflow) {
+    const nodes = layout.overflowNodes?.length ? `: ${layout.overflowNodes.join(', ')}` : '';
+    errors.push(`content exceeds its box${nodes}`);
+  }
+  if (layout.rectOverflow) errors.push('content extends outside the 1080x1350 slide bounds');
+  if (layout.invalidText) errors.push('visible text contains undefined/null or an empty required block');
+  if (layout.emptyBulletCount > 0) errors.push(`${layout.emptyBulletCount} bullet(s) are empty`);
+  return { ok: errors.length === 0, errors: errors.map(error => `slide ${slideNumber}: ${error}`) };
+}
+
 function createEditorialBackdrop(moneyChannel = 'mixed', themeColor = '#5C8DFF') {
   const motifs = {
     credit: '<path d="M110 980 C260 860 330 1080 480 900 S720 1020 950 650" fill="none" stroke="#E8C26A" stroke-width="22" stroke-linecap="round"/><rect x="170" y="270" width="500" height="370" rx="42" fill="#FFFFFF" fill-opacity=".06" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="4"/><path d="M230 390H590M230 470H530M230 550H470" stroke="#FFFFFF" stroke-opacity=".34" stroke-width="22" stroke-linecap="round"/>',
@@ -184,24 +218,44 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
         const root = document.querySelector('.slide-container');
         if (!root) return { missing: true };
         const rootRect = root.getBoundingClientRect();
-        const layoutNodes = [...root.querySelectorAll('main, main > div, .bullet-text, .core-insight-text')];
-        const boxOverflow = layoutNodes.some(node => node.scrollHeight > node.clientHeight + 2 || node.scrollWidth > node.clientWidth + 2);
+        const title = root.querySelector('[data-cover-title]');
+        const subtitle = root.querySelector('[data-cover-subtitle]');
+        const lineCount = node => {
+          if (!node) return 0;
+          const style = getComputedStyle(node);
+          const lineHeight = Number.parseFloat(style.lineHeight);
+          if (!Number.isFinite(lineHeight) || lineHeight <= 0) return 1;
+          return Math.max(1, Math.round(node.getBoundingClientRect().height / lineHeight));
+        };
+        const layoutNodes = [...root.querySelectorAll('main, main > div, .card-bullets, .bullet-text, .fact-bullet-text, .core-insight-text, .stat-panel')];
+        const overflowNodes = layoutNodes
+          .filter(node => node.scrollHeight > node.clientHeight + 2 || node.scrollWidth > node.clientWidth + 2)
+          .map(node => node.dataset?.cardType || node.className?.split(' ').find(Boolean) || node.tagName.toLowerCase());
+        const bulletNodes = [...root.querySelectorAll('.bullet-text, .fact-bullet-text')];
+        const emptyBulletCount = bulletNodes.filter(node => !node.innerText.trim()).length;
+        const invalidText = /(?:^|\s)(?:undefined|null)(?:\s|$)/i.test(document.body.innerText)
+          || bulletNodes.some(node => !node.innerText.trim());
         const rectOverflow = [...root.children].some(child => {
           const rect = child.getBoundingClientRect();
           return rect.left < rootRect.left - 1 || rect.top < rootRect.top - 1 || rect.right > rootRect.right + 1 || rect.bottom > rootRect.bottom + 1;
         });
         return {
           missing: false,
-          boxOverflow,
+          cardType: root.dataset.cardType || (title ? 'title' : root.querySelector('.action-bullets') ? 'action' : 'content'),
+          titleLineCount: lineCount(title),
+          subtitleLineCount: lineCount(subtitle),
+          statsCount: root.querySelectorAll('[data-stat-panel]').length,
+          actionBulletCount: root.querySelectorAll('.action-bullet').length,
+          coreInsightCount: root.querySelectorAll('.core-insight-text').length,
+          emptyBulletCount,
+          boxOverflow: overflowNodes.length > 0,
+          overflowNodes,
           rectOverflow,
-          visibleInvalidText: /undefined|null/i.test(document.body.innerText),
+          invalidText,
         };
       });
-      if (layout.missing) throw new Error(`[Renderer] Missing slide container on slide ${i + 1}.`);
-      if (layout.boxOverflow || layout.rectOverflow) {
-        throw new Error(`[Renderer] Slide ${i + 1} overflows its content bounds.`);
-      }
-      if (layout.visibleInvalidText) throw new Error(`[Renderer] Slide ${i + 1} contains invalid placeholder text.`);
+      const validation = validateSlideLayout(layout, i + 1);
+      if (!validation.ok) throw new Error(`[Renderer] ${validation.errors.join('; ')}`);
 
       await page.screenshot({
         path: outputPath,
@@ -234,4 +288,5 @@ module.exports = {
   createEditorialBackdrop,
   downloadNewsImage,
   renderCardImages,
+  validateSlideLayout,
 };

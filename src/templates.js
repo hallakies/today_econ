@@ -6,7 +6,21 @@
 
 function highlightText(text, themeColor) {
   if (!text) return text;
-  return text.replace(/<hl>(.*?)<\/hl>/gi, `<span style="background-color: ${themeColor}25; border-bottom: 2px solid ${themeColor}; padding: 0 4px; border-radius: 4px; font-weight: 900; color: #ffffff; -webkit-box-decoration-break: clone; box-decoration-break: clone; line-height: 1.4;">$1</span>`);
+  return String(text).replace(/<hl>(.*?)<\/hl>/gi, `<span style="background-color: ${themeColor}25; border-bottom: 2px solid ${themeColor}; padding: 0 4px; border-radius: 4px; font-weight: 900; color: #ffffff; -webkit-box-decoration-break: clone; box-decoration-break: clone; line-height: 1.4;">$1</span>`);
+}
+
+const CARD_LABELS = Object.freeze({
+  fact: '무슨 일이야?',
+  audience: '그래서 내 돈은?',
+  action: '앞으로 이렇게 될 수도',
+});
+
+function canonicalCardLabel(cardType, content = {}) {
+  // In the compact three-card fallback, the action renderer receives card3
+  // (the reader-impact section). Preserve its audience label while retaining
+  // the action-card density contract.
+  if (cardType === 'action' && content?.section_title === '그래서 내 돈은?') return '그래서 내 돈은?';
+  return CARD_LABELS[cardType] || CARD_LABELS.action;
 }
 
 function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'TODAY', mascotBase64 = '', coreInsight = '', slideNumber = 1, totalSlides = 4, seriesLabel = '오늘의 돈 신호') {
@@ -21,7 +35,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
   
   if (cardType === 'title') {
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1350px] overflow-hidden flex flex-col justify-between py-12 px-14 select-none">
+      <div class="slide-container" data-card-type="title" style="position:relative;width:1080px;height:1350px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:3rem 3.5rem;user-select:none;">
         
         <!-- Full Bleed AI Background Image -->
         <div class="absolute inset-0 z-0">
@@ -44,40 +58,48 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         <!-- Centered Typography Area -->
         <main class="w-full z-20 flex-1 flex flex-col justify-center items-center space-y-6 text-center">
           <div class="text-white/80 font-black text-2xl tracking-[0.16em] uppercase">${content.kicker || '오늘의 쟁점'}</div>
-          <h1 class="font-display text-[3.8rem] font-black text-white leading-[1.16] break-keep max-w-[940px] drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]">${highlightText(content.title.replace(/\\n|\n/g, '<br/>'), themeColor)}</h1>
+          <h1 class="cover-title font-display text-[3.8rem] font-black text-white leading-[1.16] break-keep max-w-[900px] drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]" data-cover-title>${highlightText(String(content?.title || '').replace(/\\n|\n/g, '<br/>'), themeColor)}</h1>
           
           <div class="h-1.5 w-32 rounded-full" style="background: ${themeColor}; box-shadow: 0 0 20px ${themeColor};"></div>
           
-          <p class="font-body text-[2rem] text-white/90 break-keep leading-snug font-bold drop-shadow-md px-10 max-w-[920px]">${highlightText(content.subtitle, themeColor)}</p>
+          <p class="cover-subtitle font-body text-[2rem] text-white/90 break-keep leading-snug font-bold drop-shadow-md px-10 max-w-[920px]" data-cover-subtitle>${highlightText(String(content?.subtitle || ''), themeColor)}</p>
         </main>
       </div>
     `;
   } else {
     const isFact = cardType === 'fact';
     const isAudience = cardType === 'audience';
-    const badgeText = content.section_title || (isFact ? '무슨 일이야?' : isAudience ? '그래서 내 돈은?' : '앞으로 이렇게 될 수도');
-    const bulletsHtml = content.bullets
+    const isAction = cardType === 'action';
+    const badgeText = canonicalCardLabel(cardType, content);
+    const bullets = Array.isArray(content?.bullets) ? content.bullets : [];
+    const bulletsHtml = bullets
       .map((bullet, idx) => {
+        const actionClass = cardType === 'action' ? ` action-bullet action-bullet-${idx + 1}` : '';
+        const actionLabel = cardType === 'action' && idx === 2 ? '지금 할 일' : '';
         return `
-        <li class="${isAudience ? 'rounded-2xl border border-white/12 bg-white/[.035] p-5' : 'border-b border-white/10 py-4 last:border-b-0'} flex items-start gap-5">
+        <li data-bullet-index="${idx + 1}" class="${isAudience ? 'rounded-2xl border border-white/12 bg-white/[.035] p-5' : 'border-b border-white/10 py-4 last:border-b-0'}${actionClass} flex items-start gap-5">
           <div class="mt-2 flex items-center justify-center w-10 h-10 rounded-full shrink-0 font-black text-xl" style="color: ${themeColor}; border: 1px solid ${themeColor};">${String(idx + 1).padStart(2, '0')}</div>
-          <p class="font-body text-[2.25rem] text-white/95 font-medium leading-[1.45] break-keep bullet-text drop-shadow-sm">${highlightText(bullet, themeColor)}</p>
+          <div class="flex-1 min-w-0">
+            ${actionLabel ? `<div class="action-bullet-label" style="color:${themeColor};">${actionLabel}</div>` : ''}
+            <p class="font-body ${cardType === 'fact' ? 'fact-bullet-text' : 'bullet-text'} text-[2.08rem] text-white/95 font-medium leading-[1.38] break-keep drop-shadow-sm">${highlightText(bullet, themeColor)}</p>
+          </div>
         </li>
       `}).join('');
 
-    const statsHtml = isFact && Array.isArray(content.stats) && content.stats.length > 0 ? `
-      <div class="mt-8 grid grid-cols-${Math.min(content.stats.length, 2)} gap-4">
-        ${content.stats.map(stat => `
-          <div class="rounded-2xl p-5 border border-white/15" style="background: linear-gradient(135deg, ${themeColor}25, rgba(8,13,24,.45));">
+    const stats = isFact && Array.isArray(content?.stats) ? content.stats.slice(0, 2) : [];
+    const statsHtml = isFact && stats.length > 0 ? `
+      <div class="stats-grid mt-7 grid grid-cols-${Math.min(stats.length, 2)} gap-4" data-stat-group>
+        ${stats.map(stat => `
+          <div class="stat-panel rounded-2xl p-5 border border-white/15" data-stat-panel style="background: linear-gradient(135deg, ${themeColor}25, rgba(8,13,24,.45));">
             <div class="text-white/60 font-bold text-xl">${stat.label || ''}</div>
-            <div class="font-black text-[3.3rem] leading-tight mt-1" style="color: ${themeColor};">${stat.value || ''}</div>
+            <div class="stat-value font-black text-[3.1rem] leading-tight mt-1" style="color: ${themeColor};">${stat.value || ''}</div>
             ${stat.baseline ? `<div class="text-white/55 font-semibold text-lg mt-1 break-keep">기준: ${stat.baseline}</div>` : ''}
             ${stat.comparison ? `<div class="text-white/75 font-semibold text-xl mt-1 break-keep">${stat.comparison}</div>` : ''}
           </div>
         `).join('')}
       </div>` : '';
 
-    const policyHtml = isFact && Array.isArray(content.policy_points) && content.policy_points.length > 0 ? `
+    const policyHtml = isFact && Array.isArray(content?.policy_points) && content.policy_points.length > 0 ? `
       <div class="mt-8 pt-7 border-t border-white/10">
         <div class="text-white/55 font-black text-xl tracking-wider mb-3">기사에 적힌 제한</div>
         <div class="flex flex-wrap gap-3">${content.policy_points.map(point => `<span class="px-4 py-3 rounded-xl text-white/90 font-bold text-xl border" style="border-color:${themeColor}70;background:${themeColor}18;">${point}</span>`).join('')}</div>
@@ -88,7 +110,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
     const stepsHtml = '';
 
     innerHtml = `
-      <div class="slide-container relative w-[1080px] h-[1350px] overflow-hidden flex flex-col justify-between py-16 px-16 select-none">
+      <div class="slide-container" data-card-type="${cardType}" style="position:relative;width:1080px;height:1350px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:4rem 4rem;user-select:none;">
         
         <!-- Ambient Background -->
         <div class="absolute inset-0 z-0">
@@ -115,7 +137,7 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
               </div>
             ` : ''}
 
-            <ul class="space-y-4 flex flex-col justify-center min-h-[300px]">
+            <ul class="card-bullets ${isFact ? 'fact-bullets' : ''} ${isAction ? 'action-bullets' : ''} space-y-3 flex flex-col justify-center min-h-[260px]" data-bullet-group>
               ${bulletsHtml}
             </ul>
 
@@ -184,19 +206,34 @@ function renderUnified(cardType, content, imageBase64, themeColor, newsDate = 'T
         *, *::before, *::after { box-sizing: border-box; }
         body { background-color: #0B101A; overflow: hidden; margin: 0; padding: 0; }
         .slide-container { box-sizing: border-box; }
+        .cover-title { max-height: 9rem; overflow: hidden; }
+        .cover-subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .action-bullet { border-left: 4px solid rgba(255,255,255,.14); padding-left: 1.25rem; }
+        .action-bullet-3 { border-left-color: ${themeColor}; background: ${themeColor}12; border-radius: 1rem; padding: 1rem 1.25rem; }
+        .action-bullet-label { font-size: 1.05rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; margin-bottom: .15rem; }
+        .stat-panel { min-height: 12rem; }
+        .fact-bullet-text { font-size: 2rem; }
       </style>
     </head>
     <body class="font-sans text-white antialiased flex items-center justify-center min-h-screen">
       ${innerHtml}
       <script>
         document.addEventListener("DOMContentLoaded", () => {
-          document.querySelectorAll('.bullet-text').forEach(el => {
+          document.querySelectorAll('.bullet-text, .fact-bullet-text').forEach(el => {
             const textLen = el.innerText.length;
-            if(textLen > 65) el.style.fontSize = '2.1rem';
-            else if(textLen > 45) el.style.fontSize = '2.25rem';
+            if(textLen > 78) el.style.fontSize = '1.82rem';
+            else if(textLen > 58) el.style.fontSize = '1.95rem';
+          });
+          document.querySelectorAll('.cover-subtitle').forEach(el => {
+            let size = 2;
+            while (el.scrollWidth > el.clientWidth && size > 1.55) {
+              size -= 0.05;
+              el.style.fontSize = size + 'rem';
+            }
           });
           document.querySelectorAll('.core-insight-text').forEach(el => {
-            if(el.innerText.length > 30) el.style.fontSize = '2rem';
+            if(el.innerText.length > 45) el.style.fontSize = '1.92rem';
+            else if(el.innerText.length > 30) el.style.fontSize = '2.08rem';
           });
         });
       </script>
@@ -211,4 +248,5 @@ function buildThemeHtml(themeName, themeColor, cardType, content, imageBase64, n
 
 module.exports = {
   buildThemeHtml,
+  canonicalCardLabel,
 };

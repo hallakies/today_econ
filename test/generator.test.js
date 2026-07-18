@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   buildFallbackEditorial,
+  buildReelCaption,
   ensureSingleHighlight,
   finalizeCaption,
   normalizeGeneratedContent,
@@ -19,6 +20,17 @@ test('keeps one valid hashtag set and strips URLs and generated tags', () => {
   const caption = finalizeCaption('훅입니다.\n\n핵심 설명입니다.\n\nhttps://example.com\n\n#임시태그 #today.econ');
   assert.doesNotMatch(caption, /https?:|임시태그|#today\.econ/);
   assert.equal((caption.match(/#today_econ/g) || []).length, 1);
+});
+
+test('builds a shorter Reel caption while preserving the canonical hashtag set', () => {
+  const caption = buildReelCaption({
+    card1: { title: '고령층 연체율 4년 새 2배', subtitle: '부모님 대출의 월 이자를 확인할 때예요' },
+    core_insight: '대출 뉴스는 내 월 상환액이 얼마나 달라지는지를 먼저 봐야 해요.',
+  });
+  assert.match(caption, /고령층 연체율 4년 새 2배/);
+  assert.match(caption, /핵심 숫자는 영상에서 확인/);
+  assert.equal((caption.match(/#today_econ/g) || []).length, 1);
+  assert.ok(caption.length < 400);
 });
 
 test('parses JSON wrapped in a markdown fence', () => {
@@ -42,6 +54,9 @@ test('normalizes to a three-card story and removes a generated fourth card', () 
   assert.equal(content.card3.bullets.length, 3);
   assert.equal(content.card4, undefined);
   assert.equal(content.card1.title, '청약통장,\n한 달 새 10만 명 해지');
+  assert.equal(content.analysis.hook_candidates.length, 5);
+  assert.equal(content.analysis.selected_hook, content.card1.title);
+  assert.equal(content.analysis.strongest_fact, '청약통장 가입자는 한 달 새 10만명 감소했다.');
 });
 
 test('drops malformed optional stats and removes the source URL from Instagram copy', () => {
@@ -71,8 +86,15 @@ test('polluted article fallback excludes byline and stays on the housing topic',
   assert.doesNotMatch(visible, /류영상|기자 입력|Google 검색|자영업자|노후 준비|대출 앱/);
   assert.equal(content.analysis.money_channel, 'housing');
   assert.equal(content.card4, undefined);
+  assert.equal(content.analysis.strongest_fact, '청약통장 가입자는 한 달 새 10만명 감소했다.');
+  assert.deepEqual(content.analysis.material_numbers.slice(0, 1), ['10만명']);
+  assert.equal(content.analysis.hook_candidates.length, 5);
+  assert.doesNotMatch(content.card3.bullets.slice(0, 2).join(' '), /확인하세요|비교하세요/);
+  assert.match(content.card3.bullets[2], /확인하세요/);
   const report = evaluateContentQuality(content, `${selectedNews.title} ${selectedNews.fullText}`);
   assert.equal(report.passed, true, JSON.stringify(report));
+  assert.equal(report.gates.brand_promise.passed, true, JSON.stringify(report.gates.brand_promise));
+  assert.equal(report.gates.readability.passed, true, JSON.stringify(report.gates.readability));
 });
 
 test('rejects fallback when two clean topic facts cannot be found', () => {

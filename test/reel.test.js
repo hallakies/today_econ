@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { buildVideoFilters, createReelVideo, estimateSlideDuration, resolveSlideDurations } = require('../src/reel');
+const { buildSlideTimingPlan, buildVideoFilters, createReelVideo, estimateSlideDuration, resolveSlideDurations } = require('../src/reel');
 const { createEditorialBackdrop } = require('../src/renderer');
 
 test('builds a 9:16 blurred-background filter for every card', () => {
@@ -46,11 +46,26 @@ test('creates a Reel command with dynamic durations and a looped audio track', a
   assert.equal(calls[1].args.at(-1), path.join(directory, 'reel.mp4'));
 });
 
-test('gives dense slides more reading time while staying within 6-12 seconds', () => {
-  assert.equal(estimateSlideDuration('짧은 표지'), 6);
-  const dense = estimateSlideDuration('긴 설명입니다. '.repeat(20));
-  assert.equal(dense, 12);
-  assert.deepEqual(resolveSlideDurations(['짧은 표지', '상세한 본문 '.repeat(10)], 0), [6, 10]);
+test('uses role-aware reading ranges for a three-slide editorial', () => {
+  const plan = buildSlideTimingPlan({
+    card1: { title: '청약통장 10만 명 해지', subtitle: '내 청약 계획을 다시 볼 때예요' },
+    card2: { bullets: ['핵심 사실과 이유를 충분한 길이로 설명하는 문장입니다.'.repeat(3)] },
+    card3: { bullets: ['내 돈에 미치는 영향과 오늘 확인할 행동을 충분히 설명합니다.'.repeat(4)] },
+  }, 3);
+  assert.deepEqual(plan.map(item => item.role), ['cover', 'fact', 'action']);
+  assert.ok(plan[0].duration >= 4 && plan[0].duration <= 4.5);
+  assert.ok(plan[1].duration >= 7 && plan[1].duration <= 9);
+  assert.ok(plan[2].duration >= 9 && plan[2].duration <= 11);
+  assert.ok(plan[2].duration > plan[0].duration);
+});
+
+test('gives dense slides more time inside the selected role range', () => {
+  assert.equal(estimateSlideDuration('짧은 표지', { role: 'cover' }), 4);
+  const dense = estimateSlideDuration('긴 설명입니다. '.repeat(20), { role: 'action' });
+  assert.equal(dense, 11);
+  const resolved = resolveSlideDurations(['짧은 표지', '상세한 본문 '.repeat(20)], 0, ['cover', 'fact']);
+  assert.equal(resolved[0], 4);
+  assert.ok(resolved[1] > 8 && resolved[1] <= 9);
   assert.deepEqual(resolveSlideDurations(['a', 'b', 'c'], 8), [8, 8, 8]);
 });
 
