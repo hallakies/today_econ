@@ -69,6 +69,36 @@
       "repairAttempts": 0,
       "qualityScore": 100,
       "error": ""
+    },
+    {
+      "at": "2026-07-18T11:38:07.616Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
+    },
+    {
+      "at": "2026-07-18T11:40:12.102Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "中企 연체율, 대기업의 4배 … 금리인상 기조에 '좌불안석'",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 44,
+      "error": "Content quality gate failed (44/100): card3 bullet 3 must name a concrete money check; brand promise: card2 omits the strongest article fact; brand promise: impact 2 is not tied to the article topic; readability: cover must fit in at most two short lines; readability: the last card3 bullet must be the single action"
+    },
+    {
+      "at": "2026-07-18T11:47:33.113Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
     }
   ]
 }

@@ -239,5 +239,67 @@
       "tag": "instagram-assets-29632015732-1784352008702",
       "deleteAfter": "2026-07-21T05:22:05.891Z"
     }
+  },
+  {
+    "metrics": {},
+    "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12101233",
+    "contentMetadata": {
+      "topic": "retirement",
+      "audience": "자영업자",
+      "hook_type": "숫자",
+      "money_channel": "mixed",
+      "editorial_format": "money-change-brief-fallback",
+      "brand_promise_score": 100,
+      "readability_score": 100
+    },
+    "qualityScore": 100,
+    "requestedFormats": [
+      "reel",
+      "carousel"
+    ],
+    "release": {
+      "id": 356089144,
+      "tag": "instagram-assets-29642867349-reel-1784375154839",
+      "deleteAfter": "2026-07-21T11:47:31.120Z"
+    },
+    "mediaId": "17942908944258509",
+    "permalink": "https://www.instagram.com/reel/Da7tw0JDnCV/",
+    "publishedAt": "2026-07-18T11:46:25+0000",
+    "format": "reel",
+    "story": {
+      "id": "17935397874300398",
+      "permalink": "https://www.instagram.com/stories/today.econ/3943947690342158409",
+      "publishedAt": "2026-07-18T11:47:27+0000",
+      "format": "standalone_story_copy"
+    }
+  },
+  {
+    "metrics": {},
+    "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12101233",
+    "contentMetadata": {
+      "topic": "retirement",
+      "audience": "자영업자",
+      "hook_type": "숫자",
+      "money_channel": "mixed",
+      "editorial_format": "money-change-brief-fallback",
+      "brand_promise_score": 100,
+      "readability_score": 100
+    },
+    "qualityScore": 100,
+    "requestedFormats": [
+      "reel",
+      "carousel"
+    ],
+    "release": {
+      "id": 356089154,
+      "tag": "instagram-assets-29642867349-carousel-1784375156462",
+      "deleteAfter": "2026-07-21T11:47:01.690Z"
+    },
+    "mediaId": "18088127084535397",
+    "permalink": "https://www.instagram.com/p/Da7t29wG_40/",
+    "publishedAt": "2026-07-18T11:46:57+0000",
+    "format": "carousel"
   }
 ]
