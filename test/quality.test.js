@@ -26,6 +26,7 @@ function validContent() {
     analysis: {
       topic: 'housing',
       money_channel: 'housing',
+      event_type: 'reported_change',
       money_effect: '청약 계획과 납입 부담이 달라질 수 있어요.',
       uncertainty: '분양가와 당첨 가능성에 따라 판단이 달라질 수 있어요.',
       strongest_fact: '청약통장 가입자는 한 달 새 10만명 감소했다.',
@@ -149,4 +150,40 @@ test('readability gate blocks dense bullets independently of source grounding', 
   const report = evaluateContentQuality(content, source);
   assert.equal(report.passed, false);
   assert.match(report.gates.readability.errors.join(' '), /too dense/);
+});
+
+test('blocks generic percentage-change covers and photo-credit contamination', () => {
+  const content = validContent();
+  content.analysis.topic = 'pension_insurance';
+  content.analysis.money_channel = 'mixed';
+  content.analysis.event_type = 'market_trend';
+  content.card1.title = '노후자금, 97.5% 변화';
+  content.card1.subtitle = '자영업자는 한도 변화만큼 월별 납입 부담이 달라질 수 있어요.';
+  content.card2.bullets = [
+    '연금보험 증가율 97.5%는 <hl>기사 내용과는 무관함</hl>이라고 적혀 있어요.',
+    '<hl>[연합뉴스]</hl> 올 상반기 연금보험 가입이 급증한 것으로 나타났어요.',
+  ];
+  content.card3.bullets = [
+    '자영업자는 한도 변화만큼 <hl>월별 납입 부담</hl>이 달라질 수 있어요.',
+    '노후 준비 중이라면 <hl>공제 비중</hl>을 다시 정하게 돼요.',
+    '공식 안내에서 <hl>가입 조건과 납입 한도</hl>를 확인하세요.',
+  ];
+  content.analysis.strongest_fact = '20대 이하 연금보험 증가율은 97.5%였다.';
+  content.analysis.verified_facts = [
+    '20대 이하 연금보험 증가율은 97.5%였다.',
+    '연금보험 신계약 건수는 전년 동기 대비 78.1% 급증했다.',
+  ];
+  content.analysis.hook_candidates = [
+    content.card1.title,
+    '20대 연금보험 가입 97.5% 급증',
+    '연금보험 신계약 78.1% 급증',
+    '청년층이 연금보험에 몰린 이유',
+    '연금보험 가입 전 볼 숫자',
+  ];
+  content.analysis.selected_hook = content.card1.title;
+  const pensionSource = `${content.analysis.verified_facts.join(' ')} 올 상반기 20대 청년층과 5060 고령층의 가입이 늘었다.`;
+  const report = evaluateContentQuality(content, pensionSource);
+
+  assert.equal(report.passed, false);
+  assert.match(report.errors.join(' '), /generic|photo|credit|pension|self-employed|topic|cover/i);
 });

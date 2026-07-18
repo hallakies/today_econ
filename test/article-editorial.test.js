@@ -72,3 +72,27 @@ test('brief locks facts, material numbers, topic, and selected hook before gener
   assert.equal(brief.selected_hook.text, brief.cover_title);
   assert.doesNotMatch(JSON.stringify(brief.facts), /자영업자|노후 준비|기자 입력|Google/);
 });
+
+test('builds a clean pension-insurance brief from an article polluted by photo captions', () => {
+  const brief = buildArticleBrief({
+    title: '“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’',
+    fullText: [
+      '연금보험, 20대 이하 증가율 97.5% 달해 해당 기사 내용과는 무관함.',
+      '기사 이해를 돕기 위한 사진임. [연합뉴스] 사진 확대.',
+      '올 상반기 20대 청년층과 5060 고령층을 중심으로 연금보험 가입이 급증한 것으로 나타났다.',
+      '증시 호황에 따른 변액보험의 인기와 노후 생활고에 대한 불안감이 맞물린 결과다.',
+      '올해 상반기 연금보험 신계약 건수는 전년 동기 대비 78.1% 급증했다.',
+      '60대 이상은 135.3%, 20대 이하는 97.5%의 증가율을 보였다.',
+    ].join(' '),
+  });
+
+  assert.equal(brief.topic, 'pension_insurance');
+  assert.equal(brief.money_channel, 'mixed');
+  assert.equal(brief.event_type, 'market_trend');
+  assert.match(brief.audience, /20대|5060/);
+  assert.match(brief.strongest_fact, /연금보험|20대/);
+  assert.match(brief.cover_title, /연금보험/);
+  assert.match(brief.cover_title, /급증/);
+  assert.doesNotMatch(brief.cover_title, /97\.5%\s*변화|핵심 변화/);
+  assert.doesNotMatch(JSON.stringify(brief), /기사 내용과는 무관|연합뉴스|사진 확대|자영업자|공제 한도/);
+});

@@ -30,6 +30,7 @@ const TOPIC_DRIFT = Object.freeze({
   living_cost: /청약통장|스톡론|노란우산|공제\s*납입/,
   credit: /청약통장|노란우산|공제\s*납입/,
   tax: /청약통장|스톡론|노란우산/,
+  pension_insurance: /자영업|소상공인|노란우산|공제\s*(?:한도|납입)|월별\s*납입\s*부담/,
 });
 const TOPIC_ANCHORS = Object.freeze({
   housing: /청약|주택|집|분양|전세|납입|당첨/,
@@ -37,10 +38,14 @@ const TOPIC_ANCHORS = Object.freeze({
   living_cost: /물가|생활비|가격|지출|결제|품목|소비/,
   tax: /세금|과세|소득세|보유세|취득세|공제|납세/,
   retirement: /노후|연금|공제|납입|자영업|소상공인|저축/,
+  pension_insurance: /연금보험|변액연금|변액보험|보험|신계약|가입|사업비|해지환급률/,
   credit: /대출|금리|이자|상환|한도|신용|만기/,
 });
 const GENERIC_IMPACT = /(?:내 상황에 맞는|적용 조건을 먼저|기존 계획과 비교|현금흐름의 변화|개인별 조건|실제 적용 범위|중요해요)/;
 const IMPERATIVE_ENDING = /(?:(?:확인|비교|점검|계산|기록|저장|신청)(?:하|해)(?:보)?(?:세요|요)|살펴(?:보)?세요)[.!]?$/;
+const SOURCE_CREDIT_OR_CAPTION = /(?:기사\s*내용과는\s*무관|기사\s*이해를\s*돕기|사진\s*(?:확대|축소)|\[(?:연합뉴스|뉴스1|뉴시스|매경DB|MK스포츠)\])/i;
+const GENERIC_CHANGE_COVER = /(?:\d[\d,.]*%\s*(?:핵심\s*)?변화|기사에서\s*확인한\s*변화|오늘\s*달라진\s*핵심|지금\s*봐야\s*할\s*신호)/;
+const EVENT_TYPES = new Set(['policy_change', 'market_trend', 'price_change', 'reported_change']);
 
 function stripMarkup(text = '') {
   return String(text ?? '').replace(/<\/?hl>/gi, '').replace(/\s+/g, ' ').trim();
@@ -89,7 +94,7 @@ function hasImpossibleNumericComparison(text = '') {
 }
 
 function hasConcreteActionTarget(text = '') {
-  return /(금리변동일|월(?:상환액|이자)|만기(?:일)?|상환방식|대출잔액|연체(?:여부|율)?|대출한도|한도|잔액|적용(?:시점|기준)|시행일|납입(?:액|여력)|가입조건|세액|보유세|취득세|매수가|매도가|수수료|담보비율|계약기간|갱신조건)/.test(stripMarkup(text).replace(/\s+/g, ''));
+  return /(금리변동일|월(?:상환액|이자)|만기(?:일)?|상환방식|대출잔액|연체(?:여부|율)?|대출한도|한도|잔액|적용(?:시점|기준)|시행일|납입(?:액|여력)|가입조건|세액|보유세|취득세|매수가|매도가|수수료|담보비율|계약기간|갱신조건|사업비|해지환급률|상품설명서|보험료)/.test(stripMarkup(text).replace(/\s+/g, ''));
 }
 
 function hasUsefulUncertainty(text = '') {
@@ -168,6 +173,9 @@ function evaluateBrandPromise(content, sourceText = '') {
   if (!selectedHook || normalizeSource(selectedHook) !== normalizeSource(title) || !hookCandidates.some(hook => normalizeSource(hook) === normalizeSource(selectedHook))) {
     fail('brand promise: cover must use the deterministically selected hook', 15);
   }
+  if (GENERIC_CHANGE_COVER.test(title)) {
+    fail('brand promise: cover uses a generic percentage/change label without an insight', 25);
+  }
 
   const strongestNumbers = extractMaterialNumbers(strongestFact);
   const normalizedTitle = normalizeSource(title);
@@ -184,6 +192,14 @@ function evaluateBrandPromise(content, sourceText = '') {
 
   const topic = analysis.topic;
   const anchor = TOPIC_ANCHORS[topic] || TOPIC_ANCHORS[analysis.money_channel];
+  if (topic === 'pension_insurance') {
+    if (!/연금보험|변액연금|변액보험/.test(title)) {
+      fail('brand promise: pension-insurance cover must name the actual product', 25);
+    }
+    if (!/가입|신계약|급증|증가/.test(title)) {
+      fail('brand promise: pension-insurance cover must state what changed', 20);
+    }
+  }
   impacts.forEach((impact, index) => {
     if (GENERIC_IMPACT.test(impact)) fail(`brand promise: impact ${index + 1} is generic rather than story-specific`, 20);
     if (anchor && !anchor.test(impact)) fail(`brand promise: impact ${index + 1} is not tied to the article topic`, 20);
@@ -262,6 +278,8 @@ function evaluateContentQuality(content, sourceText = '') {
   if (VISIBLE_BOILERPLATE.test(`${title} ${subtitle}`)) fail('cover contains page metadata instead of editorial copy', 25);
   if (!subtitle || subtitle.length < 8) fail('cover subtitle must explain the reader money effect');
   if (/^(?:혹시|아세요|Did you know)/i.test(title)) fail('cover uses a generic opening', 8);
+  if (GENERIC_CHANGE_COVER.test(title)) fail('cover must state the subject and direction, not only a percentage change', 25);
+  if (SOURCE_CREDIT_OR_CAPTION.test(`${title} ${subtitle}`)) fail('cover contains a photo credit or image-caption disclaimer', 25);
   if (!/(내|부모|가족|월|상환|이자|대출|집값|주택|청약|세금|생활비|노후|사업|자영업|투자금|현금흐름)/.test(`${title} ${subtitle}`)) {
     fail('cover must name a concrete reader money connection', 15);
   }
@@ -283,6 +301,7 @@ function evaluateContentQuality(content, sourceText = '') {
       if ((String(bullet).match(/<hl>.*?<\/hl>/gi) || []).length !== 1) fail(`${key} bullet ${index + 1} needs exactly one highlight`, 8);
       if (GENERIC_PHRASES.some(phrase => plain.includes(phrase))) fail(`${key} bullet ${index + 1} contains generic or sensational wording`, 12);
       if (VISIBLE_BOILERPLATE.test(plain)) fail(`${key} bullet ${index + 1} contains page metadata`, 25);
+      if (SOURCE_CREDIT_OR_CAPTION.test(plain)) fail(`${key} bullet ${index + 1} contains a photo credit or image-caption disclaimer`, 30);
       if (key === 'card3' && isRunOnImpact(plain)) fail(`${key} bullet ${index + 1} merges multiple audience impacts`, 10);
       if (hasImpossibleNumericComparison(plain)) fail(`${key} bullet ${index + 1} has a contradictory numeric comparison`, 25);
       if (!hasGroundedNumericSentence(plain, sourceText)) fail(`${key} bullet ${index + 1} combines numbers that do not appear together in the article`, 25);
@@ -330,7 +349,24 @@ function evaluateContentQuality(content, sourceText = '') {
   }
 
   const storyText = [title, subtitle, ...(content.card2?.bullets || []), ...(content.card3?.bullets || [])].map(stripMarkup).join(' ');
-  if (TOPIC_DRIFT[moneyChannel]?.test(storyText)) fail(`cards drift away from the ${moneyChannel} article topic`, 25);
+  const topic = content.analysis?.topic;
+  if (TOPIC_DRIFT[topic]?.test(storyText) || TOPIC_DRIFT[moneyChannel]?.test(storyText)) {
+    fail(`cards drift away from the ${topic || moneyChannel} article topic`, 25);
+  }
+  const eventType = content.analysis?.event_type;
+  if (!EVENT_TYPES.has(eventType)) fail('analysis.event_type must use the controlled enum', 15);
+  if (eventType === 'market_trend' && /(정책|규제|공제\s*한도|제도\s*활용|시행일)/.test(storyText)) {
+    fail('market-trend article is incorrectly framed as a policy or limit change', 25);
+  }
+  if (topic === 'pension_insurance') {
+    if (!/연금보험|변액연금|변액보험/.test(storyText)) fail('pension-insurance story lost its product anchor', 25);
+    if (!/(사업비|해지환급률|상품설명서|보험료)/.test(action)) {
+      fail('pension-insurance action must name a product cost or exit-condition check', 25);
+    }
+    if (/자영업자|공제\s*한도|월별\s*납입\s*부담/.test(storyText)) {
+      fail('pension-insurance story incorrectly targets self-employed mutual-aid readers', 30);
+    }
+  }
 
   const allCardText = [content.card1?.title, content.card1?.subtitle]
     .concat(content.card2?.bullets || [], content.card3?.bullets || [])

@@ -116,6 +116,13 @@ function hasGroundedEffectiveDate(value, sourceText) {
 }
 
 function fallbackImpactBullets(brief) {
+  if (brief.topic === 'pension_insurance') {
+    return [
+      '가입자가 늘어도 <hl>수익이 보장되는 상품</hl>이라는 뜻은 아니에요.',
+      '변액연금보험은 증시 흐름에 따라 <hl>적립금과 수익률</hl>이 달라질 수 있어요.',
+      '상품설명서에서 <hl>사업비와 중도해지 환급률</hl>을 확인하세요.',
+    ];
+  }
   if (brief.topic === 'retirement') {
     return [
       '자영업자는 한도 변화만큼 <hl>월별 납입 부담</hl>이 달라질 수 있어요.',
@@ -166,8 +173,38 @@ function fallbackCoreInsight(brief) {
     living_cost: '물가 뉴스는 체감보다 같은 품목의 실제 결제액을 비교할 때 더 정확해요.',
     tax: '세금 변화는 적용 대상과 시행 시점을 내 상황에 대입해야 실제 부담을 알 수 있어요.',
     retirement: '공제 한도보다 내 소득에서 꾸준히 납입할 수 있는 금액을 먼저 계산해야 해요.',
+    pension_insurance: '연금보험 가입 급증은 추천 신호가 아니에요. 수익률보다 비용과 중도해지 조건을 먼저 봐야 해요.',
   };
   return insights[brief.topic] || '내 상황에 적용되는 조건과 금액을 먼저 확인하는 것이 중요해요.';
+}
+
+function fallbackCoverSubtitle(brief) {
+  if (brief.topic === 'pension_insurance') return '가입 증가율보다 내 비용과 해지 조건이 더 중요해요.';
+  return plainBulletText(fallbackImpactBullets(brief)[0]);
+}
+
+function friendlyFactSentence(value = '') {
+  return plainBulletText(value)
+    .replace(/^\d{1,2}일\s+[^.]{0,35}?(?:분석한\s*결과에\s*따르면|따르면)\s*/u, '')
+    .replace(/나타났다[.]?$/u, '나타났어요.')
+    .replace(/급증했다[.]?$/u, '급증했어요.')
+    .replace(/증가했다[.]?$/u, '증가했어요.')
+    .replace(/감소했다[.]?$/u, '감소했어요.')
+    .replace(/보였다[.]?$/u, '보였어요.')
+    .replace(/결과다[.]?$/u, '결과예요.')
+    .trim();
+}
+
+function lockedFactBullets(brief) {
+  const facts = brief.facts.filter(fact => !isBoilerplate(fact));
+  if (brief.topic === 'pension_insurance') {
+    const overall = facts.find(fact => /연금보험\s*신계약|신계약\s*건수/.test(fact));
+    const age = facts.find(fact => /20대|청년층/.test(fact) && /\d[\d,.]*%/.test(fact));
+    const ordered = [overall, age, ...facts].filter(Boolean);
+    const unique = ordered.filter((fact, index) => ordered.indexOf(fact) === index);
+    return unique.slice(0, 2).map(friendlyFactSentence);
+  }
+  return facts.slice(0, 2).map(friendlyFactSentence);
 }
 
 function buildFallbackEditorial(selectedNews) {
@@ -183,6 +220,7 @@ function buildFallbackEditorial(selectedNews) {
     '실제 적용은 <hl>개인별 가입 조건</hl>에 따라 달라질 수 있어요.',
   ];
   const impacts = fallbackImpactBullets(brief);
+  const lockedFacts = lockedFactBullets(brief);
   return {
     analysis: {
       topic: brief.topic,
@@ -194,6 +232,7 @@ function buildFallbackEditorial(selectedNews) {
       hook_candidates: brief.hook_candidates.map(candidate => candidate.text),
       selected_hook: brief.selected_hook?.text || brief.cover_title,
       source_title: brief.title,
+      event_type: brief.event_type,
       money_channel: brief.money_channel,
       money_effect: impacts[0],
       publication_date: '',
@@ -207,9 +246,9 @@ function buildFallbackEditorial(selectedNews) {
       card1: {
         kicker: '오늘의 쟁점',
         title: brief.selected_hook?.text || brief.cover_title,
-        subtitle: plainBulletText(impacts[0]),
+        subtitle: fallbackCoverSubtitle(brief),
       },
-      card2: { section_title: FRIENDLY_SECTIONS.card2, bullets: [facts[0] || fallbackFacts[0], facts[1] || fallbackFacts[1]], stats: [], hard_terms: [] },
+      card2: { section_title: FRIENDLY_SECTIONS.card2, bullets: [lockedFacts[0] || fallbackFacts[0], lockedFacts[1] || fallbackFacts[1]], stats: [], hard_terms: [] },
       card3: { section_title: FRIENDLY_SECTIONS.card3, bullets: impacts, hard_terms: [] },
     },
   };
@@ -279,8 +318,15 @@ function plainBulletText(value) {
 }
 
 function chooseHighlight(text) {
-  const numeric = text.match(/(?<![A-Za-z])\d[\d,.]*(?:(?:조|억|만)(?:원)?|원|명|개|배|%|퍼센트)?/);
-  if (numeric) return numeric[0];
+  const numericPatterns = [
+    /\d[\d,.]*(?:%|퍼센트)/,
+    /\d[\d,.]*(?:(?:조|억|만)(?:원)?|원)/,
+    /\d[\d,.]*(?:명|개|배)/,
+  ];
+  for (const pattern of numericPatterns) {
+    const numeric = text.match(pattern);
+    if (numeric) return numeric[0];
+  }
 
   const words = text.split(/\s+/).filter(Boolean);
   const meaningful = words.filter(word => !HIGHLIGHT_STOPWORDS.has(word.replace(/[.,!?]/g, '')));
@@ -289,12 +335,35 @@ function chooseHighlight(text) {
 }
 
 function ensureSingleHighlight(value) {
+  const original = sanitizeText(String(value || ''));
   const text = plainBulletText(value);
   if (!text) return text;
+  const existing = [...original.matchAll(HIGHLIGHT_TAG)];
+  if (existing.length === 1) {
+    const preferred = plainBulletText(existing[0][1]);
+    const preferredStart = text.indexOf(preferred);
+    if (preferred && preferredStart >= 0) {
+      return `${text.slice(0, preferredStart)}<hl>${preferred}</hl>${text.slice(preferredStart + preferred.length)}`;
+    }
+  }
   const highlighted = chooseHighlight(text);
   const start = text.indexOf(highlighted);
   if (start < 0) return `<hl>${text.slice(0, Math.min(12, text.length))}</hl>${text.slice(Math.min(12, text.length))}`;
   return `${text.slice(0, start)}<hl>${highlighted}</hl>${text.slice(start + highlighted.length)}`;
+}
+
+function formatBullet(value) {
+  const original = sanitizeText(String(value || ''));
+  const completed = ensureCompleteSentence(original);
+  const existing = [...original.matchAll(HIGHLIGHT_TAG)];
+  if (existing.length === 1) {
+    const preferred = plainBulletText(existing[0][1]);
+    const preferredStart = completed.indexOf(preferred);
+    if (preferred && preferredStart >= 0) {
+      return `${completed.slice(0, preferredStart)}<hl>${preferred}</hl>${completed.slice(preferredStart + preferred.length)}`;
+    }
+  }
+  return ensureSingleHighlight(completed);
 }
 
 function normalizeBulletFormatting(content) {
@@ -302,7 +371,7 @@ function normalizeBulletFormatting(content) {
     const card = content[key];
     if (!card || !Array.isArray(card.bullets)) continue;
     card.section_title = sectionTitle;
-    card.bullets = card.bullets.map(bullet => ensureSingleHighlight(ensureCompleteSentence(bullet)));
+    card.bullets = card.bullets.map(formatBullet);
   }
   return content;
 }
@@ -339,6 +408,7 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   content.analysis.money_channel = brief.money_channel;
   content.analysis.topic = brief.topic;
   content.analysis.audience = brief.audience;
+  content.analysis.event_type = brief.event_type;
   content.analysis.verified_facts = brief.facts.slice(0, 2);
   content.analysis.strongest_fact = brief.strongest_fact;
   content.analysis.material_numbers = brief.material_numbers.map(number => number.normalized);
@@ -347,10 +417,11 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   content.analysis.source_title = brief.title;
   content.card1.title = content.analysis.selected_hook;
   const fallbackImpacts = fallbackImpactBullets(brief);
-  content.card3.bullets = (content.card3.bullets || []).slice(0, 3);
-  while (content.card3.bullets.length < 3) content.card3.bullets.push(fallbackImpacts[content.card3.bullets.length]);
-  content.card3.bullets = content.card3.bullets.map(bullet => ensureSingleHighlight(ensureCompleteSentence(bullet)));
-  if (!content.card1.subtitle || isBoilerplate(content.card1.subtitle)) content.card1.subtitle = plainBulletText(fallbackImpacts[0]);
+  const lockedFacts = lockedFactBullets(brief);
+  content.card2.bullets = lockedFacts.map(formatBullet);
+  content.card3.bullets = fallbackImpacts.map(formatBullet);
+  content.core_insight = fallbackCoreInsight(brief);
+  content.card1.subtitle = fallbackCoverSubtitle(brief);
   content.instagram_caption = finalizeCaption(buildCanonicalCaption(content));
   content.reel_caption = buildReelCaption(content);
   content.template_theme = 'unified';

@@ -154,8 +154,9 @@ async function fetchArticleBody(articleUrl) {
     // Remove page chrome before selecting the editorial body. MK occasionally
     // renders author/search widgets inside the article wrapper, so selectors and
     // a final phrase sanitizer are both required.
-    $('script, style, noscript, iframe, header, footer, nav, aside, form, button').remove();
+    $('script, style, noscript, iframe, header, footer, nav, aside, form, button, figcaption').remove();
     $('[class*="author"], [class*="reporter"], [class*="byline"], [class*="google"], [class*="related"], [class*="recommend"], [class*="share"], [id*="author"], [id*="reporter"], [id*="google"], [id*="related"]').remove();
+    $('[class*="caption"], [class*="photo_desc"], [class*="photo-desc"], [class*="copyright"], [class*="image_desc"], [class*="image-desc"]').remove();
 
     // Most news sites put their main content in article, .article, #article, #content, etc.
     let contentNode = $('.news_cnt_detail_wrap, .news_cnt_detail, .article_body, .article-body, #article_body, #news_body, #art_body, #dic_area, article').first();

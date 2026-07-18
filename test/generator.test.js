@@ -40,6 +40,8 @@ test('parses JSON wrapped in a markdown fence', () => {
 test('repairs missing or duplicated bullet highlights without changing the claim', () => {
   assert.equal(ensureSingleHighlight('당국은 스톡론 한도를 10억원으로 제한해요.'), '당국은 스톡론 한도를 <hl>10억원</hl>으로 제한해요.');
   assert.equal(ensureSingleHighlight('<hl>대출</hl> 조건을 <hl>다시</hl> 확인해요.'), '<hl>대출 조건을</hl> 다시 확인해요.');
+  assert.equal(ensureSingleHighlight('60대 이상은 135.3%, 20대 이하는 97.5% 늘었어요.'), '60대 이상은 <hl>135.3%</hl>, 20대 이하는 97.5% 늘었어요.');
+  assert.equal(ensureSingleHighlight('상품설명서에서 <hl>사업비와 중도해지 환급률</hl>을 확인하세요.'), '상품설명서에서 <hl>사업비와 중도해지 환급률</hl>을 확인하세요.');
 });
 
 test('normalizes to a three-card story and removes a generated fourth card', () => {
@@ -102,4 +104,35 @@ test('rejects fallback when two clean topic facts cannot be found', () => {
     () => buildFallbackEditorial({ title: '청약 소식', fullText: '류영상 기자 입력 : 2026.07.17 21:56 Google 검색 선호 추가' }),
     error => error.code === 'ARTICLE_REJECTED'
   );
+});
+
+test('locks pension-insurance cards to the article instead of self-employed pension copy', () => {
+  const selectedNews = {
+    title: '“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’',
+    fullText: [
+      '연금보험, 20대 이하 증가율 97.5% 달해 해당 기사 내용과는 무관함.',
+      '기사 이해를 돕기 위한 사진임. [연합뉴스] 사진 확대.',
+      '올 상반기 20대 청년층과 5060 고령층을 중심으로 연금보험 가입이 급증한 것으로 나타났다.',
+      '증시 호황에 따른 변액보험의 인기와 노후 생활고에 대한 불안감이 맞물린 결과다.',
+      '올해 상반기 연금보험 신계약 건수는 전년 동기 대비 78.1% 급증했다.',
+      '60대 이상은 135.3%, 20대 이하는 97.5%의 증가율을 보였다.',
+    ].join(' '),
+    pubDate: '2026-07-17T13:36:00Z',
+  };
+  const fallbackRaw = buildFallbackEditorial(selectedNews);
+  const content = normalizeGeneratedContent(
+    { ...fallbackRaw.cards, analysis: fallbackRaw.analysis },
+    '',
+    selectedNews
+  );
+  const visible = JSON.stringify(content);
+
+  assert.match(content.card1.title, /연금보험/);
+  assert.match(content.card1.title, /급증/);
+  assert.match(content.card2.bullets.join(' '), /78\.1%|97\.5%/);
+  assert.match(content.card3.bullets[0], /수익.*보장/);
+  assert.match(content.card3.bullets[1], /적립금|수익률/);
+  assert.match(content.card3.bullets[2], /사업비|중도해지 환급률/);
+  assert.match(content.card3.bullets[2], /<hl>사업비와 중도해지 환급률<\/hl>/);
+  assert.doesNotMatch(visible, /기사 내용과는 무관|연합뉴스|사진 확대|자영업자|공제 한도|월별 납입 부담/);
 });

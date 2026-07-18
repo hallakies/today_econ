@@ -6,9 +6,15 @@ const BOILERPLATE_PATTERNS = [
   /매일경제\s*기사를\s*더\s*자주\s*볼\s*수\s*있습니다/gi,
   /(?:기사|뉴스)\s*(?:공유|저장|인쇄)/gi,
   /알아보기/gi,
+  /해당\s*기사\s*내용과는\s*무관함\.?/gi,
+  /기사\s*이해를\s*돕기\s*위한\s*사진임\.?/gi,
+  /\[(?:연합뉴스|뉴스1|뉴시스|매경DB|MK스포츠)\]/gi,
+  /(?:사진\s*)?(?:확대|축소|닫기)/gi,
+  /Image\s*:/gi,
 ];
 
-const VISIBLE_BOILERPLATE = /(?:[가-힣]{2,4}\s*기자\s*(?:입력|수정)?|Google\s*검색|구글\s*검색|선호\s*추가|알아보기|매일경제\s*기사를\s*더\s*자주)/i;
+const VISIBLE_BOILERPLATE = /(?:[가-힣]{2,4}\s*기자\s*(?:입력|수정)?|Google\s*검색|구글\s*검색|선호\s*추가|알아보기|매일경제\s*기사를\s*더\s*자주|기사\s*내용과는\s*무관|기사\s*이해를\s*돕기|연합뉴스|뉴스1|뉴시스|사진\s*(?:확대|축소))/i;
+const ARTICLE_NAVIGATION = /^(?:관련\s*(?:기사|뉴스)|함께\s*(?:읽을|볼)\s*(?:기사|뉴스)|추천\s*(?:기사|뉴스))/;
 const MONEY_TERMS = /청약|주택|부동산|집값|전세|분양|대출|금리|신용|연체|주식|증시|ETF|코인|물가|생활비|세금|공제|연금|노후|자영업|소상공인|예금|저축|보험/;
 const CHANGE_TERMS = /늘|줄|증가|감소|확대|축소|인상|인하|해지|가입|제한|완화|강화|시행|바뀌|변화|급감|급증/;
 const CAUSE_TERMS = /때문|영향|따라|이유|배경|여파|부담|가능성|전망/;
@@ -20,6 +26,7 @@ const TOPIC_LABELS = Object.freeze({
   living_cost: '생활물가',
   tax: '세금',
   retirement: '노후자금',
+  pension_insurance: '연금보험',
   credit: '대출',
 });
 
@@ -76,10 +83,10 @@ function scoreFact(sentence, keywords, index) {
   const keywordHits = keywords.filter(keyword => sentence.includes(keyword)).length;
   const materialNumbers = extractMaterialNumbers(sentence);
   const score = keywordHits * 5
-    + (MONEY_TERMS.test(sentence) ? 4 : 0)
-    + materialNumbers.length * 3
-    + (CHANGE_TERMS.test(sentence) ? 3 : 0)
-    + (CAUSE_TERMS.test(sentence) ? 2 : 0)
+    + (MONEY_TERMS.test(sentence) ? 5 : 0)
+    + materialNumbers.length * 8
+    + (CHANGE_TERMS.test(sentence) ? 5 : 0)
+    + (CAUSE_TERMS.test(sentence) ? 1 : 0)
     - index * 0.05;
   return { keywordHits, materialNumbers, score };
 }
@@ -90,6 +97,7 @@ function extractFactRecords(title = '', body = '', limit = 6) {
   return splitSentences(body)
     .filter(sentence => sentence.length >= 15 && sentence.length <= 140)
     .filter(sentence => !isBoilerplate(sentence))
+    .filter(sentence => !ARTICLE_NAVIGATION.test(sentence))
     .filter(sentence => {
       const compact = normalizeTitle(sentence).replace(/\s+/g, '');
       return compact !== normalizedTitle && !compact.startsWith(normalizedTitle);
@@ -116,13 +124,27 @@ function extractRelevantFacts(title = '', body = '', limit = 4) {
 
 function inferTopic(title = '', facts = []) {
   const source = `${title} ${facts.join(' ')}`;
+  if (/연금보험|변액연금|변액보험|보험\s*신계약|보험\s*가입/.test(source)) {
+    return {
+      channel: 'mixed',
+      audience: /20대|청년|5060|50대|60대/.test(source) ? '연금보험을 고민하는 20대·5060' : '연금보험 가입을 고민하는 사람',
+      key: 'pension_insurance',
+    };
+  }
   if (/청약|주택|부동산|집값|전세|분양/.test(source)) return { channel: 'housing', audience: '주택을 준비하는 사람', key: 'housing' };
   if (/주식|증시|종목|ETF|코인|스톡론|증권/.test(source)) return { channel: 'stocks', audience: '투자자', key: 'stocks' };
   if (/물가|생활비|소비자|가격/.test(source)) return { channel: 'living_cost', audience: '생활비를 관리하는 사람', key: 'living_cost' };
   if (/세금|과세|소득세|보유세|취득세/.test(source)) return { channel: 'tax', audience: '납세자', key: 'tax' };
-  if (/노란우산|공제|연금|노후|자영업|소상공인/.test(source)) return { channel: 'mixed', audience: '자영업자', key: 'retirement' };
+  if (/노란우산|소상공인|자영업|공제금|공제\s*(?:한도|납입)/.test(source)) return { channel: 'mixed', audience: '자영업자', key: 'retirement' };
   if (/대출|금리|신용|담보|연체|차주/.test(source)) return { channel: 'credit', audience: '대출을 이용하는 사람', key: 'credit' };
   return { channel: 'mixed', audience: '경제 관심 독자', key: 'mixed' };
+}
+
+function inferEventType(topic, source = '') {
+  if (/(시행|도입|폐지|개편|규제|한도|지원|법안|정책)/.test(source)) return 'policy_change';
+  if (topic === 'pension_insurance' && /(가입|신계약).*(급증|증가)|(?:급증|증가).*(가입|신계약)/.test(source)) return 'market_trend';
+  if (/(가격|금리|주가|집값).*(상승|하락|인상|인하)|(?:상승|하락|인상|인하).*(가격|금리|주가|집값)/.test(source)) return 'price_change';
+  return 'reported_change';
 }
 
 function editorialCoverTitle(title = '', topicKey = '') {
@@ -147,6 +169,12 @@ function compactFactHook(fact = '', topicKey = '') {
   const clean = normalizeTitle(fact)
     .replace(/(?:했어요|합니다|했습니다|됐다|되었다|이에요|예요)$/u, '')
     .trim();
+  if (topicKey === 'pension_insurance') {
+    const youthRate = clean.match(/20대\s*(?:이하|청년층)?[^.!?%]{0,35}?(\d[\d,.]*%)/);
+    if (youthRate) return `20대 연금보험 가입\n${youthRate[1]} 급증`;
+    const contractRate = clean.match(/연금보험\s*신계약[^.!?%]{0,35}?(\d[\d,.]*%)/);
+    if (contractRate) return `연금보험 신계약\n${contractRate[1]} 급증`;
+  }
   const ratio = clean.match(/(?:전체\s*)?([가-힣]{2,12})\s*(\d+\s*명\s*중\s*\d+\s*명).*?((?:\d{2}대\s*이상|고령층|청년층))/);
   if (ratio) return `${ratio[1]} ${ratio[2]},\n${ratio[3]}`;
   if (clean.length >= 8 && clean.length <= 34) return clean;
@@ -208,10 +236,12 @@ function buildArticleBrief({ title = '', fullText = '', summary = '' } = {}) {
   const factRecords = extractFactRecords(title, cleanedBody, 6);
   const facts = factRecords.slice(0, 4).map(item => item.text);
   const topic = inferTopic(title, facts);
+  const eventType = inferEventType(topic.key, `${title} ${facts.join(' ')}`);
   const hookCandidates = buildHookCandidates({
     title,
     topic: topic.key,
     audience: topic.audience,
+    event_type: eventType,
     factRecords,
   });
   const selectedHook = selectEditorialHook(hookCandidates);
@@ -227,6 +257,7 @@ function buildArticleBrief({ title = '', fullText = '', summary = '' } = {}) {
     topic: topic.key,
     money_channel: topic.channel,
     audience: topic.audience,
+    event_type: eventType,
     hook_candidates: hookCandidates,
     selected_hook: selectedHook,
     cover_title: selectedHook?.text || editorialCoverTitle(title, topic.key),
