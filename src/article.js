@@ -147,6 +147,16 @@ function inferEventType(topic, source = '') {
   return 'reported_change';
 }
 
+function topicFactBonus(sentence = '', topic = '') {
+  if (topic === 'pension_insurance') {
+    if (/건강보험|간편보험|펫보험/.test(sentence) && !/연금보험|변액연금/.test(sentence)) return -30;
+    if (/연금보험\s*신계약|신계약[^.]{0,30}연금보험/.test(sentence) && /급증|증가|늘/.test(sentence)) return 45;
+    if (/(?:20대|50대|60대|청년층|5060).*\d[\d,.]*%/.test(sentence)) return 40;
+    if (/연금보험|변액연금/.test(sentence)) return 10;
+  }
+  return 0;
+}
+
 function editorialCoverTitle(title = '', topicKey = '') {
   const clean = normalizeTitle(title);
   const subscription = clean.match(/한\s*달\s*새\s*청약통장\s*(\d+(?:만)?\s*명?)/);
@@ -232,10 +242,19 @@ function selectEditorialHook(candidates = []) {
 }
 
 function buildArticleBrief({ title = '', fullText = '', summary = '' } = {}) {
-  const cleanedBody = cleanArticleText(fullText || summary);
-  const factRecords = extractFactRecords(title, cleanedBody, 6);
+  // RSS summaries often retain the one or two concrete figures that are hidden
+  // behind photo blocks or omitted from the fetched article wrapper. Treat the
+  // summary as supplementary source evidence instead of discarding it whenever
+  // a body exists.
+  const cleanedBody = cleanArticleText([fullText, summary].filter(Boolean).join('. '));
+  const extractedRecords = extractFactRecords(title, cleanedBody, 10);
+  const initialFacts = extractedRecords.slice(0, 6).map(item => item.text);
+  const topic = inferTopic(title, initialFacts);
+  const factRecords = extractedRecords
+    .map(record => ({ ...record, topic_score: record.score + topicFactBonus(record.text, topic.key) }))
+    .sort((a, b) => b.topic_score - a.topic_score || a.source_index - b.source_index)
+    .map((record, index) => ({ ...record, rank: index + 1 }));
   const facts = factRecords.slice(0, 4).map(item => item.text);
-  const topic = inferTopic(title, facts);
   const eventType = inferEventType(topic.key, `${title} ${facts.join(' ')}`);
   const hookCandidates = buildHookCandidates({
     title,

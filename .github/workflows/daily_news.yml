@@ -46,6 +46,9 @@ jobs:
       - name: Run Card News Creator Pipeline
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          # Publishing must not depend on Groq's free daily quota.
+          # Set to 'true' only for an intentional editorial experiment.
+          USE_LLM_EDITORIAL: 'false'
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           POLLINATIONS_API_KEY: ${{ secrets.POLLINATIONS_API_KEY }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

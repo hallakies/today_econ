@@ -30,3 +30,19 @@ test('removes byline and Google recommendation chrome from the article body', as
     global.fetch = originalFetch;
   }
 });
+
+test('preserves paragraph boundaries so adjacent facts remain separate sentences', async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => new Response(`
+    <article>
+      <p>연금보험 신계약 건수는 전년 동기 대비 78.1% 급증했다.</p>
+      <p>20대 이하 가입 증가율은 97.5%에 달했다.</p>
+    </article>`, { status: 200 });
+  try {
+    const text = await fetchArticleBody('https://example.com/article');
+    assert.match(text, /급증했다\.\s+20대/);
+    assert.doesNotMatch(text, /급증했다\.20대/);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});

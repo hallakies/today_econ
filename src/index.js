@@ -4,7 +4,7 @@ const path = require('path');
 const config = require('../config');
 const { fetchNews, fetchArticleBody } = require('./crawler');
 const { rankNewsCandidates, selectNews, saveHistoryEntry } = require('./selector');
-const { generateCardContent } = require('./generator');
+const { generateCardContent, shouldUseLlmEditorial } = require('./generator');
 const { renderCardImages } = require('./renderer');
 const { sendPipelineFailure, sendToSlack } = require('./slack');
 const { cleanupExpiredReleases, createTemporaryRelease, deleteTemporaryRelease } = require('./github-assets');
@@ -312,7 +312,7 @@ async function run() {
       try {
         stage = 'article_fetch';
         selectedNews.fullText = await fetchArticleBody(selectedNews.link) || selectedNews.summary;
-        if (index === 0) await new Promise(resolve => setTimeout(resolve, 8000));
+        if (index === 0 && shouldUseLlmEditorial()) await new Promise(resolve => setTimeout(resolve, 8000));
         stage = 'content_generate';
         cardContent = await generateCardContent(selectedNews);
         break;

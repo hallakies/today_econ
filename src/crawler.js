@@ -166,6 +166,14 @@ async function fetchArticleBody(articleUrl) {
       contentNode = $('body');
     }
 
+    // Cheerio's .text() concatenates adjacent block elements without a space.
+    // Preserve editorial boundaries before extraction so `...했다.</p><p>20대`
+    // cannot become `...했다.20대`, which makes multiple facts look like one
+    // overlong sentence and causes the article to be rejected.
+    contentNode.find('p, li, h2, h3, h4, blockquote').each((_, element) => {
+      $(element).append('\n');
+    });
+
     // Extract text and clean up excess whitespace
     let fullText = cleanArticleText(contentNode.text()).slice(0, 16000);
     

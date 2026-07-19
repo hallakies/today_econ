@@ -5,13 +5,22 @@ const { loadPipelineState } = require('./pipeline-state');
 const { buildArticleBrief, isBoilerplate } = require('./article');
 
 const MAIN_MODEL = 'llama-3.3-70b-versatile';
-const FALLBACK_MODEL = 'llama-3.1-8b-instant';
 const STANDARD_HASHTAGS = '#경제뉴스 #경제공부 #오늘경제 #today_econ';
 const FRIENDLY_SECTIONS = Object.freeze({
   card2: '무슨 일이야?',
   card3: '그래서 내 돈은?',
 });
 const MAX_QUALITY_REPAIR_ATTEMPTS = 2;
+
+function shouldUseLlmEditorial(env = process.env) {
+  return String(env.USE_LLM_EDITORIAL || '').toLowerCase() === 'true';
+}
+
+function isQuotaOrPayloadError(error = {}) {
+  const message = String(error.message || '');
+  return error.status === 413
+    || /request too large|tokens per day|TPD|tokens per minute|TPM/i.test(message);
+}
 
 function getGroqClient() {
   return new Groq({ apiKey: config.groqApiKey });
@@ -23,6 +32,7 @@ async function callGroqWithRetry(params, retries = 5, delayMs = 8000) {
     try {
       return await groq.chat.completions.create(params);
     } catch (error) {
+      if (isQuotaOrPayloadError(error)) throw error;
       const retryable = error.status === 429 || error.status >= 500 || /rate|timeout/i.test(error.message || '');
       if (!retryable || attempt === retries) throw error;
       console.warn(`[Generator] API retry ${attempt}/${retries} in ${delayMs}ms: ${error.message}`);
@@ -44,26 +54,17 @@ function parseJsonResponse(text) {
 }
 
 async function executeLLMCall(systemPrompt, userPrompt, maxTokens) {
-  const request = async (model, temperature, tokens) => {
-    const response = await callGroqWithRetry({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt.normalize('NFC') },
-        { role: 'user', content: userPrompt.normalize('NFC') },
-      ],
-      temperature,
-      max_tokens: tokens,
-      response_format: { type: 'json_object' },
-    });
-    return parseJsonResponse(response.choices[0]?.message?.content);
-  };
-
-  try {
-    return await request(MAIN_MODEL, 0.45, maxTokens);
-  } catch (error) {
-    console.warn(`[Generator] ${MAIN_MODEL} failed, using fallback: ${error.message}`);
-    return request(FALLBACK_MODEL, 0.25, Math.min(maxTokens, 3000));
-  }
+  const response = await callGroqWithRetry({
+    model: MAIN_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt.normalize('NFC') },
+      { role: 'user', content: userPrompt.normalize('NFC') },
+    ],
+    temperature: 0.45,
+    max_tokens: maxTokens,
+    response_format: { type: 'json_object' },
+  });
+  return parseJsonResponse(response.choices[0]?.message?.content);
 }
 
 function sanitizeText(text) {
@@ -191,6 +192,8 @@ function friendlyFactSentence(value = '') {
     .replace(/증가했다[.]?$/u, '증가했어요.')
     .replace(/감소했다[.]?$/u, '감소했어요.')
     .replace(/보였다[.]?$/u, '보였어요.')
+    .replace(/웃돌았다[.]?$/u, '웃돌았어요.')
+    .replace(/달했다[.]?$/u, '달했어요.')
     .replace(/결과다[.]?$/u, '결과예요.')
     .trim();
 }
@@ -252,6 +255,27 @@ function buildFallbackEditorial(selectedNews) {
       card3: { section_title: FRIENDLY_SECTIONS.card3, bullets: impacts, hard_terms: [] },
     },
   };
+}
+
+function buildDeterministicEditorial(selectedNews, sourceText) {
+  const fallbackDraft = buildFallbackEditorial(selectedNews);
+  const content = normalizeGeneratedContent(
+    { ...fallbackDraft.cards, analysis: fallbackDraft.analysis },
+    '',
+    selectedNews
+  );
+  const qualityReport = assertContentQuality(content, sourceText);
+  content.quality_score = qualityReport.score;
+  content.content_metadata = {
+    topic: content.analysis.topic || '미분류',
+    audience: content.analysis.audience || '경제 관심 독자',
+    hook_type: content.analysis.hook_type || '시의성',
+    money_channel: content.analysis.money_channel,
+    editorial_format: 'money-change-brief-deterministic',
+    brand_promise_score: qualityReport.gates?.brand_promise?.score ?? null,
+    readability_score: qualityReport.gates?.readability?.score ?? null,
+  };
+  return content;
 }
 
 function normalizeEvidence(text = '') {
@@ -520,6 +544,12 @@ async function generateCardContent(selectedNews) {
     .normalize('NFC')
     .slice(0, 12000);
 
+  if (!shouldUseLlmEditorial()) {
+    const deterministic = buildDeterministicEditorial(cleanNews, sourceText);
+    console.log(`[Generator] Deterministic quality gate passed: ${deterministic.quality_score}/100; no LLM tokens used.`);
+    return deterministic;
+  }
+
   console.log('[Generator] Generating evidence-led three-card editorial...');
   let cardResult;
   let content;
@@ -533,8 +563,8 @@ async function generateCardContent(selectedNews) {
       5000
     );
   } catch (error) {
-    error.draft = { cards: {}, analysis: {}, instagram_caption: '' };
-    throw error;
+    console.warn(`[Generator] LLM unavailable; switching immediately to deterministic editorial: ${error.message}`);
+    return buildDeterministicEditorial(cleanNews, sourceText);
   }
 
   for (let attempt = 0; attempt <= MAX_QUALITY_REPAIR_ATTEMPTS; attempt += 1) {
@@ -578,20 +608,7 @@ async function generateCardContent(selectedNews) {
 
   const error = lastError || new Error('[Generator] Content generation failed without a quality report');
   try {
-    const fallbackDraft = buildFallbackEditorial(cleanNews);
-    const fallback = normalizeGeneratedContent({ ...fallbackDraft.cards, analysis: fallbackDraft.analysis }, '', cleanNews);
-    fallback.instagram_caption = finalizeCaption(buildCanonicalCaption(fallback));
-    const qualityReport = assertContentQuality(fallback, sourceText);
-    fallback.content_metadata = {
-      topic: fallback.analysis.topic || '미분류',
-      audience: fallback.analysis.audience || '경제 관심 독자',
-      hook_type: fallback.analysis.hook_type || '시의성',
-      money_channel: fallback.analysis.money_channel,
-      editorial_format: 'money-change-brief-fallback',
-      brand_promise_score: qualityReport.gates?.brand_promise?.score ?? null,
-      readability_score: qualityReport.gates?.readability?.score ?? null,
-    };
-    fallback.quality_score = qualityReport.score;
+    const fallback = buildDeterministicEditorial(cleanNews, sourceText);
     console.warn(`[Generator] Published safe fallback after ${repairAttempts} LLM repair attempt(s).`);
     return fallback;
   } catch (fallbackError) {
@@ -605,9 +622,11 @@ async function generateCardContent(selectedNews) {
 module.exports = {
   buildCanonicalCaption,
   buildCardPrompt,
+  buildDeterministicEditorial,
   buildReelCaption,
   finalizeCaption,
   generateCardContent,
+  isQuotaOrPayloadError,
   ensureSingleHighlight,
   normalizeGeneratedContent,
   inferMoneyChannel,
@@ -615,5 +634,6 @@ module.exports = {
   normalizeCoreInsight,
   normalizeStats,
   parseJsonResponse,
+  shouldUseLlmEditorial,
   sanitizeText,
 };

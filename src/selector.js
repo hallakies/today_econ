@@ -38,6 +38,12 @@ async function requestSelection(systemPrompt, userPrompt, model, maxTokens = 120
   return JSON.parse(response.choices[0]?.message?.content || '{}');
 }
 
+function isDailyQuotaOrPayloadError(error = {}) {
+  const message = String(error.message || '');
+  return error.status === 413
+    || /request too large|tokens per day|TPD|tokens per minute|TPM/i.test(message);
+}
+
 function buildFallbackRanking(newsList) {
   return newsList
     .map((item, index) => ({
@@ -105,6 +111,7 @@ JSON만 응답하세요: {"selected_index":0,"scores":{"money_impact":0,"actiona
     try {
       result = await requestSelection(systemPrompt, userPrompt, 'llama-3.3-70b-versatile');
     } catch (error) {
+      if (isDailyQuotaOrPayloadError(error)) throw error;
       console.warn(`[Selector] Main model failed: ${error.message}`);
       result = await requestSelection(systemPrompt, userPrompt, 'llama-3.1-8b-instant', 1000);
     }

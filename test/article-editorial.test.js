@@ -96,3 +96,33 @@ test('builds a clean pension-insurance brief from an article polluted by photo c
   assert.doesNotMatch(brief.cover_title, /97\.5%\s*변화|핵심 변화/);
   assert.doesNotMatch(JSON.stringify(brief), /기사 내용과는 무관|연합뉴스|사진 확대|자영업자|공제 한도/);
 });
+
+test('uses the RSS summary to supplement a sparse fetched article body', () => {
+  const brief = buildArticleBrief({
+    title: '노후 불안에 청년들이 몰린 연금보험',
+    fullText: '올 상반기 연금보험 가입이 급증한 것으로 나타났다.',
+    summary: '연금보험 신계약은 전년 동기 대비 78.1% 늘었다. 20대 이하 가입 증가율은 97.5%였다.',
+  });
+
+  assert.equal(brief.topic, 'pension_insurance');
+  assert.ok(brief.facts.length >= 2);
+  assert.match(brief.facts.join(' '), /78\.1%/);
+  assert.match(brief.facts.join(' '), /97\.5%/);
+});
+
+test('keeps pension-insurance facts ahead of other insurance products in the same article', () => {
+  const brief = buildArticleBrief({
+    title: '노후 불안에 청년들이 몰린 연금보험',
+    fullText: [
+      '연금보험 신계약 건수는 전년 동기 대비 78.1% 급증했다.',
+      '특히 20대 이하의 연금보험 가입 증가율은 97.5%에 달했다.',
+      '건강보험과 간편보험 신계약은 각각 16.5%, 44.5% 증가했다.',
+      '펫보험 신계약도 전년 동기 대비 80% 급증했다.',
+    ].join(' '),
+  });
+
+  const leadFacts = brief.facts.slice(0, 2).join(' ');
+  assert.match(leadFacts, /78\.1%/);
+  assert.match(leadFacts, /97\.5%/);
+  assert.doesNotMatch(leadFacts, /건강보험|간편보험|펫보험/);
+});

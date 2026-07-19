@@ -5,8 +5,11 @@ const {
   buildReelCaption,
   ensureSingleHighlight,
   finalizeCaption,
+  generateCardContent,
+  isQuotaOrPayloadError,
   normalizeGeneratedContent,
   parseJsonResponse,
+  shouldUseLlmEditorial,
 } = require('../src/generator');
 const { evaluateContentQuality } = require('../src/quality');
 
@@ -35,6 +38,32 @@ test('builds a shorter Reel caption while preserving the canonical hashtag set',
 
 test('parses JSON wrapped in a markdown fence', () => {
   assert.deepEqual(parseJsonResponse('```json\n{"ok":true}\n```'), { ok: true });
+});
+
+test('uses the deterministic editorial path by default', () => {
+  assert.equal(shouldUseLlmEditorial({}), false);
+  assert.equal(shouldUseLlmEditorial({ USE_LLM_EDITORIAL: 'false' }), false);
+  assert.equal(shouldUseLlmEditorial({ USE_LLM_EDITORIAL: 'true' }), true);
+});
+
+test('recognizes quota and payload failures that must not be retried', () => {
+  assert.equal(isQuotaOrPayloadError({ status: 429, message: 'tokens per day limit reached' }), true);
+  assert.equal(isQuotaOrPayloadError({ status: 413, message: 'request too large' }), true);
+  assert.equal(isQuotaOrPayloadError({ status: 500, message: 'temporary server failure' }), false);
+});
+
+test('generates a publishable editorial without an LLM call', async () => {
+  const original = process.env.USE_LLM_EDITORIAL;
+  delete process.env.USE_LLM_EDITORIAL;
+  try {
+    const content = await generateCardContent(housingNews);
+    assert.equal(content.quality_score, 100);
+    assert.equal(content.content_metadata.editorial_format, 'money-change-brief-deterministic');
+    assert.match(content.card1.title, /청약통장/);
+  } finally {
+    if (original === undefined) delete process.env.USE_LLM_EDITORIAL;
+    else process.env.USE_LLM_EDITORIAL = original;
+  }
 });
 
 test('repairs missing or duplicated bullet highlights without changing the claim', () => {
