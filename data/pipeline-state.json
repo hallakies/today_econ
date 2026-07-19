@@ -1,76 +1,6 @@
 {
   "events": [
     {
-      "at": "2026-07-17T08:25:44.367Z",
-      "status": "published",
-      "stage": "slack_notify",
-      "articleTitle": "“퇴직금 없는 우리엄마 희소식”…이달부터 자영업자 노란우산 한도 연 1800만원으로",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 100,
-      "error": ""
-    },
-    {
-      "at": "2026-07-17T11:46:58.064Z",
-      "status": "published",
-      "stage": "slack_notify",
-      "articleTitle": "“퇴직금 없는 우리엄마 희소식”…이달부터 자영업자 노란우산 한도 연 1800만원으로",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 100,
-      "error": ""
-    },
-    {
-      "at": "2026-07-17T12:03:54.597Z",
-      "status": "failed",
-      "stage": "content_generate",
-      "articleTitle": "60대이상 취약차주 빚 평균 1억원 … 30대보다 2배 많아",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 6037, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-17T12:07:38.952Z",
-      "status": "published",
-      "stage": "slack_notify",
-      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
-      "recoveryMode": true,
-      "repairAttempts": 0,
-      "qualityScore": 100,
-      "error": ""
-    },
-    {
-      "at": "2026-07-17T23:38:24.026Z",
-      "status": "published",
-      "stage": "slack_notify",
-      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 100,
-      "error": ""
-    },
-    {
-      "at": "2026-07-18T05:18:42.195Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
-    },
-    {
-      "at": "2026-07-18T05:22:07.557Z",
-      "status": "published",
-      "stage": "slack_notify",
-      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 100,
-      "error": ""
-    },
-    {
       "at": "2026-07-18T11:38:07.616Z",
       "status": "article_rejected",
       "stage": "content_generate",
@@ -349,6 +279,126 @@
       "repairAttempts": 0,
       "qualityScore": 100,
       "error": ""
+    },
+    {
+      "at": "2026-07-19T11:43:19.048Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "李 정부 포용금융 기조에 중소기업 대출금리 낮아져",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 53,
+      "error": "Content quality gate failed (53/100): cards drift away from the housing article topic; brand promise: cover omits the strongest numeric signal; readability: card2 bullet 1 is too dense"
+    },
+    {
+      "at": "2026-07-19T11:43:19.248Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "올해 韓 1인당 GDP 3만9천弗 넘을듯",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-19T11:43:19.450Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "\"친환경農 2배 늘리려면… 직불금 최대 3배 올려야\"",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-19T11:43:19.628Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "대졸 실업 48만명 '5년來 최대' … 알바도 안한 청년 7천명 늘어",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-19T11:43:19.874Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "외국인, 뉴욕서 원화 빌려 韓주식 살 수 있다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 64,
+      "error": "Content quality gate failed (64/100): card2 bullet 1 must be 15-90 characters; card2 bullet 2 must be 15-90 characters; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-19T11:43:19.876Z",
+      "status": "failed",
+      "stage": "content_generate",
+      "articleTitle": "외국인, 뉴욕서 원화 빌려 韓주식 살 수 있다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 64,
+      "error": "Content quality gate failed (64/100): card2 bullet 1 must be 15-90 characters; card2 bullet 2 must be 15-90 characters; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-19T11:43:23.079Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "李 정부 포용금융 기조에 중소기업 대출금리 낮아져",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 53,
+      "error": "Content quality gate failed (53/100): cards drift away from the housing article topic; brand promise: cover omits the strongest numeric signal; readability: card2 bullet 1 is too dense"
+    },
+    {
+      "at": "2026-07-19T11:43:23.565Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "올해 韓 1인당 GDP 3만9천弗 넘을듯",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-19T11:43:24.008Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "\"친환경農 2배 늘리려면… 직불금 최대 3배 올려야\"",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-19T11:43:24.622Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "대졸 실업 48만명 '5년來 최대' … 알바도 안한 청년 7천명 늘어",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-19T11:43:25.225Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "외국인, 뉴욕서 원화 빌려 韓주식 살 수 있다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 64,
+      "error": "Content quality gate failed (64/100): card2 bullet 1 must be 15-90 characters; card2 bullet 2 must be 15-90 characters; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-19T11:43:25.228Z",
+      "status": "failed",
+      "stage": "content_generate",
+      "articleTitle": "외국인, 뉴욕서 원화 빌려 韓주식 살 수 있다",
+      "recoveryMode": true,
+      "repairAttempts": 0,
+      "qualityScore": 64,
+      "error": "Content quality gate failed (64/100): card2 bullet 1 must be 15-90 characters; card2 bullet 2 must be 15-90 characters; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
     }
   ]
 }
