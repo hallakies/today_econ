@@ -82,6 +82,103 @@
           "status": "ok"
         },
         "collectedAt": "2026-07-17T08:27:14.197Z"
+      },
+      "72h": {
+        "views": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "reach": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "likes": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "comments": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "saved": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "shares": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "total_interactions": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "media": {
+          "views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "likes": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "comments": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "saved": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "shares": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "total_interactions": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          }
+        },
+        "account": {
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "profile_views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "follows": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          }
+        },
+        "engagementRate": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "reach unavailable"
+        },
+        "collectedAt": "2026-07-19T08:31:53.195Z"
       }
     },
     "mediaId": "18091029554150774",
@@ -604,7 +701,105 @@
     }
   },
   {
-    "metrics": {},
+    "metrics": {
+      "24h": {
+        "views": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "reach": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "likes": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "comments": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "saved": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "shares": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "total_interactions": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 500: An unknown error occurred"
+        },
+        "media": {
+          "views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "likes": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "comments": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "saved": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "shares": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "total_interactions": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          }
+        },
+        "account": {
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "profile_views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          },
+          "follows": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 500: An unknown error occurred"
+          }
+        },
+        "engagementRate": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "reach unavailable"
+        },
+        "collectedAt": "2026-07-19T08:31:53.195Z"
+      }
+    },
     "mediaId": "18122352349687902",
     "permalink": "https://www.instagram.com/reel/Da7BojykkKg/",
     "publishedAt": "2026-07-18T05:20:47+0000",
