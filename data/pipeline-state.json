@@ -219,6 +219,126 @@
       "repairAttempts": 0,
       "qualityScore": null,
       "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 10098, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
+    },
+    {
+      "at": "2026-07-18T23:36:59.875Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
+    },
+    {
+      "at": "2026-07-18T23:38:42.424Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "대출 조이니 결국 있는 사람만…2억 이상 고액 마통만 늘었다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 57,
+      "error": "Content quality gate failed (57/100): cover must name a concrete reader money connection; card2 bullet 1 must be 15-90 characters; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-18T23:43:12.281Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 80,
+      "error": "Content quality gate failed (80/100): readability: cover must fit in at most two short lines; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-18T23:47:14.962Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "中企 연체율, 대기업의 4배 … 금리인상 기조에 '좌불안석'",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8918, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
+    },
+    {
+      "at": "2026-07-18T23:51:16.397Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8352, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
+    },
+    {
+      "at": "2026-07-18T23:51:16.399Z",
+      "status": "failed",
+      "stage": "content_generate",
+      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8352, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
+    },
+    {
+      "at": "2026-07-18T23:55:27.918Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "“한 번 떨어지면 끝?”…‘기초연금 탈락자’ 기준 맞으면 자동으로 받는다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 7385, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
+    },
+    {
+      "at": "2026-07-18T23:59:29.610Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "대출 조이니 결국 있는 사람만…2억 이상 고액 마통만 늘었다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8941, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
+    },
+    {
+      "at": "2026-07-19T00:03:31.883Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 6106, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
+    },
+    {
+      "at": "2026-07-19T00:07:33.918Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "中企 연체율, 대기업의 4배 … 금리인상 기조에 '좌불안석'",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8918, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
+    },
+    {
+      "at": "2026-07-19T00:07:35.556Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
+    },
+    {
+      "at": "2026-07-19T00:07:35.558Z",
+      "status": "failed",
+      "stage": "content_generate",
+      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
+      "recoveryMode": true,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
     }
   ]
 }
