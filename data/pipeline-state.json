@@ -1,16 +1,6 @@
 {
   "events": [
     {
-      "at": "2026-07-18T11:38:07.616Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
-    },
-    {
       "at": "2026-07-18T11:40:12.102Z",
       "status": "article_rejected",
       "stage": "content_generate",
@@ -399,6 +389,16 @@
       "repairAttempts": 0,
       "qualityScore": 64,
       "error": "Content quality gate failed (64/100): card2 bullet 1 must be 15-90 characters; card2 bullet 2 must be 15-90 characters; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-19T23:43:12.669Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "집 살 때, 전세 구할 때 ... “하반기 대출 문턱 더 높아진다”",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
     }
   ]
 }
