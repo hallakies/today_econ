@@ -339,6 +339,16 @@
       "repairAttempts": 0,
       "qualityScore": null,
       "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
+    },
+    {
+      "at": "2026-07-19T00:32:00.496Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
     }
   ]
 }
