@@ -1,16 +1,6 @@
 {
   "events": [
     {
-      "at": "2026-07-18T11:40:12.102Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "中企 연체율, 대기업의 4배 … 금리인상 기조에 '좌불안석'",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 44,
-      "error": "Content quality gate failed (44/100): card3 bullet 3 must name a concrete money check; brand promise: card2 omits the strongest article fact; brand promise: impact 2 is not tied to the article topic; readability: cover must fit in at most two short lines; readability: the last card3 bullet must be the single action"
-    },
-    {
       "at": "2026-07-18T11:47:33.113Z",
       "status": "published",
       "stage": "slack_notify",
@@ -395,6 +385,16 @@
       "status": "published",
       "stage": "slack_notify",
       "articleTitle": "집 살 때, 전세 구할 때 ... “하반기 대출 문턱 더 높아진다”",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
+    },
+    {
+      "at": "2026-07-20T12:59:17.900Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "집 살 때, 전세 구할 때…“하반기 대출 문턱 더 높아진다” [머니 이기자]",
       "recoveryMode": false,
       "repairAttempts": 0,
       "qualityScore": 100,

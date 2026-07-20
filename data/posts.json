@@ -1243,5 +1243,67 @@
     "permalink": "https://www.instagram.com/p/Da_kjQ8GZ7u/",
     "publishedAt": "2026-07-19T23:42:35+0000",
     "format": "carousel"
+  },
+  {
+    "metrics": {},
+    "articleTitle": "집 살 때, 전세 구할 때…“하반기 대출 문턱 더 높아진다” [머니 이기자]",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12102731",
+    "contentMetadata": {
+      "topic": "housing",
+      "audience": "주택을 준비하는 사람",
+      "hook_type": "숫자",
+      "money_channel": "housing",
+      "editorial_format": "money-change-brief-deterministic",
+      "brand_promise_score": 100,
+      "readability_score": 100
+    },
+    "qualityScore": 100,
+    "requestedFormats": [
+      "reel",
+      "carousel"
+    ],
+    "release": {
+      "id": 356722575,
+      "tag": "instagram-assets-29744057288-reel-1784552187732",
+      "deleteAfter": "2026-07-23T12:59:14.245Z"
+    },
+    "mediaId": "18134920381607903",
+    "permalink": "https://www.instagram.com/reel/DbA_gVhDXTd/",
+    "publishedAt": "2026-07-20T12:57:35+0000",
+    "format": "reel",
+    "story": {
+      "id": "18109292461806301",
+      "permalink": "https://www.instagram.com/stories/today.econ/3945433349811716052",
+      "publishedAt": "2026-07-20T12:59:09+0000",
+      "format": "standalone_story_copy"
+    }
+  },
+  {
+    "metrics": {},
+    "articleTitle": "집 살 때, 전세 구할 때…“하반기 대출 문턱 더 높아진다” [머니 이기자]",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12102731",
+    "contentMetadata": {
+      "topic": "housing",
+      "audience": "주택을 준비하는 사람",
+      "hook_type": "숫자",
+      "money_channel": "housing",
+      "editorial_format": "money-change-brief-deterministic",
+      "brand_promise_score": 100,
+      "readability_score": 100
+    },
+    "qualityScore": 100,
+    "requestedFormats": [
+      "reel",
+      "carousel"
+    ],
+    "release": {
+      "id": 356722591,
+      "tag": "instagram-assets-29744057288-carousel-1784552189705",
+      "deleteAfter": "2026-07-23T12:58:13.801Z"
+    },
+    "mediaId": "17977589333891892",
+    "permalink": "https://www.instagram.com/p/DbA_mUcoNHV/",
+    "publishedAt": "2026-07-20T12:58:10+0000",
+    "format": "carousel"
   }
 ]
