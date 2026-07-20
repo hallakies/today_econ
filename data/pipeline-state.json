@@ -1,16 +1,6 @@
 {
   "events": [
     {
-      "at": "2026-07-18T11:47:33.113Z",
-      "status": "published",
-      "stage": "slack_notify",
-      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 100,
-      "error": ""
-    },
-    {
       "at": "2026-07-18T14:28:36.787Z",
       "status": "article_rejected",
       "stage": "content_generate",
@@ -392,6 +382,16 @@
     },
     {
       "at": "2026-07-20T12:59:17.900Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "집 살 때, 전세 구할 때…“하반기 대출 문턱 더 높아진다” [머니 이기자]",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
+    },
+    {
+      "at": "2026-07-20T23:41:34.311Z",
       "status": "published",
       "stage": "slack_notify",
       "articleTitle": "집 살 때, 전세 구할 때…“하반기 대출 문턱 더 높아진다” [머니 이기자]",
