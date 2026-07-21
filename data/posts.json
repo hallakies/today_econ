@@ -1395,6 +1395,103 @@
           "reason": "reach unavailable"
         },
         "collectedAt": "2026-07-19T13:51:51.713Z"
+      },
+      "72h": {
+        "views": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "reach": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "likes": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "comments": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "saved": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "shares": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "total_interactions": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "media": {
+          "views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "likes": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "comments": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "saved": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "shares": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "total_interactions": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '17942908944258509' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          }
+        },
+        "account": {
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "profile_views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "follows": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          }
+        },
+        "engagementRate": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "reach unavailable"
+        },
+        "collectedAt": "2026-07-21T19:50:20.714Z"
       }
     },
     "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
@@ -1527,6 +1624,103 @@
           "reason": "reach unavailable"
         },
         "collectedAt": "2026-07-19T13:51:51.713Z"
+      },
+      "72h": {
+        "views": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "reach": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "likes": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "comments": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "saved": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "shares": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "total_interactions": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+        },
+        "media": {
+          "views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "likes": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "comments": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "saved": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "shares": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          },
+          "total_interactions": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: Unsupported get request. Object with ID '18088127084535397' does not exist, cannot be loaded due to missing permissions, or does not support this operation"
+          }
+        },
+        "account": {
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "profile_views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "follows": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          }
+        },
+        "engagementRate": {
+          "value": null,
+          "status": "unavailable",
+          "reason": "reach unavailable"
+        },
+        "collectedAt": "2026-07-21T19:50:20.714Z"
       }
     },
     "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
@@ -1784,7 +1978,90 @@
     "format": "carousel"
   },
   {
-    "metrics": {},
+    "metrics": {
+      "24h": {
+        "views": {
+          "value": 126,
+          "status": "ok"
+        },
+        "reach": {
+          "value": 116,
+          "status": "ok"
+        },
+        "likes": {
+          "value": 0,
+          "status": "ok"
+        },
+        "comments": {
+          "value": 0,
+          "status": "ok"
+        },
+        "saved": {
+          "value": 0,
+          "status": "ok"
+        },
+        "shares": {
+          "value": 0,
+          "status": "ok"
+        },
+        "total_interactions": {
+          "value": 0,
+          "status": "ok"
+        },
+        "media": {
+          "views": {
+            "value": 126,
+            "status": "ok"
+          },
+          "reach": {
+            "value": 116,
+            "status": "ok"
+          },
+          "likes": {
+            "value": 0,
+            "status": "ok"
+          },
+          "comments": {
+            "value": 0,
+            "status": "ok"
+          },
+          "saved": {
+            "value": 0,
+            "status": "ok"
+          },
+          "shares": {
+            "value": 0,
+            "status": "ok"
+          },
+          "total_interactions": {
+            "value": 0,
+            "status": "ok"
+          }
+        },
+        "account": {
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "profile_views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "follows": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          }
+        },
+        "engagementRate": {
+          "value": 0,
+          "status": "ok"
+        },
+        "collectedAt": "2026-07-21T19:50:20.714Z"
+      }
+    },
     "articleTitle": "집 살 때, 전세 구할 때…“하반기 대출 문턱 더 높아진다” [머니 이기자]",
     "articleUrl": "https://www.mk.co.kr/news/economy/12102731",
     "contentMetadata": {
@@ -1818,7 +2095,90 @@
     }
   },
   {
-    "metrics": {},
+    "metrics": {
+      "24h": {
+        "views": {
+          "value": 29,
+          "status": "ok"
+        },
+        "reach": {
+          "value": 10,
+          "status": "ok"
+        },
+        "likes": {
+          "value": 2,
+          "status": "ok"
+        },
+        "comments": {
+          "value": 0,
+          "status": "ok"
+        },
+        "saved": {
+          "value": 0,
+          "status": "ok"
+        },
+        "shares": {
+          "value": 0,
+          "status": "ok"
+        },
+        "total_interactions": {
+          "value": 2,
+          "status": "ok"
+        },
+        "media": {
+          "views": {
+            "value": 29,
+            "status": "ok"
+          },
+          "reach": {
+            "value": 10,
+            "status": "ok"
+          },
+          "likes": {
+            "value": 2,
+            "status": "ok"
+          },
+          "comments": {
+            "value": 0,
+            "status": "ok"
+          },
+          "saved": {
+            "value": 0,
+            "status": "ok"
+          },
+          "shares": {
+            "value": 0,
+            "status": "ok"
+          },
+          "total_interactions": {
+            "value": 2,
+            "status": "ok"
+          }
+        },
+        "account": {
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "profile_views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "follows": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          }
+        },
+        "engagementRate": {
+          "value": 20,
+          "status": "ok"
+        },
+        "collectedAt": "2026-07-21T19:50:20.714Z"
+      }
+    },
     "articleTitle": "집 살 때, 전세 구할 때…“하반기 대출 문턱 더 높아진다” [머니 이기자]",
     "articleUrl": "https://www.mk.co.kr/news/economy/12102731",
     "contentMetadata": {
