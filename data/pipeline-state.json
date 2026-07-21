@@ -1,16 +1,6 @@
 {
   "events": [
     {
-      "at": "2026-07-18T23:38:42.424Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "대출 조이니 결국 있는 사람만…2억 이상 고액 마통만 늘었다",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 57,
-      "error": "Content quality gate failed (57/100): cover must name a concrete reader money connection; card2 bullet 1 must be 15-90 characters; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
-    },
-    {
       "at": "2026-07-18T23:43:12.281Z",
       "status": "article_rejected",
       "stage": "content_generate",
@@ -392,6 +382,16 @@
     },
     {
       "at": "2026-07-21T14:29:34.543Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "퇴직연금 계좌로 국채 사면 … 세금 '0원'도 가능",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
+    },
+    {
+      "at": "2026-07-21T23:42:09.871Z",
       "status": "published",
       "stage": "slack_notify",
       "articleTitle": "퇴직연금 계좌로 국채 사면 … 세금 '0원'도 가능",
