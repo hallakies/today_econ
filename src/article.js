@@ -27,8 +27,17 @@ const TOPIC_LABELS = Object.freeze({
   tax: '세금',
   retirement: '노후자금',
   pension_insurance: '연금보험',
+  savings: '예금',
   credit: '대출',
 });
+
+function preferredMaterialNumber(records = []) {
+  const numbers = records.flatMap(record => record.material_numbers || []);
+  return numbers.find(number => /%|퍼센트|원|명|개|배/.test(number.raw))
+    || numbers.find(number => !/^\d{1,2}월$/.test(number.raw))
+    || numbers[0]
+    || null;
+}
 
 function cleanArticleText(text = '') {
   let clean = String(text).normalize('NFC');
@@ -124,6 +133,18 @@ function extractRelevantFacts(title = '', body = '', limit = 4) {
 
 function inferTopic(title = '', facts = []) {
   const source = `${title} ${facts.join(' ')}`;
+  // The headline describes the article's primary subject. Supporting comparisons
+  // (for example a household mortgage rate inside a small-business loan story)
+  // must not hijack the topic classification.
+  if (/(?:중소기업|자영업자|소상공인).*(?:대출|금리)|(?:대출|금리).*(?:중소기업|자영업자|소상공인)/.test(title)) {
+    return { channel: 'credit', audience: '대출을 이용하는 자영업자·중소기업', key: 'credit' };
+  }
+  if (/세금|과세|소득세|보유세|취득세/.test(title)) {
+    return { channel: 'tax', audience: '납세자', key: 'tax' };
+  }
+  if (/외국인.*(?:원화|한국|韓).*(?:주식|투자)|역외원화결제기관|\bRFI\b/i.test(source)) {
+    return { channel: 'mixed', audience: '기관·외국인 투자자', key: 'mixed' };
+  }
   if (/연금보험|변액연금|변액보험|보험\s*신계약|보험\s*가입/.test(source)) {
     return {
       channel: 'mixed',
@@ -132,6 +153,8 @@ function inferTopic(title = '', facts = []) {
     };
   }
   if (/청약|주택|부동산|집값|전세|분양/.test(source)) return { channel: 'housing', audience: '주택을 준비하는 사람', key: 'housing' };
+  if (/예금|적금|수신금리|정기예금/.test(title)) return { channel: 'mixed', audience: '예금·적금을 비교하는 사람', key: 'savings' };
+  if (/국채|국고채|채권/.test(title)) return { channel: 'stocks', audience: '채권·예금 투자자', key: 'stocks' };
   if (/주식|증시|종목|ETF|코인|스톡론|증권/.test(source)) return { channel: 'stocks', audience: '투자자', key: 'stocks' };
   if (/물가|생활비|소비자|가격/.test(source)) return { channel: 'living_cost', audience: '생활비를 관리하는 사람', key: 'living_cost' };
   if (/세금|과세|소득세|보유세|취득세/.test(source)) return { channel: 'tax', audience: '납세자', key: 'tax' };
@@ -154,11 +177,24 @@ function topicFactBonus(sentence = '', topic = '') {
     if (/(?:20대|50대|60대|청년층|5060).*\d[\d,.]*%/.test(sentence)) return 40;
     if (/연금보험|변액연금/.test(sentence)) return 10;
   }
+  if (topic === 'tax') {
+    if (/세금|과세|세액/.test(sentence) && /0원|\d[\d,.]*%/.test(sentence)) return 35;
+    if (/퇴직연금/.test(sentence) && /국채/.test(sentence)) return 15;
+  }
   return 0;
 }
 
 function editorialCoverTitle(title = '', topicKey = '') {
   const clean = normalizeTitle(title);
+  if (/퇴직연금/.test(clean) && /국채/.test(clean) && /세금/.test(clean)) {
+    const tax = clean.match(/세금\s*(\d[\d,.]*(?:원|%)?)/)?.[1] || '0원';
+    return `퇴직연금으로 국채,\n세금 ${tax} 가능`;
+  }
+  const depositRate = clean.match(/예금\s*금리[^\d]{0,12}(\d[\d,.]*%대?(?:\s*중반)?)/);
+  if (depositRate) return `예금금리 ${depositRate[1]},\n다시 오르기 시작`;
+  if (/국채\s*30년물\s*금리/.test(clean) && /사상\s*최고/.test(clean)) {
+    return '30년 국채금리,\n사상 최고';
+  }
   const subscription = clean.match(/한\s*달\s*새\s*청약통장\s*(\d+(?:만)?\s*명?)/);
   if (subscription) {
     const count = subscription[1].replace(/\s+/g, '').replace(/(만)(명)$/, '$1 $2');
@@ -185,10 +221,16 @@ function compactFactHook(fact = '', topicKey = '') {
     const contractRate = clean.match(/연금보험\s*신계약[^.!?%]{0,35}?(\d[\d,.]*%)/);
     if (contractRate) return `연금보험 신계약\n${contractRate[1]} 급증`;
   }
+  if (topicKey === 'credit') {
+    const businessRates = /자영업자/.test(clean) ? clean.match(/\d[\d,.]*%/g) : null;
+    if (businessRates?.length) return `자영업자 대출금리,\n${businessRates.at(-1)}로 낮아져`;
+    const companyRates = /중소기업/.test(clean) ? clean.match(/\d[\d,.]*%/g) : null;
+    if (companyRates?.length) return `중소기업 대출금리,\n${companyRates.at(-1)}로 낮아져`;
+  }
   const ratio = clean.match(/(?:전체\s*)?([가-힣]{2,12})\s*(\d+\s*명\s*중\s*\d+\s*명).*?((?:\d{2}대\s*이상|고령층|청년층))/);
   if (ratio) return `${ratio[1]} ${ratio[2]},\n${ratio[3]}`;
   if (clean.length >= 8 && clean.length <= 34) return clean;
-  const number = extractMaterialNumbers(clean)[0]?.raw;
+  const number = preferredMaterialNumber([{ material_numbers: extractMaterialNumbers(clean) }])?.raw;
   const topicLabel = TOPIC_LABELS[topicKey] || '';
   if (number && topicLabel) return `${topicLabel}, ${number} 변화`;
   return '';
@@ -196,7 +238,7 @@ function compactFactHook(fact = '', topicKey = '') {
 
 function buildHookCandidates({ title = '', topic = 'mixed', audience = '', factRecords = [] } = {}) {
   const strongest = factRecords[0]?.text || '';
-  const materialNumber = factRecords.flatMap(record => record.material_numbers || [])[0]?.raw || '';
+  const materialNumber = preferredMaterialNumber(factRecords)?.raw || '';
   const topicLabel = TOPIC_LABELS[topic] || '';
   const headlineHook = editorialCoverTitle(title, topic);
   const factHook = compactFactHook(strongest, topic);
@@ -207,11 +249,12 @@ function buildHookCandidates({ title = '', topic = 'mixed', audience = '', factR
   const headlineHasStrongestNumber = headlineNumbers.some(number => strongestNumbers.has(number.normalized));
   const headlineHasNumber = headlineNumbers.length > 0;
   const factHasNumber = extractMaterialNumbers(factHook).length > 0;
+  const craftedHeadline = /세금\s*\d|예금금리|사상\s*최고|\d[\d,.]*%.*\d[\d,.]*%/.test(headlineHook.replace(/\n/g, ' '));
   const candidates = [
     {
       text: headlineHook,
       type: 'headline_edit',
-      score: headlineHasStrongestNumber ? 130 : (headlineHasNumber ? 95 : 85),
+      score: craftedHeadline ? 140 : headlineHasStrongestNumber ? 130 : (headlineHasNumber ? 95 : 85),
     },
     { text: factHook || `${topicLabel},\n기사에서 확인한 변화`, type: 'strongest_fact', score: factHasNumber ? 125 : 92 },
     { text: materialNumber && topicLabel ? `${topicLabel},\n${materialNumber} 핵심 변화` : `${topicLabel},\n숫자보다 중요한 변화`, type: 'material_number', score: 80 },

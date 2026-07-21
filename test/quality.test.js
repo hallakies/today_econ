@@ -187,3 +187,11 @@ test('blocks generic percentage-change covers and photo-credit contamination', (
   assert.equal(report.passed, false);
   assert.match(report.errors.join(' '), /generic|photo|credit|pension|self-employed|topic|cover/i);
 });
+
+test('blocks bullets that only look complete because a cut-off particle received 이에요', () => {
+  const content = validContent();
+  content.card2.bullets[0] = '퇴직연금 계좌를 <hl>확인</hl>하는 기준을이에요.';
+  const report = evaluateContentQuality(content, source);
+  assert.equal(report.passed, false);
+  assert.match(report.errors.join(' '), /cut off|incomplete/i);
+});

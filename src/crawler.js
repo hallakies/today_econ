@@ -41,6 +41,7 @@ async function fetchOgImage(articleUrl) {
         'ci_sns',
         'sns_share',
         'facebook_share',
+        'facebook_mknews',
         'twitter_share',
         'mk_bi',
         'mk_ci',

@@ -2,7 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const config = require('../config');
-const { fetchNews, fetchArticleBody } = require('./crawler');
+const { fetchNews, fetchArticleBody, fetchOgImage } = require('./crawler');
 const { rankNewsCandidates, selectNews, saveHistoryEntry } = require('./selector');
 const { generateCardContent, shouldUseLlmEditorial } = require('./generator');
 const { renderCardImages } = require('./renderer');
@@ -304,7 +304,11 @@ async function run() {
 
     stage = 'news_select';
     const preferredNews = await selectNews(newsList);
-    const candidates = rankNewsCandidates(newsList.slice(0, 15), preferredNews).slice(0, 5);
+    // A single scheduled run should exhaust a useful editorial shortlist instead
+    // of asking the operator to discover that five deterministic candidates all
+    // failed. Recovery mode widens the same quality-preserving search further.
+    const candidateLimit = recoveryMode ? 15 : 10;
+    const candidates = rankNewsCandidates(newsList.slice(0, 20), preferredNews).slice(0, candidateLimit);
     let lastCandidateError = null;
     for (let index = 0; index < candidates.length; index += 1) {
       selectedNews = candidates[index];
@@ -312,6 +316,7 @@ async function run() {
       try {
         stage = 'article_fetch';
         selectedNews.fullText = await fetchArticleBody(selectedNews.link) || selectedNews.summary;
+        selectedNews.imageUrl = await fetchOgImage(selectedNews.link);
         if (index === 0 && shouldUseLlmEditorial()) await new Promise(resolve => setTimeout(resolve, 8000));
         stage = 'content_generate';
         cardContent = await generateCardContent(selectedNews);
@@ -330,7 +335,7 @@ async function run() {
     }
     if (!cardContent) throw lastCandidateError || new Error('[Main] No candidate produced a publishable editorial.');
     stage = 'render';
-    renderedFiles = await renderCardImages(cardContent);
+    renderedFiles = await renderCardImages(cardContent, selectedNews.imageUrl);
 
     if (config.publishInstagram) {
       try {

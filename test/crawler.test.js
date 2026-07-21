@@ -1,6 +1,19 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { fetchArticleBody } = require('../src/crawler');
+const { fetchArticleBody, fetchOgImage } = require('../src/crawler');
+
+test('rejects the publisher-wide social image as a story background', async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => new Response(
+    '<meta property="og:image" content="https://static.mk.co.kr/facebook_mknews.jpg">',
+    { status: 200 }
+  );
+  try {
+    assert.equal(await fetchOgImage('https://example.com/article'), null);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
 
 test('collapses real whitespace when extracting article text', async () => {
   const originalFetch = global.fetch;

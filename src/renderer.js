@@ -42,23 +42,31 @@ function validateSlideLayout(layout, slideNumber = 1) {
   return { ok: errors.length === 0, errors: errors.map(error => `slide ${slideNumber}: ${error}`) };
 }
 
-function createEditorialBackdrop(moneyChannel = 'mixed', themeColor = '#5C8DFF') {
+function createEditorialBackdrop(moneyChannel = 'mixed', themeColor = '#5C8DFF', storySeed = '') {
   const motifs = {
     credit: '<path d="M110 980 C260 860 330 1080 480 900 S720 1020 950 650" fill="none" stroke="#E8C26A" stroke-width="22" stroke-linecap="round"/><rect x="170" y="270" width="500" height="370" rx="42" fill="#FFFFFF" fill-opacity=".06" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="4"/><path d="M230 390H590M230 470H530M230 550H470" stroke="#FFFFFF" stroke-opacity=".34" stroke-width="22" stroke-linecap="round"/>',
     housing: '<path d="M140 920V650L370 450L600 650V920M690 920V520L860 360L1030 520V920" fill="#FFFFFF" fill-opacity=".08" stroke="#FFFFFF" stroke-opacity=".26" stroke-width="7"/><path d="M90 1020H990" stroke="#E8C26A" stroke-width="12" stroke-linecap="round"/>',
     stocks: '<path d="M110 980L280 760L430 840L590 510L750 620L960 280" fill="none" stroke="#E8C26A" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/><circle cx="960" cy="280" r="28" fill="#E8C26A"/>',
     living_cost: '<path d="M220 480H820L750 920H290L220 480Z" fill="#FFFFFF" fill-opacity=".08" stroke="#FFFFFF" stroke-opacity=".26" stroke-width="7"/><path d="M360 480C360 260 680 260 680 480M360 650H680M360 760H620" fill="none" stroke="#E8C26A" stroke-width="20" stroke-linecap="round"/>',
     tax: '<rect x="260" y="260" width="560" height="780" rx="42" fill="#FFFFFF" fill-opacity=".08" stroke="#FFFFFF" stroke-opacity=".26" stroke-width="7"/><path d="M340 440H740M340 540H690M340 640H730M340 740H610" stroke="#E8C26A" stroke-width="22" stroke-linecap="round"/>',
+    savings: '<rect x="185" y="310" width="710" height="520" rx="70" fill="#FFFFFF" fill-opacity=".08" stroke="#FFFFFF" stroke-opacity=".25" stroke-width="7"/><circle cx="540" cy="565" r="145" fill="none" stroke="#E8C26A" stroke-width="24"/><path d="M540 465V665M470 520H590C660 520 660 610 590 610H485" fill="none" stroke="#E8C26A" stroke-width="22" stroke-linecap="round"/><path d="M220 950H860" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="18" stroke-linecap="round"/>',
     mixed: '<circle cx="540" cy="650" r="300" fill="#FFFFFF" fill-opacity=".05" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="7"/><path d="M210 930C350 680 510 940 670 650C760 490 870 580 980 360" fill="none" stroke="#E8C26A" stroke-width="22" stroke-linecap="round"/>',
   };
   const motif = motifs[moneyChannel] || motifs.mixed;
+  const seed = [...String(storySeed)].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) >>> 0, 17);
+  const shiftX = (seed % 121) - 60;
+  const shiftY = ((seed >>> 7) % 101) - 50;
+  const rotation = ((seed >>> 14) % 9) - 4;
+  const orbitX = 220 + (seed % 640);
+  const orbitY = 250 + ((seed >>> 5) % 700);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
     <defs>
       <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#081426"/><stop offset=".56" stop-color="#16243C"/><stop offset="1" stop-color="#0A0F1A"/></linearGradient>
       <radialGradient id="glow" cx=".78" cy=".24" r=".7"><stop stop-color="${themeColor}" stop-opacity=".42"/><stop offset="1" stop-color="${themeColor}" stop-opacity="0"/></radialGradient>
     </defs>
     <rect width="1080" height="1350" fill="url(#bg)"/><rect width="1080" height="1350" fill="url(#glow)"/>
-    <g opacity=".9">${motif}</g>
+    <circle cx="${orbitX}" cy="${orbitY}" r="${140 + (seed % 120)}" fill="${themeColor}" fill-opacity=".08"/>
+    <g opacity=".9" transform="translate(${shiftX} ${shiftY}) rotate(${rotation} 540 675)">${motif}</g>
     <g opacity=".12" stroke="#FFFFFF"><path d="M0 180H1080M0 430H1080M0 1180H1080"/><path d="M160 0V1350M900 0V1350"/></g>
   </svg>`;
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
@@ -161,8 +169,16 @@ async function renderCardImages(generatedJson, newsImageUrl = null) {
 
   // Use a deterministic, channel-specific financial backdrop. This prevents
   // unrelated AI portraits from being paired with sensitive economic stories.
-  const newsImageBase64 = createEditorialBackdrop(generatedJson.analysis?.money_channel, themeColor);
-  console.log('[Renderer] Using a deterministic money-mechanism background.');
+  let newsImageBase64;
+  if (newsImageUrl) {
+    const imageBuffer = await downloadNewsImage(newsImageUrl);
+    newsImageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
+    console.log('[Renderer] Using the article image as the story-specific background.');
+  } else {
+    const storySeed = generatedJson.analysis?.source_title || generatedJson.card1?.title || '';
+    newsImageBase64 = createEditorialBackdrop(generatedJson.analysis?.topic || generatedJson.analysis?.money_channel, themeColor, storySeed);
+    console.log('[Renderer] Using a story-varied money-mechanism background.');
+  }
 
   // Render PNGs using Playwright
   console.log('[Renderer] Launching Playwright browser...');

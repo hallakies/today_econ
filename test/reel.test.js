@@ -70,7 +70,13 @@ test('gives dense slides more time inside the selected role range', () => {
 });
 
 test('uses a deterministic financial background without an unrelated portrait', () => {
-  const backdrop = Buffer.from(createEditorialBackdrop('credit', '#D7A84B').split(',')[1], 'base64').toString('utf8');
+  const backdrop = Buffer.from(createEditorialBackdrop('credit', '#D7A84B', '대출금리').split(',')[1], 'base64').toString('utf8');
   assert.match(backdrop, /path|rect/i);
   assert.doesNotMatch(backdrop, /person|portrait|face|woman|man/i);
+});
+
+test('varies editorial art by story instead of repeating one channel backdrop', () => {
+  const loan = createEditorialBackdrop('credit', '#D7A84B', '자영업자 대출금리');
+  const bond = createEditorialBackdrop('credit', '#D7A84B', '퇴직연금 국채 세금');
+  assert.notEqual(loan, bond);
 });

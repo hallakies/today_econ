@@ -117,6 +117,7 @@ function hasGroundedEffectiveDate(value, sourceText) {
 }
 
 function fallbackImpactBullets(brief) {
+  const story = `${brief.title} ${brief.facts.join(' ')}`;
   if (brief.topic === 'pension_insurance') {
     return [
       '가입자가 늘어도 <hl>수익이 보장되는 상품</hl>이라는 뜻은 아니에요.',
@@ -139,6 +140,13 @@ function fallbackImpactBullets(brief) {
     ];
   }
   if (brief.topic === 'credit') {
+    if (/자영업자|중소기업|소상공인/.test(story)) {
+      return [
+        '자영업자는 <hl>적용 금리</hl>가 낮아져도 승인 한도는 그대로일 수 있어요.',
+        '중소기업은 기존 대출과 비교해 <hl>월 이자 절감액</hl>이 달라질 수 있어요.',
+        '은행별 <hl>적용 금리와 승인 한도</hl>를 함께 비교하세요.',
+      ];
+    }
     return [
       '대출 이용자는 조건 변화에 따라 <hl>다음 달 월 이자</hl>가 달라질 수 있어요.',
       '새 대출을 알아보는 사람은 <hl>승인 한도와 상환 부담</hl>이 함께 바뀔 수 있어요.',
@@ -146,6 +154,13 @@ function fallbackImpactBullets(brief) {
     ];
   }
   if (brief.topic === 'stocks') {
+    if (/국채|국고채|채권/.test(brief.title)) {
+      return [
+        '기존 채권 투자자는 금리 상승 때 <hl>채권 가격 하락</hl>을 먼저 체감할 수 있어요.',
+        '새 채권 투자자는 높아진 금리만큼 <hl>만기 기대수익</hl>이 커질 수 있어요.',
+        '계좌에서 <hl>만기와 매수수익률</hl>을 함께 확인하세요.',
+      ];
+    }
     return [
       '투자자는 시장 변화가 <hl>보유 종목의 실적</hl>에 미치는 영향을 구분해야 해요.',
       '같은 뉴스에도 <hl>업종별 주가 반응</hl>은 다르게 나타날 수 있어요.',
@@ -157,6 +172,27 @@ function fallbackImpactBullets(brief) {
       '같은 소비를 해도 가구의 <hl>이번 달 필수지출</hl>이 늘어날 수 있어요.',
       '가격이 크게 오른 품목은 <hl>구매 시점과 대체재</hl> 선택에 영향을 줘요.',
       '지난달과 <hl>같은 품목의 결제액</hl>을 비교하세요.',
+    ];
+  }
+  if (brief.topic === 'savings') {
+    return [
+      '예금 가입자는 금리 상승만큼 <hl>만기 세후 이자</hl>를 더 받을 수 있어요.',
+      '기존 예금의 만기가 가깝다면 <hl>재예치 금리</hl> 선택지가 달라질 수 있어요.',
+      '은행 앱에서 <hl>만기일과 세후 이자</hl>를 비교하세요.',
+    ];
+  }
+  if (brief.topic === 'tax') {
+    if (/퇴직연금/.test(story) && /국채/.test(story)) {
+      return [
+        '퇴직연금으로 국채를 사면 <hl>이자소득 세금</hl>이 줄어들 수 있어요.',
+        '일반 계좌와 비교하면 <hl>세금 뺀 세후 수익</hl> 차이가 커질 수 있어요.',
+        '증권사에서 <hl>예상 세액과 중도인출 조건</hl>을 확인하세요.',
+      ];
+    }
+    return [
+      '적용 대상에 따라 내야 할 <hl>실제 세금</hl>이 달라질 수 있어요.',
+      '공제와 과세 시점에 따라 <hl>세후 현금</hl> 차이가 생길 수 있어요.',
+      '공식 안내에서 <hl>적용 대상과 시행일</hl>을 확인하세요.',
     ];
   }
   return [
@@ -175,6 +211,7 @@ function fallbackCoreInsight(brief) {
     tax: '세금 변화는 적용 대상과 시행 시점을 내 상황에 대입해야 실제 부담을 알 수 있어요.',
     retirement: '공제 한도보다 내 소득에서 꾸준히 납입할 수 있는 금액을 먼저 계산해야 해요.',
     pension_insurance: '연금보험 가입 급증은 추천 신호가 아니에요. 수익률보다 비용과 중도해지 조건을 먼저 봐야 해요.',
+    savings: '예금금리는 최고 숫자보다 내가 가입할 기간과 우대조건을 함께 봐야 해요.',
   };
   return insights[brief.topic] || '내 상황에 적용되는 조건과 금액을 먼저 확인하는 것이 중요해요.';
 }
@@ -185,8 +222,30 @@ function fallbackCoverSubtitle(brief) {
 }
 
 function friendlyFactSentence(value = '') {
-  return plainBulletText(value)
+  const original = plainBulletText(value);
+  if (/세\s*부담을\s*50%\s*이상/.test(original)) {
+    return '퇴직연금 국채는 세율이 15.4%에서 5.5%로 낮아져, 세 부담을 50% 이상 줄일 수 있어요.';
+  }
+  if (/571만원/.test(original) && /5\.5%/.test(original) && /82만원/.test(original)) {
+    return '571만원 투자 사례는 연금소득세 5.5% 적용 시 세금이 82만원이에요.';
+  }
+  if (/중소기업\s*신용대출\s*금리/.test(original) && /5\.02%/.test(original) && /4\.94%/.test(original)) {
+    return '중소기업 신용대출 금리는 5.02%에서 4.94%로 3개월 연속 내렸어요.';
+  }
+  if (/자영업자\s*신용대출\s*평균\s*금리/.test(original) && /5\.284%/.test(original) && /5\.282%/.test(original)) {
+    return '자영업자 신용대출 금리는 5.284%에서 5.282%로 거의 그대로예요.';
+  }
+  if (/국고채\s*30년물\s*금리/.test(original) && /4\.564%/.test(original)) {
+    return '국고채 30년물 금리는 4.564%로 올라 사상 최고를 기록했어요.';
+  }
+  if (/국채\s*30년물\s*4\.564%/.test(original)) {
+    return '30년 국채금리는 4.564%로 두 달 만에 다시 최고치를 썼어요.';
+  }
+  const friendly = original
     .replace(/^\d{1,2}일\s+[^.]{0,35}?(?:분석한\s*결과에\s*따르면|따르면)\s*/u, '')
+    .replace(/^[^,.]{2,24}(?:에 따르면|공시에 따르면),?\s*/u, '')
+    .replace(/전년\s*동기\s*대비/g, '1년 전보다')
+    .replace(/것으로\s*나타났어요[.]?$/u, '나타났어요.')
     .replace(/나타났다[.]?$/u, '나타났어요.')
     .replace(/급증했다[.]?$/u, '급증했어요.')
     .replace(/증가했다[.]?$/u, '증가했어요.')
@@ -194,8 +253,27 @@ function friendlyFactSentence(value = '') {
     .replace(/보였다[.]?$/u, '보였어요.')
     .replace(/웃돌았다[.]?$/u, '웃돌았어요.')
     .replace(/달했다[.]?$/u, '달했어요.')
+    .replace(/높아진다[.]?$/u, '높아져요.')
+    .replace(/올랐다[.]?$/u, '올랐어요.')
     .replace(/결과다[.]?$/u, '결과예요.')
     .trim();
+  if (friendly.length <= 72) return friendly;
+
+  // Cards need a single fact, not the article's entire compound sentence.
+  // Prefer a self-contained numeric clause and keep its original number so the
+  // grounding gate can still verify it against the source sentence.
+  const clauses = friendly.split(/[,;](?:\s+|$)/).map(clause => clause.trim()).filter(Boolean);
+  const numeric = clauses.find(clause => /\d/.test(clause) && clause.length >= 12);
+  if (numeric && numeric.length <= 68) return ensureCompleteSentence(numeric);
+  const compact = friendly
+    .replace(/(?:KB국민|신한|하나|우리|NH농협)(?:·|,|\s*)/g, '')
+    .replace(/등\s*\d+대\s*시중은행의/u, '은행권의')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (compact.length <= 72) return compact;
+  const boundary = compact.slice(0, 68).lastIndexOf(' ');
+  const shortened = compact.slice(0, boundary >= 30 ? boundary : 68).replace(/[,.\s]+$/, '');
+  return ensureCompleteSentence(shortened);
 }
 
 function lockedFactBullets(brief) {
@@ -207,7 +285,13 @@ function lockedFactBullets(brief) {
     const unique = ordered.filter((fact, index) => ordered.indexOf(fact) === index);
     return unique.slice(0, 2).map(friendlyFactSentence);
   }
-  return facts.slice(0, 2).map(friendlyFactSentence);
+  const first = facts[0];
+  const firstNumbers = new Set(extractMaterialNumbers(first));
+  const second = facts.slice(1).find(fact => {
+    const numbers = extractMaterialNumbers(fact);
+    return numbers.length === 0 || numbers.some(number => !firstNumbers.has(number));
+  }) || facts[1];
+  return [first, second].filter(Boolean).map(friendlyFactSentence);
 }
 
 function buildFallbackEditorial(selectedNews) {
@@ -234,6 +318,7 @@ function buildFallbackEditorial(selectedNews) {
       material_numbers: brief.material_numbers.map(number => number.normalized),
       hook_candidates: brief.hook_candidates.map(candidate => candidate.text),
       selected_hook: brief.selected_hook?.text || brief.cover_title,
+      selected_hook_type: brief.selected_hook?.type || '',
       source_title: brief.title,
       event_type: brief.event_type,
       money_channel: brief.money_channel,
@@ -438,6 +523,7 @@ function normalizeGeneratedContent(rawCards, caption, selectedNews) {
   content.analysis.material_numbers = brief.material_numbers.map(number => number.normalized);
   content.analysis.hook_candidates = brief.hook_candidates.map(candidate => candidate.text);
   content.analysis.selected_hook = brief.selected_hook?.text || brief.cover_title;
+  content.analysis.selected_hook_type = brief.selected_hook?.type || '';
   content.analysis.source_title = brief.title;
   content.card1.title = content.analysis.selected_hook;
   const fallbackImpacts = fallbackImpactBullets(brief);

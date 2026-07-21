@@ -66,6 +66,65 @@ test('generates a publishable editorial without an LLM call', async () => {
   }
 });
 
+test('turns a retirement-account bond tax story into a short concrete money brief', async () => {
+  const content = await generateCardContent({
+    title: "퇴직연금 계좌로 국채 사면 … 세금 '0원'도 가능",
+    fullText: [
+      '오는 9월부터 DC형과 IRP 등 퇴직연금 계좌에서 개인투자용 국채를 살 수 있다.',
+      '만기까지 보유하면 이자소득 세금을 0원까지 낮출 수 있다.',
+      '일반 계좌에서 사는 것보다 세 부담을 50% 이상 줄일 수 있다.',
+    ].join(' '),
+    pubDate: '2026-07-21T00:00:00Z',
+  });
+
+  assert.equal(content.quality_score, 100);
+  assert.equal(content.analysis.topic, 'tax');
+  assert.match(content.card1.title, /퇴직연금|국채/);
+  assert.match(content.card1.title, /0원/);
+  assert.doesNotMatch(content.card1.title, /핵심 변화|달라진 핵심/);
+  assert.ok(content.card2.bullets.every(bullet => bullet.replace(/<\/?hl>/g, '').length <= 72));
+  assert.doesNotMatch(content.card2.bullets.join(' '), /(?:를|은|는|이|가|개월)이에요/);
+  assert.match(content.card3.bullets.join(' '), /세후 수익|이자소득 세금/);
+});
+
+test('keeps a business-loan article in credit and produces readable story-specific impacts', async () => {
+  const content = await generateCardContent({
+    title: '李 정부 포용금융 기조에 중소기업 대출금리 낮아져',
+    fullText: [
+      '5대 시중은행의 자영업자 신용대출 평균 금리는 5.288%, 중소기업은 4.94%로 집계됐다.',
+      '반면 가계대출은 주택담보대출 7%대, 개인신용대출 8%대까지 올랐다.',
+      '자영업자 대출 잔액은 연초보다 9349억원 늘어나는 데 그쳤다.',
+    ].join(' '),
+    pubDate: '2026-07-19T00:00:00Z',
+  });
+
+  assert.equal(content.quality_score, 100);
+  assert.equal(content.analysis.topic, 'credit');
+  assert.match(content.card1.title, /자영업자|중소기업/);
+  assert.match(content.card1.title, /5\.288%|4\.94%/);
+  assert.ok(content.card2.bullets.every(bullet => bullet.replace(/<\/?hl>/g, '').length <= 72));
+  assert.doesNotMatch(content.card2.bullets.join(' '), /(?:를|은|는|이|가|개월)이에요/);
+  assert.match(content.card3.bullets.join(' '), /자영업자|중소기업/);
+});
+
+test('treats rising deposit rates as savings rather than loan advice', async () => {
+  const content = await generateCardContent({
+    title: '오르는 은행 예금 금리 … 3%대 중반도 등장',
+    fullText: [
+      '신한S드림 정기예금 만기 1년 금리는 연 2.05%에서 2.30%로 높아진다.',
+      '쏠편한 정기예금 만기 1년 금리는 연 2.9%에서 3.2%로 올랐다.',
+      '5대 시중은행 정기예금 잔액은 965조2949억원으로 늘었다.',
+    ].join(' '),
+    pubDate: '2026-07-21T00:00:00Z',
+  });
+
+  assert.equal(content.quality_score, 100);
+  assert.equal(content.analysis.topic, 'savings');
+  assert.match(content.card1.title, /예금금리/);
+  assert.match(content.card3.bullets.join(' '), /예금|만기|세후 이자/);
+  assert.doesNotMatch(content.card3.bullets.join(' '), /대출 승인|월 상환/);
+});
+
 test('repairs missing or duplicated bullet highlights without changing the claim', () => {
   assert.equal(ensureSingleHighlight('당국은 스톡론 한도를 10억원으로 제한해요.'), '당국은 스톡론 한도를 <hl>10억원</hl>으로 제한해요.');
   assert.equal(ensureSingleHighlight('<hl>대출</hl> 조건을 <hl>다시</hl> 확인해요.'), '<hl>대출 조건을</hl> 다시 확인해요.');
