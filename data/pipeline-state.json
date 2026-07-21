@@ -1,126 +1,6 @@
 {
   "events": [
     {
-      "at": "2026-07-18T14:28:36.787Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
-    },
-    {
-      "at": "2026-07-18T14:32:48.993Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 80,
-      "error": "Content quality gate failed (80/100): readability: cover must fit in at most two short lines; readability: card2 bullet 2 is too dense"
-    },
-    {
-      "at": "2026-07-18T14:36:50.215Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "中企 연체율, 대기업의 4배 … 금리인상 기조에 '좌불안석'",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8694, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T14:40:51.264Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8128, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T14:44:53.038Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "60대이상 취약차주 빚 평균 1억원 … 30대보다 2배 많아",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 9986, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T14:44:53.041Z",
-      "status": "failed",
-      "stage": "content_generate",
-      "articleTitle": "60대이상 취약차주 빚 평균 1억원 … 30대보다 2배 많아",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 9986, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T14:45:04.199Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
-    },
-    {
-      "at": "2026-07-18T14:54:06.178Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 80,
-      "error": "Content quality gate failed (80/100): readability: cover must fit in at most two short lines; readability: card2 bullet 2 is too dense"
-    },
-    {
-      "at": "2026-07-18T14:58:07.360Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "中企 연체율, 대기업의 4배 … 금리인상 기조에 '좌불안석'",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8806, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T15:02:09.102Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8240, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T15:06:10.332Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "60대이상 취약차주 빚 평균 1억원 … 30대보다 2배 많아",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 10098, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T15:06:10.335Z",
-      "status": "failed",
-      "stage": "content_generate",
-      "articleTitle": "60대이상 취약차주 빚 평균 1억원 … 30대보다 2배 많아",
-      "recoveryMode": true,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 10098, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
       "at": "2026-07-18T23:36:59.875Z",
       "status": "article_rejected",
       "stage": "content_generate",
@@ -399,6 +279,126 @@
       "repairAttempts": 0,
       "qualityScore": 100,
       "error": ""
+    },
+    {
+      "at": "2026-07-21T12:12:35.829Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "퇴직연금 계좌로 국채 사면 … 세금 '0원'도 가능",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 2,
+      "error": "Content quality gate failed (2/100): card2 bullet 1 must be 15-90 characters; brand promise: cover omits the strongest numeric signal; brand promise: impact 1 is generic rather than story-specific; brand promise: impact 1 is not tied to the article topic; brand promise: impact 2 is generic rather than story-specific; brand promise: impact 2 is not tied to the article topic; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense; readability: the first two card3 bullets must explain impact, not issue commands"
+    },
+    {
+      "at": "2026-07-21T12:12:36.241Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "신현송은 올렸고, 워시는 올릴 준비…금리인상기, 왜 국채 투자일까 [신환종의 채권&자산배분]",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 60,
+      "error": "Content quality gate failed (60/100): card2 bullet 1 must be 15-90 characters; brand promise: cover omits the strongest numeric signal; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-21T12:12:36.599Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "올해 생산 10% 늘어날 때 고용 증가율 1%에 그쳤다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 88,
+      "error": "Content quality gate failed (88/100): brand promise: cover omits the strongest numeric signal"
+    },
+    {
+      "at": "2026-07-21T12:12:36.949Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "유가 쇼크에 물가 공포까지 … 국채 30년물 금리 사상 최고",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 67,
+      "error": "Content quality gate failed (67/100): cover must name a concrete reader money connection; card2 bullet 2 must be 15-90 characters; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-21T12:12:37.292Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "오르는 은행 예금 금리 … 3%대 중반도 등장",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 90,
+      "error": "Content quality gate failed (90/100): readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-21T12:12:37.295Z",
+      "status": "failed",
+      "stage": "content_generate",
+      "articleTitle": "오르는 은행 예금 금리 … 3%대 중반도 등장",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 90,
+      "error": "Content quality gate failed (90/100): readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-21T12:12:40.018Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "퇴직연금 계좌로 국채 사면 … 세금 '0원'도 가능",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 2,
+      "error": "Content quality gate failed (2/100): card2 bullet 1 must be 15-90 characters; brand promise: cover omits the strongest numeric signal; brand promise: impact 1 is generic rather than story-specific; brand promise: impact 1 is not tied to the article topic; brand promise: impact 2 is generic rather than story-specific; brand promise: impact 2 is not tied to the article topic; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense; readability: the first two card3 bullets must explain impact, not issue commands"
+    },
+    {
+      "at": "2026-07-21T12:12:40.351Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "신현송은 올렸고, 워시는 올릴 준비…금리인상기, 왜 국채 투자일까 [신환종의 채권&자산배분]",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 60,
+      "error": "Content quality gate failed (60/100): card2 bullet 1 must be 15-90 characters; brand promise: cover omits the strongest numeric signal; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-21T12:12:40.567Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "올해 생산 10% 늘어날 때 고용 증가율 1%에 그쳤다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 88,
+      "error": "Content quality gate failed (88/100): brand promise: cover omits the strongest numeric signal"
+    },
+    {
+      "at": "2026-07-21T12:12:40.783Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "유가 쇼크에 물가 공포까지 … 국채 30년물 금리 사상 최고",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 67,
+      "error": "Content quality gate failed (67/100): cover must name a concrete reader money connection; card2 bullet 2 must be 15-90 characters; readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-21T12:12:41.006Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "오르는 은행 예금 금리 … 3%대 중반도 등장",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 90,
+      "error": "Content quality gate failed (90/100): readability: card2 bullet 2 is too dense"
+    },
+    {
+      "at": "2026-07-21T12:12:41.008Z",
+      "status": "failed",
+      "stage": "content_generate",
+      "articleTitle": "오르는 은행 예금 금리 … 3%대 중반도 등장",
+      "recoveryMode": true,
+      "repairAttempts": 0,
+      "qualityScore": 90,
+      "error": "Content quality gate failed (90/100): readability: card2 bullet 2 is too dense"
     }
   ]
 }
