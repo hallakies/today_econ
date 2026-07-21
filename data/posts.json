@@ -1844,5 +1844,67 @@
     "permalink": "https://www.instagram.com/p/DbA_mUcoNHV/",
     "publishedAt": "2026-07-20T12:58:10+0000",
     "format": "carousel"
+  },
+  {
+    "metrics": {},
+    "articleTitle": "퇴직연금 계좌로 국채 사면 … 세금 '0원'도 가능",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12103656",
+    "contentMetadata": {
+      "topic": "tax",
+      "audience": "납세자",
+      "hook_type": "숫자",
+      "money_channel": "tax",
+      "editorial_format": "money-change-brief-deterministic",
+      "brand_promise_score": 100,
+      "readability_score": 100
+    },
+    "qualityScore": 100,
+    "requestedFormats": [
+      "reel",
+      "carousel"
+    ],
+    "release": {
+      "id": 357407040,
+      "tag": "instagram-assets-29838248320-reel-1784644067302",
+      "deleteAfter": "2026-07-24T14:29:32.945Z"
+    },
+    "mediaId": "18098558921195567",
+    "permalink": "https://www.instagram.com/reel/DbDurTIgCIu/",
+    "publishedAt": "2026-07-21T14:28:19+0000",
+    "format": "reel",
+    "story": {
+      "id": "18168947815434977",
+      "permalink": "https://www.instagram.com/stories/today.econ/3946203526946520725",
+      "publishedAt": "2026-07-21T14:29:28+0000",
+      "format": "standalone_story_copy"
+    }
+  },
+  {
+    "metrics": {},
+    "articleTitle": "퇴직연금 계좌로 국채 사면 … 세금 '0원'도 가능",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12103656",
+    "contentMetadata": {
+      "topic": "tax",
+      "audience": "납세자",
+      "hook_type": "숫자",
+      "money_channel": "tax",
+      "editorial_format": "money-change-brief-deterministic",
+      "brand_promise_score": 100,
+      "readability_score": 100
+    },
+    "qualityScore": 100,
+    "requestedFormats": [
+      "reel",
+      "carousel"
+    ],
+    "release": {
+      "id": 357407058,
+      "tag": "instagram-assets-29838248320-carousel-1784644069411",
+      "deleteAfter": "2026-07-24T14:28:57.201Z"
+    },
+    "mediaId": "17900506701330545",
+    "permalink": "https://www.instagram.com/p/DbDuxhboNCt/",
+    "publishedAt": "2026-07-21T14:28:52+0000",
+    "format": "carousel"
   }
 ]
