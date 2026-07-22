@@ -1,56 +1,6 @@
 {
   "events": [
     {
-      "at": "2026-07-19T00:03:31.883Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 6106, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-19T00:07:33.918Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "中企 연체율, 대기업의 4배 … 금리인상 기조에 '좌불안석'",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8918, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-19T00:07:35.556Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
-    },
-    {
-      "at": "2026-07-19T00:07:35.558Z",
-      "status": "failed",
-      "stage": "content_generate",
-      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
-      "recoveryMode": true,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected before generation: fewer than two clean, topic-relevant facts"
-    },
-    {
-      "at": "2026-07-19T00:32:00.496Z",
-      "status": "published",
-      "stage": "slack_notify",
-      "articleTitle": "“지금 안 하면 늦는다”…노후 불안 확산에 청년들 이례적으로 몰린 ‘이것’",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 100,
-      "error": ""
-    },
-    {
       "at": "2026-07-19T11:43:19.048Z",
       "status": "article_rejected",
       "stage": "content_generate",
@@ -392,6 +342,56 @@
     },
     {
       "at": "2026-07-22T12:17:47.882Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "집값 뛰자 …전국 주택 시총 7710조",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
+    },
+    {
+      "at": "2026-07-22T23:42:08.459Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "은행 연체율 10년만에 최고…中企는 1% 넘어",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 90,
+      "error": "Content quality gate failed (90/100): readability: cover must fit in at most two short lines"
+    },
+    {
+      "at": "2026-07-22T23:42:09.095Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "“4755조 메가프로젝트로도 역부족”…잠재성장률 3% ‘마지막 퍼즐’은 [나현준의 뉴스해부]",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-22T23:42:09.601Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "NH농협, 1000억 출연 … 미소금융재단 만든다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 90,
+      "error": "Content quality gate failed (90/100): card2 repeats the same idea across bullets"
+    },
+    {
+      "at": "2026-07-22T23:42:10.138Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "기업대출 수도권 쏠림 역대 최대…양극화 심화",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 63,
+      "error": "Content quality gate failed (63/100): cover must state the subject and direction, not only a percentage change; brand promise: cover uses a generic percentage/change label without an insight"
+    },
+    {
+      "at": "2026-07-22T23:42:14.589Z",
       "status": "published",
       "stage": "slack_notify",
       "articleTitle": "집값 뛰자 …전국 주택 시총 7710조",
