@@ -2266,5 +2266,67 @@
     "permalink": "https://www.instagram.com/p/DbDuxhboNCt/",
     "publishedAt": "2026-07-21T14:28:52+0000",
     "format": "carousel"
+  },
+  {
+    "metrics": {},
+    "articleTitle": "집값 뛰자 …전국 주택 시총 7710조",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12104720",
+    "contentMetadata": {
+      "topic": "housing",
+      "audience": "주택을 준비하는 사람",
+      "hook_type": "숫자",
+      "money_channel": "housing",
+      "editorial_format": "money-change-brief-deterministic",
+      "brand_promise_score": 100,
+      "readability_score": 100
+    },
+    "qualityScore": 100,
+    "requestedFormats": [
+      "reel",
+      "carousel"
+    ],
+    "release": {
+      "id": 357998778,
+      "tag": "instagram-assets-29918840313-reel-1784722563069",
+      "deleteAfter": "2026-07-25T12:17:46.834Z"
+    },
+    "mediaId": "18019919576699255",
+    "permalink": "https://www.instagram.com/reel/DbGEZU_AHE-/",
+    "publishedAt": "2026-07-22T12:16:38+0000",
+    "format": "reel",
+    "story": {
+      "id": "18098870336206900",
+      "permalink": "https://www.instagram.com/stories/today.econ/3946862011451883572",
+      "publishedAt": "2026-07-22T12:17:42+0000",
+      "format": "standalone_story_copy"
+    }
+  },
+  {
+    "metrics": {},
+    "articleTitle": "집값 뛰자 …전국 주택 시총 7710조",
+    "articleUrl": "https://www.mk.co.kr/news/economy/12104720",
+    "contentMetadata": {
+      "topic": "housing",
+      "audience": "주택을 준비하는 사람",
+      "hook_type": "숫자",
+      "money_channel": "housing",
+      "editorial_format": "money-change-brief-deterministic",
+      "brand_promise_score": 100,
+      "readability_score": 100
+    },
+    "qualityScore": 100,
+    "requestedFormats": [
+      "reel",
+      "carousel"
+    ],
+    "release": {
+      "id": 357998792,
+      "tag": "instagram-assets-29918840313-carousel-1784722564775",
+      "deleteAfter": "2026-07-25T12:17:16.256Z"
+    },
+    "mediaId": "18095889761022666",
+    "permalink": "https://www.instagram.com/p/DbGEf9kG-LW/",
+    "publishedAt": "2026-07-22T12:17:12+0000",
+    "format": "carousel"
   }
 ]

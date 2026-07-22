@@ -1,66 +1,6 @@
 {
   "events": [
     {
-      "at": "2026-07-18T23:43:12.281Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "이젠 정말 ‘헛꿈’ 안 꾼다”…한 달 새 청약통장 10만명 깬 이유는?",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 80,
-      "error": "Content quality gate failed (80/100): readability: cover must fit in at most two short lines; readability: card2 bullet 2 is too dense"
-    },
-    {
-      "at": "2026-07-18T23:47:14.962Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "中企 연체율, 대기업의 4배 … 금리인상 기조에 '좌불안석'",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8918, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T23:51:16.397Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8352, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T23:51:16.399Z",
-      "status": "failed",
-      "stage": "content_generate",
-      "articleTitle": "금리인상 후폭풍 … 고령층부터 타격",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8352, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T23:55:27.918Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "“한 번 떨어지면 끝?”…‘기초연금 탈락자’ 기준 맞으면 자동으로 받는다",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 7385, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
-      "at": "2026-07-18T23:59:29.610Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "대출 조이니 결국 있는 사람만…2억 이상 고액 마통만 늘었다",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "413 {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01jqrxqhn8fgbrjqcryesdbrfb` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 8941, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}"
-    },
-    {
       "at": "2026-07-19T00:03:31.883Z",
       "status": "article_rejected",
       "stage": "content_generate",
@@ -395,6 +335,66 @@
       "status": "published",
       "stage": "slack_notify",
       "articleTitle": "퇴직연금 계좌로 국채 사면 … 세금 '0원'도 가능",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
+    },
+    {
+      "at": "2026-07-22T12:15:39.729Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "통신사·경찰·은행 실시간 공조 … 보이스피싱·노쇼사기 막는다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-22T12:15:40.719Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "“4755조 메가프로젝트로도 역부족”…잠재성장률 3% ‘마지막 퍼즐’은 [나현준의 뉴스해부]",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-22T12:15:41.402Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "NH농협, 1000억 출연 … 미소금융재단 만든다",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 90,
+      "error": "Content quality gate failed (90/100): card2 repeats the same idea across bullets"
+    },
+    {
+      "at": "2026-07-22T12:15:42.089Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "은행 연체율 10년만에 최고…中企는 1% 넘어",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 90,
+      "error": "Content quality gate failed (90/100): readability: cover must fit in at most two short lines"
+    },
+    {
+      "at": "2026-07-22T12:15:43.037Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "기업대출 수도권 쏠림 역대 최대…양극화 심화",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 63,
+      "error": "Content quality gate failed (63/100): cover must state the subject and direction, not only a percentage change; brand promise: cover uses a generic percentage/change label without an insight"
+    },
+    {
+      "at": "2026-07-22T12:17:47.882Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "집값 뛰자 …전국 주택 시총 7710조",
       "recoveryMode": false,
       "repairAttempts": 0,
       "qualityScore": 100,
