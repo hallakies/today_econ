@@ -1,86 +1,6 @@
 {
   "events": [
     {
-      "at": "2026-07-19T11:43:19.450Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "\"친환경農 2배 늘리려면… 직불금 최대 3배 올려야\"",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
-    },
-    {
-      "at": "2026-07-19T11:43:19.628Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "대졸 실업 48만명 '5년來 최대' … 알바도 안한 청년 7천명 늘어",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
-    },
-    {
-      "at": "2026-07-19T11:43:19.874Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "외국인, 뉴욕서 원화 빌려 韓주식 살 수 있다",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 64,
-      "error": "Content quality gate failed (64/100): card2 bullet 1 must be 15-90 characters; card2 bullet 2 must be 15-90 characters; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
-    },
-    {
-      "at": "2026-07-19T11:43:19.876Z",
-      "status": "failed",
-      "stage": "content_generate",
-      "articleTitle": "외국인, 뉴욕서 원화 빌려 韓주식 살 수 있다",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 64,
-      "error": "Content quality gate failed (64/100): card2 bullet 1 must be 15-90 characters; card2 bullet 2 must be 15-90 characters; readability: card2 bullet 1 is too dense; readability: card2 bullet 2 is too dense"
-    },
-    {
-      "at": "2026-07-19T11:43:23.079Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "李 정부 포용금융 기조에 중소기업 대출금리 낮아져",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": 53,
-      "error": "Content quality gate failed (53/100): cards drift away from the housing article topic; brand promise: cover omits the strongest numeric signal; readability: card2 bullet 1 is too dense"
-    },
-    {
-      "at": "2026-07-19T11:43:23.565Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "올해 韓 1인당 GDP 3만9천弗 넘을듯",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
-    },
-    {
-      "at": "2026-07-19T11:43:24.008Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "\"친환경農 2배 늘리려면… 직불금 최대 3배 올려야\"",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
-    },
-    {
-      "at": "2026-07-19T11:43:24.622Z",
-      "status": "article_rejected",
-      "stage": "content_generate",
-      "articleTitle": "대졸 실업 48만명 '5년來 최대' … 알바도 안한 청년 7천명 늘어",
-      "recoveryMode": false,
-      "repairAttempts": 0,
-      "qualityScore": null,
-      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
-    },
-    {
       "at": "2026-07-19T11:43:25.225Z",
       "status": "article_rejected",
       "stage": "content_generate",
@@ -396,6 +316,86 @@
       "stage": "slack_notify",
       "articleTitle": "대출규제 풍선효과에…당국, 車담대도 조인다",
       "recoveryMode": true,
+      "repairAttempts": 0,
+      "qualityScore": 100,
+      "error": ""
+    },
+    {
+      "at": "2026-07-23T23:40:11.808Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "“국민연금만 믿었다간 큰일” … 연 19% 대박 낸 퇴직연금 굴리기 비결",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-23T23:40:12.394Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "“증권사 버스 탔습니다”…사상 최대실적 KB·신한, 상반기 순익이 무려",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 48,
+      "error": "Content quality gate failed (48/100): card2 bullet 1 combines numbers that do not appear together in the article; numeric claim is not grounded in the article: 1년; brand promise: two article-specific verified facts are required"
+    },
+    {
+      "at": "2026-07-23T23:40:12.899Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "주가 물었더니 반도체값 답한 신현송 … “소득 13.2% 뛰어 금리 올렸다”",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 38,
+      "error": "Content quality gate failed (38/100): cover must state the subject and direction, not only a percentage change; card2 bullet 1 ends with a cut off particle; brand promise: cover uses a generic percentage/change label without an insight"
+    },
+    {
+      "at": "2026-07-23T23:40:13.836Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "하나·농협銀 예금금리 인상 1년 만기상품 연 3%대로 쑥",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 73,
+      "error": "Content quality gate failed (73/100): money_channel housing lacks source/evidence mapping; brand promise: cover omits the strongest numeric signal"
+    },
+    {
+      "at": "2026-07-23T23:40:14.533Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "반도체의 힘…韓 2분기 성장률 0.6%",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 38,
+      "error": "Content quality gate failed (38/100): cover must state the subject and direction, not only a percentage change; card2 bullet 2 ends with a cut off particle; brand promise: cover uses a generic percentage/change label without an insight"
+    },
+    {
+      "at": "2026-07-23T23:40:15.199Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "증시 랠리에 증권 호황 … KB·신한, 사상 최대 실적",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": 60,
+      "error": "Content quality gate failed (60/100): card2 bullet 1 combines numbers that do not appear together in the article; numeric claim is not grounded in the article: 1년"
+    },
+    {
+      "at": "2026-07-23T23:40:15.699Z",
+      "status": "article_rejected",
+      "stage": "content_generate",
+      "articleTitle": "‘원화 계속 약세’ 콕 집은 美…한국 ‘환율 관찰대상국’에 또 올려",
+      "recoveryMode": false,
+      "repairAttempts": 0,
+      "qualityScore": null,
+      "error": "[Generator] Article rejected: no story-specific brief with two clean facts"
+    },
+    {
+      "at": "2026-07-23T23:40:22.568Z",
+      "status": "published",
+      "stage": "slack_notify",
+      "articleTitle": "대출규제 풍선효과에…당국, 車담대도 조인다",
+      "recoveryMode": false,
       "repairAttempts": 0,
       "qualityScore": 100,
       "error": ""
