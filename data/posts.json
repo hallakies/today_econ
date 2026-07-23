@@ -1832,6 +1832,88 @@
           "status": "ok"
         },
         "collectedAt": "2026-07-21T03:43:03.754Z"
+      },
+      "72h": {
+        "views": {
+          "value": 130,
+          "status": "ok"
+        },
+        "reach": {
+          "value": 124,
+          "status": "ok"
+        },
+        "likes": {
+          "value": 1,
+          "status": "ok"
+        },
+        "comments": {
+          "value": 0,
+          "status": "ok"
+        },
+        "saved": {
+          "value": 0,
+          "status": "ok"
+        },
+        "shares": {
+          "value": 0,
+          "status": "ok"
+        },
+        "total_interactions": {
+          "value": 1,
+          "status": "ok"
+        },
+        "media": {
+          "views": {
+            "value": 130,
+            "status": "ok"
+          },
+          "reach": {
+            "value": 124,
+            "status": "ok"
+          },
+          "likes": {
+            "value": 1,
+            "status": "ok"
+          },
+          "comments": {
+            "value": 0,
+            "status": "ok"
+          },
+          "saved": {
+            "value": 0,
+            "status": "ok"
+          },
+          "shares": {
+            "value": 0,
+            "status": "ok"
+          },
+          "total_interactions": {
+            "value": 1,
+            "status": "ok"
+          }
+        },
+        "account": {
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "profile_views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "follows": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          }
+        },
+        "engagementRate": {
+          "value": 0.81,
+          "status": "ok"
+        },
+        "collectedAt": "2026-07-23T03:43:04.066Z"
       }
     },
     "articleTitle": "집 살 때, 전세 구할 때 ... “하반기 대출 문턱 더 높아진다”",
@@ -1949,6 +2031,88 @@
           "status": "ok"
         },
         "collectedAt": "2026-07-21T03:43:03.754Z"
+      },
+      "72h": {
+        "views": {
+          "value": 21,
+          "status": "ok"
+        },
+        "reach": {
+          "value": 9,
+          "status": "ok"
+        },
+        "likes": {
+          "value": 3,
+          "status": "ok"
+        },
+        "comments": {
+          "value": 0,
+          "status": "ok"
+        },
+        "saved": {
+          "value": 0,
+          "status": "ok"
+        },
+        "shares": {
+          "value": 0,
+          "status": "ok"
+        },
+        "total_interactions": {
+          "value": 3,
+          "status": "ok"
+        },
+        "media": {
+          "views": {
+            "value": 21,
+            "status": "ok"
+          },
+          "reach": {
+            "value": 9,
+            "status": "ok"
+          },
+          "likes": {
+            "value": 3,
+            "status": "ok"
+          },
+          "comments": {
+            "value": 0,
+            "status": "ok"
+          },
+          "saved": {
+            "value": 0,
+            "status": "ok"
+          },
+          "shares": {
+            "value": 0,
+            "status": "ok"
+          },
+          "total_interactions": {
+            "value": 3,
+            "status": "ok"
+          }
+        },
+        "account": {
+          "reach": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "profile_views": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          },
+          "follows": {
+            "value": null,
+            "status": "unavailable",
+            "reason": "[Instagram] 400: metric[2] must be one of the following values: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, likes, comments, shares, saves, replies, engaged_audience_demographics, reached_audience_demographics, follower_demographics, follows_and_unfollows, profile_links_taps, views, threads_likes, threads_replies, reposts, quotes, threads_followers, threads_follower_demographics, content_views, threads_views, threads_clicks, threads_reposts"
+          }
+        },
+        "engagementRate": {
+          "value": 33.33,
+          "status": "ok"
+        },
+        "collectedAt": "2026-07-23T03:43:04.066Z"
       }
     },
     "articleTitle": "집 살 때, 전세 구할 때 ... “하반기 대출 문턱 더 높아진다”",
